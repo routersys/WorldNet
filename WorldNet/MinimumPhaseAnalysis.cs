@@ -1,6 +1,7 @@
 namespace WorldNet;
 
-internal unsafe struct MinimumPhaseAnalysis
+[ScratchLayout]
+internal unsafe partial struct MinimumPhaseAnalysis
 {
     public int FftSize;
     public double* LogSpectrum;
@@ -20,14 +21,6 @@ internal unsafe struct MinimumPhaseAnalysis
         FftPlan.Layout(ref allocator, fftSize, FftPlanKind.RealToComplex, ref analysis.InverseFft);
         FftPlan.Layout(
             ref allocator, fftSize, FftPlanKind.ComplexToComplex, ref analysis.ForwardFft);
-    }
-
-    public static nuint GetRequiredArenaBytes(int fftSize)
-    {
-        MeasuringAllocator allocator = default;
-        MinimumPhaseAnalysis analysis = default;
-        Layout(ref allocator, fftSize, ref analysis);
-        return allocator.Total;
     }
 
     public static MinimumPhaseAnalysis Bind(WorldArena arena, int fftSize)

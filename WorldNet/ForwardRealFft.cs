@@ -1,6 +1,7 @@
 namespace WorldNet;
 
-internal unsafe struct ForwardRealFft
+[ScratchLayout]
+internal unsafe partial struct ForwardRealFft
 {
     public int FftSize;
     public double* Waveform;
@@ -14,14 +15,6 @@ internal unsafe struct ForwardRealFft
         fft.Waveform = (double*)allocator.Allocate(fftSize, sizeof(double));
         fft.Spectrum = (FftComplex*)allocator.Allocate(fftSize, (nuint)sizeof(FftComplex));
         FftPlan.Layout(ref allocator, fftSize, FftPlanKind.RealToComplex, ref fft.ForwardFft);
-    }
-
-    public static nuint GetRequiredArenaBytes(int fftSize)
-    {
-        MeasuringAllocator allocator = default;
-        ForwardRealFft fft = default;
-        Layout(ref allocator, fftSize, ref fft);
-        return allocator.Total;
     }
 
     public static ForwardRealFft Bind(WorldArena arena, int fftSize)

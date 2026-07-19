@@ -1,6 +1,7 @@
 namespace WorldNet;
 
-internal unsafe struct InverseComplexFft
+[ScratchLayout]
+internal unsafe partial struct InverseComplexFft
 {
     public int FftSize;
     public FftComplex* Input;
@@ -14,14 +15,6 @@ internal unsafe struct InverseComplexFft
         fft.Input = (FftComplex*)allocator.Allocate(fftSize, (nuint)sizeof(FftComplex));
         fft.Output = (FftComplex*)allocator.Allocate(fftSize, (nuint)sizeof(FftComplex));
         FftPlan.Layout(ref allocator, fftSize, FftPlanKind.ComplexToComplex, ref fft.InverseFft);
-    }
-
-    public static nuint GetRequiredArenaBytes(int fftSize)
-    {
-        MeasuringAllocator allocator = default;
-        InverseComplexFft fft = default;
-        Layout(ref allocator, fftSize, ref fft);
-        return allocator.Total;
     }
 
     public static InverseComplexFft Bind(WorldArena arena, int fftSize)

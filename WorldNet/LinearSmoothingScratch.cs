@@ -1,6 +1,7 @@
 namespace WorldNet;
 
-internal unsafe struct LinearSmoothingScratch
+[ScratchLayout]
+internal unsafe partial struct LinearSmoothingScratch
 {
     public double* MirroringSpectrum;
     public double* MirroringSegment;
@@ -22,21 +23,5 @@ internal unsafe struct LinearSmoothingScratch
         scratch.HighLevels = (double*)allocator.Allocate(spectrumLength, sizeof(double));
         Interp1QScratch.Layout(
             ref allocator, mirroringLength, spectrumLength, ref scratch.Interpolation);
-    }
-
-    public static nuint GetRequiredArenaBytes(int fftSize, int boundary)
-    {
-        MeasuringAllocator allocator = default;
-        LinearSmoothingScratch scratch = default;
-        Layout(ref allocator, fftSize, boundary, ref scratch);
-        return allocator.Total;
-    }
-
-    public static LinearSmoothingScratch Bind(WorldArena arena, int fftSize, int boundary)
-    {
-        ArenaAllocator allocator = new(arena);
-        LinearSmoothingScratch scratch = default;
-        Layout(ref allocator, fftSize, boundary, ref scratch);
-        return scratch;
     }
 }
