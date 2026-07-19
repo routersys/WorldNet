@@ -29,8 +29,13 @@ internal unsafe struct InverseRealFft
         ArenaAllocator allocator = new(arena);
         InverseRealFft fft = default;
         Layout(ref allocator, fftSize, ref fft);
-        fft.FftSize = fftSize;
-        fft.InverseFft.InitializeComplexToReal(fftSize, fft.Spectrum, fft.Waveform);
+        fft.Initialize(fftSize);
         return fft;
+    }
+
+    public void Initialize(int fftSize)
+    {
+        FftSize = fftSize;
+        InverseFft.InitializeComplexToReal(fftSize, Spectrum, Waveform);
     }
 }
