@@ -1,18 +1,20 @@
 namespace WorldNet;
 
-public readonly ref struct WorldArenaScope
+public readonly unsafe ref struct WorldArenaScope
 {
     private readonly WorldArena _arena;
-    private readonly nuint _offset;
+    private readonly void* _chunk;
+    private readonly nuint _used;
 
-    internal WorldArenaScope(WorldArena arena, nuint offset)
+    internal WorldArenaScope(WorldArena arena, void* chunk, nuint used)
     {
         _arena = arena;
-        _offset = offset;
+        _chunk = chunk;
+        _used = used;
     }
 
     public void Dispose()
     {
-        _arena.RestoreTo(_offset);
+        _arena.RestoreTo(_chunk, _used);
     }
 }
