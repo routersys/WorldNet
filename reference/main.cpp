@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "audioio.h"
+#include "parameterio.h"
 #include "dump.h"
 #include "world/cheaptrick.h"
 #include "world/codec.h"
@@ -460,6 +461,20 @@ void DumpPipeline(const double *x, int x_length, int fs) {
   Synthesis(refined_f0, f0_length, spectrogram, aperiodicity, fft_size,
       frame_period, fs, y_length, y);
   Write1D("synthesis_y", y, y_length);
+
+  {
+    char param_path[2048];
+    snprintf(param_path, sizeof(param_path), "%s/param_f0.bin", g_outdir);
+    WriteF0(param_path, f0_length, frame_period, temporal_positions, refined_f0, 0);
+    snprintf(param_path, sizeof(param_path), "%s/param_f0.txt", g_outdir);
+    WriteF0(param_path, f0_length, frame_period, temporal_positions, refined_f0, 1);
+    snprintf(param_path, sizeof(param_path), "%s/param_spec.bin", g_outdir);
+    WriteSpectralEnvelope(param_path, fs, f0_length, frame_period, fft_size, 0,
+        spectrogram);
+    snprintf(param_path, sizeof(param_path), "%s/param_ap.bin", g_outdir);
+    WriteAperiodicity(param_path, fs, f0_length, frame_period, fft_size, 0,
+        aperiodicity);
+  }
 
   {
     char wav_path[2048];
