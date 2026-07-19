@@ -1,6 +1,7 @@
 namespace WorldNet;
 
-internal unsafe struct CheapTrickScratch
+[ScratchLayout]
+internal unsafe partial struct CheapTrickScratch
 {
     public ForwardRealFft ForwardRealFft;
     public InverseRealFft InverseRealFft;

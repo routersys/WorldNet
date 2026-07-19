@@ -1,6 +1,7 @@
 namespace WorldNet;
 
-internal unsafe struct SynthesisScratch
+[ScratchLayout]
+internal unsafe partial struct SynthesisScratch
 {
     public double* ImpulseResponse;
     public MinimumPhaseAnalysis MinimumPhase;

@@ -1,6 +1,7 @@
 namespace WorldNet;
 
-internal unsafe struct CheapTrickFrameScratch
+[ScratchLayout]
+internal unsafe partial struct CheapTrickFrameScratch
 {
     public int* BaseIndex;
     public int* SafeIndex;
@@ -18,14 +19,5 @@ internal unsafe struct CheapTrickFrameScratch
         scratch.Window = (double*)allocator.Allocate(windowLength, sizeof(double));
         DcCorrectionScratch.Layout(ref allocator, upperLimit, ref scratch.DcCorrection);
         LinearSmoothingScratch.Layout(ref allocator, fftSize, boundary, ref scratch.LinearSmoothing);
-    }
-
-    public static CheapTrickFrameScratch Bind(WorldArena arena, int halfWindowLength,
-        int upperLimit, int fftSize, int boundary)
-    {
-        ArenaAllocator allocator = new(arena);
-        CheapTrickFrameScratch scratch = default;
-        Layout(ref allocator, halfWindowLength, upperLimit, fftSize, boundary, ref scratch);
-        return scratch;
     }
 }
