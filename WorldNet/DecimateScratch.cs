@@ -1,6 +1,7 @@
 namespace WorldNet;
 
-internal unsafe struct DecimateScratch
+[ScratchLayout]
+internal unsafe partial struct DecimateScratch
 {
     public double* Tmp1;
     public double* Tmp2;
@@ -12,21 +13,5 @@ internal unsafe struct DecimateScratch
         int padded = xLength + (MatlabFunctions.DecimateFactorLength * 2);
         scratch.Tmp1 = (double*)allocator.Allocate(padded, sizeof(double));
         scratch.Tmp2 = (double*)allocator.Allocate(padded, sizeof(double));
-    }
-
-    public static nuint GetRequiredArenaBytes(int xLength)
-    {
-        MeasuringAllocator allocator = default;
-        DecimateScratch scratch = default;
-        Layout(ref allocator, xLength, ref scratch);
-        return allocator.Total;
-    }
-
-    public static DecimateScratch Bind(WorldArena arena, int xLength)
-    {
-        ArenaAllocator allocator = new(arena);
-        DecimateScratch scratch = default;
-        Layout(ref allocator, xLength, ref scratch);
-        return scratch;
     }
 }
