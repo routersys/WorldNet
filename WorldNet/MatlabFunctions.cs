@@ -160,6 +160,54 @@ internal static unsafe class MatlabFunctions
         }
     }
 
+    public static void FastFftFilt(double* x, int xLength, double* h, int hLength, int fftSize,
+        in ForwardRealFft forwardRealFft, in InverseRealFft inverseRealFft, double* y,
+        in FastFftFiltScratch scratch)
+    {
+        FftComplex* xSpectrum = scratch.XSpectrum;
+
+        for (int i = 0; i < xLength; ++i)
+        {
+            forwardRealFft.Waveform[i] = x[i] / fftSize;
+        }
+        for (int i = xLength; i < fftSize; ++i)
+        {
+            forwardRealFft.Waveform[i] = 0.0;
+        }
+        forwardRealFft.ForwardFft.Execute();
+        for (int i = 0; i <= fftSize / 2; ++i)
+        {
+            xSpectrum[i].Real = forwardRealFft.Spectrum[i].Real;
+            xSpectrum[i].Imaginary = forwardRealFft.Spectrum[i].Imaginary;
+        }
+
+        for (int i = 0; i < hLength; ++i)
+        {
+            forwardRealFft.Waveform[i] = h[i] / fftSize;
+        }
+        for (int i = hLength; i < fftSize; ++i)
+        {
+            forwardRealFft.Waveform[i] = 0.0;
+        }
+        forwardRealFft.ForwardFft.Execute();
+
+        for (int i = 0; i <= fftSize / 2; ++i)
+        {
+            inverseRealFft.Spectrum[i].Real =
+                (xSpectrum[i].Real * forwardRealFft.Spectrum[i].Real)
+                - (xSpectrum[i].Imaginary * forwardRealFft.Spectrum[i].Imaginary);
+            inverseRealFft.Spectrum[i].Imaginary =
+                (xSpectrum[i].Real * forwardRealFft.Spectrum[i].Imaginary)
+                + (xSpectrum[i].Imaginary * forwardRealFft.Spectrum[i].Real);
+        }
+        inverseRealFft.InverseFft.Execute();
+
+        for (int i = 0; i < fftSize; ++i)
+        {
+            y[i] = inverseRealFft.Waveform[i];
+        }
+    }
+
     public static double MatlabStd(double* x, int xLength)
     {
         double average = 0.0;
