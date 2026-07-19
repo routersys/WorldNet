@@ -25,51 +25,91 @@ internal unsafe struct FftPlan
     public FftComplex* CIn;
     public FftComplex* COut;
 
-    public static nuint GetRequiredArenaBytes(int n, FftPlanKind kind)
+    public static void Layout<TAllocator>(ref TAllocator allocator, int n, FftPlanKind kind,
+        ref FftPlan plan)
+        where TAllocator : struct, IScratchAllocator
     {
         int inputCount = kind == FftPlanKind.ComplexToComplex ? n * 2 : n;
-        return WorldArena.GetReservedBytes(inputCount, sizeof(double))
-            + WorldArena.GetReservedBytes(n, sizeof(int))
-            + WorldArena.GetReservedBytes(n * 5 / 4, sizeof(double));
+        plan.Input = (double*)allocator.Allocate(inputCount, sizeof(double));
+        plan.Ip = (int*)allocator.Allocate(n, sizeof(int));
+        plan.W = (double*)allocator.Allocate(n * 5 / 4, sizeof(double));
     }
 
-    public static FftPlan CreateRealToComplex(int n, double* input, FftComplex* output, WorldArena arena)
+    public static nuint GetRequiredArenaBytes(int n, FftPlanKind kind)
     {
+        MeasuringAllocator allocator = default;
         FftPlan plan = default;
-        plan.N = n;
-        plan.In = input;
-        plan.COut = output;
-        plan.Sign = FftDirection.Forward;
-        plan.AllocateTables(n, n, arena);
-        OouraFft.MakeWt(plan.N >> 2, plan.Ip, plan.W);
-        OouraFft.MakeCt(plan.N >> 2, plan.Ip, plan.W + (plan.N >> 2));
+        Layout(ref allocator, n, kind, ref plan);
+        return allocator.Total;
+    }
+
+    public static FftPlan BindRealToComplex(WorldArena arena, int n, double* input,
+        FftComplex* output)
+    {
+        ArenaAllocator allocator = new(arena);
+        FftPlan plan = default;
+        Layout(ref allocator, n, FftPlanKind.RealToComplex, ref plan);
+        plan.InitializeRealToComplex(n, input, output);
         return plan;
     }
 
-    public static FftPlan CreateComplexToReal(int n, FftComplex* input, double* output, WorldArena arena)
+    public static FftPlan BindComplexToReal(WorldArena arena, int n, FftComplex* input,
+        double* output)
     {
+        ArenaAllocator allocator = new(arena);
         FftPlan plan = default;
-        plan.N = n;
-        plan.CIn = input;
-        plan.Out = output;
-        plan.Sign = FftDirection.Backward;
-        plan.AllocateTables(n, n, arena);
-        OouraFft.MakeWt(plan.N >> 2, plan.Ip, plan.W);
-        OouraFft.MakeCt(plan.N >> 2, plan.Ip, plan.W + (plan.N >> 2));
+        Layout(ref allocator, n, FftPlanKind.ComplexToReal, ref plan);
+        plan.InitializeComplexToReal(n, input, output);
         return plan;
     }
 
-    public static FftPlan CreateComplexToComplex(int n, FftComplex* input, FftComplex* output,
-        FftDirection sign, WorldArena arena)
+    public static FftPlan BindComplexToComplex(WorldArena arena, int n, FftComplex* input,
+        FftComplex* output, FftDirection sign)
     {
+        ArenaAllocator allocator = new(arena);
         FftPlan plan = default;
-        plan.N = n;
-        plan.CIn = input;
-        plan.COut = output;
-        plan.Sign = sign;
-        plan.AllocateTables(n * 2, n, arena);
-        OouraFft.MakeWt(plan.N >> 1, plan.Ip, plan.W);
+        Layout(ref allocator, n, FftPlanKind.ComplexToComplex, ref plan);
+        plan.InitializeComplexToComplex(n, input, output, sign);
         return plan;
+    }
+
+    public void InitializeRealToComplex(int n, double* input, FftComplex* output)
+    {
+        N = n;
+        Sign = FftDirection.Forward;
+        In = input;
+        Out = null;
+        CIn = null;
+        COut = output;
+        Ip[0] = 0;
+        OouraFft.MakeWt(N >> 2, Ip, W);
+        OouraFft.MakeCt(N >> 2, Ip, W + (N >> 2));
+    }
+
+    public void InitializeComplexToReal(int n, FftComplex* input, double* output)
+    {
+        N = n;
+        Sign = FftDirection.Backward;
+        In = null;
+        Out = output;
+        CIn = input;
+        COut = null;
+        Ip[0] = 0;
+        OouraFft.MakeWt(N >> 2, Ip, W);
+        OouraFft.MakeCt(N >> 2, Ip, W + (N >> 2));
+    }
+
+    public void InitializeComplexToComplex(int n, FftComplex* input, FftComplex* output,
+        FftDirection sign)
+    {
+        N = n;
+        Sign = sign;
+        In = null;
+        Out = null;
+        CIn = input;
+        COut = output;
+        Ip[0] = 0;
+        OouraFft.MakeWt(N >> 1, Ip, W);
     }
 
     public readonly void Execute()
@@ -82,14 +122,6 @@ internal unsafe struct FftPlan
         {
             ExecuteBackward();
         }
-    }
-
-    private void AllocateTables(int inputCount, int n, WorldArena arena)
-    {
-        Input = (double*)arena.AllocateRaw(inputCount, sizeof(double));
-        Ip = (int*)arena.AllocateRaw(n, sizeof(int));
-        W = (double*)arena.AllocateRaw(n * 5 / 4, sizeof(double));
-        Ip[0] = 0;
     }
 
     private readonly void ExecuteForward()
