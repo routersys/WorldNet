@@ -405,6 +405,17 @@ void DumpPipeline(const double *x, int x_length, int fs) {
   Write1D("dio_temporal_positions", temporal_positions, f0_length);
   Write1D("dio_f0", f0, f0_length);
 
+  DioOption dio_option_speed2;
+  InitializeDioOption(&dio_option_speed2);
+  dio_option_speed2.frame_period = frame_period;
+  dio_option_speed2.speed = 2;
+  double *temporal_positions_speed2 = new double[f0_length];
+  double *f0_speed2 = new double[f0_length];
+  Dio(x, x_length, fs, &dio_option_speed2, temporal_positions_speed2, f0_speed2);
+  Write1D("dio_f0_speed2", f0_speed2, f0_length);
+  delete[] f0_speed2;
+  delete[] temporal_positions_speed2;
+
   double *refined_f0 = new double[f0_length];
   StoneMask(x, x_length, fs, temporal_positions, f0, f0_length, refined_f0);
   Write1D("stonemask_f0", refined_f0, f0_length);
