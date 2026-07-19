@@ -2,7 +2,7 @@ namespace WorldNet;
 
 internal static unsafe class MatlabFunctions
 {
-    private const int DecimateFactorLength = 9;
+    internal const int DecimateFactorLength = 9;
 
     public static void FftShift(double* x, int xLength, double* y)
     {
@@ -48,18 +48,11 @@ internal static unsafe class MatlabFunctions
         }
     }
 
-    public static nuint GetInterp1ArenaBytes(int xLength, int xiLength)
-    {
-        return WorldArena.GetReservedBytes(xLength - 1, sizeof(double))
-            + WorldArena.GetReservedBytes(xiLength, sizeof(int));
-    }
-
     public static void Interp1(double* x, double* y, int xLength, double* xi, int xiLength,
-        double* yi, WorldArena arena)
+        double* yi, in Interp1Scratch scratch)
     {
-        using WorldArenaScope scope = arena.BeginScope();
-        double* h = (double*)arena.AllocateRaw(xLength - 1, sizeof(double));
-        int* k = (int*)arena.AllocateRaw(xiLength, sizeof(int));
+        double* h = scratch.H;
+        int* k = scratch.K;
 
         for (int i = 0; i < xLength - 1; ++i)
         {
@@ -79,11 +72,6 @@ internal static unsafe class MatlabFunctions
         }
     }
 
-    public static nuint GetDecimateArenaBytes(int xLength)
-    {
-        return 2 * WorldArena.GetReservedBytes(xLength + DecimateFactorLength * 2, sizeof(double));
-    }
-
     public static int GetDecimateOutputLength(int xLength, int r)
     {
         int nout = ((xLength - 1) / r) + 1;
@@ -96,12 +84,12 @@ internal static unsafe class MatlabFunctions
         return count;
     }
 
-    public static void Decimate(double* x, int xLength, int r, double* y, WorldArena arena)
+    public static void Decimate(double* x, int xLength, int r, double* y,
+        in DecimateScratch scratch)
     {
         const int nFact = DecimateFactorLength;
-        using WorldArenaScope scope = arena.BeginScope();
-        double* tmp1 = (double*)arena.AllocateRaw(xLength + (nFact * 2), sizeof(double));
-        double* tmp2 = (double*)arena.AllocateRaw(xLength + (nFact * 2), sizeof(double));
+        double* tmp1 = scratch.Tmp1;
+        double* tmp2 = scratch.Tmp2;
 
         for (int i = 0; i < nFact; ++i)
         {
@@ -150,20 +138,12 @@ internal static unsafe class MatlabFunctions
         }
     }
 
-    public static nuint GetInterp1QArenaBytes(int xLength, int xiLength)
-    {
-        return WorldArena.GetReservedBytes(xiLength, sizeof(double))
-            + WorldArena.GetReservedBytes(xLength, sizeof(double))
-            + WorldArena.GetReservedBytes(xiLength, sizeof(int));
-    }
-
     public static void Interp1Q(double x, double shift, double* y, int xLength, double* xi,
-        int xiLength, double* yi, WorldArena arena)
+        int xiLength, double* yi, in Interp1QScratch scratch)
     {
-        using WorldArenaScope scope = arena.BeginScope();
-        double* xiFraction = (double*)arena.AllocateRaw(xiLength, sizeof(double));
-        double* deltaY = (double*)arena.AllocateRaw(xLength, sizeof(double));
-        int* xiBase = (int*)arena.AllocateRaw(xiLength, sizeof(int));
+        double* xiFraction = scratch.XiFraction;
+        double* deltaY = scratch.DeltaY;
+        int* xiBase = scratch.XiBase;
 
         double deltaX = shift;
         for (int i = 0; i < xiLength; ++i)
