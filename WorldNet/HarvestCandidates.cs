@@ -127,6 +127,11 @@ public static unsafe partial class Harvest
         double* intervalLocations, double* intervals, int* negativeGoingPoints, int* edges,
         double* fineEdges)
     {
+        if (yLength < 2)
+        {
+            return 0;
+        }
+
         for (int i = 0; i < yLength - 1; ++i)
         {
             negativeGoingPoints[i] =
