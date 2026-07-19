@@ -462,6 +462,12 @@ void DumpPipeline(const double *x, int x_length, int fs) {
   Write1D("synthesis_y", y, y_length);
 
   {
+    char wav_path[2048];
+    snprintf(wav_path, sizeof(wav_path), "%s/synthesis_y.wav", g_outdir);
+    wavwrite(y, y_length, fs, 16, wav_path);
+  }
+
+  {
     const int realtime_buffer_size = 64;
     WorldSynthesizer synthesizer = { 0 };
     InitializeSynthesizer(fs, frame_period, fft_size, realtime_buffer_size, 1,
