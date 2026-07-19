@@ -34,7 +34,7 @@ public unsafe class MatlabFunctionsTests
 
         Assert.Equal(expected.Length, MatlabFunctions.GetDecimateOutputLength(length, r));
 
-        using WorldArena arena = new(MatlabFunctions.GetDecimateArenaBytes(length) + 65536);
+        using WorldArena arena = new();
         double* x = (double*)arena.AllocateRaw(length, sizeof(double));
         double* y = (double*)arena.AllocateRaw(expected.Length, sizeof(double));
         for (int i = 0; i < length; ++i)
@@ -42,7 +42,8 @@ public unsafe class MatlabFunctionsTests
             x[i] = source[i];
         }
 
-        MatlabFunctions.Decimate(x, length, r, y, arena);
+        DecimateScratch scratch = DecimateScratch.Bind(arena, length);
+        MatlabFunctions.Decimate(x, length, r, y, scratch);
 
         AssertExact(expected, y, $"decimate r={r}");
     }
@@ -61,7 +62,8 @@ public unsafe class MatlabFunctionsTests
         double* xi = Copy(arena, sourceXi);
         double* yi = (double*)arena.AllocateRaw(expected.Length, sizeof(double));
 
-        MatlabFunctions.Interp1(x, y, sourceX.Length, xi, sourceXi.Length, yi, arena);
+        Interp1Scratch scratch = Interp1Scratch.Bind(arena, sourceX.Length, sourceXi.Length);
+        MatlabFunctions.Interp1(x, y, sourceX.Length, xi, sourceXi.Length, yi, scratch);
 
         AssertExact(expected, yi, "interp1");
     }
@@ -144,7 +146,8 @@ public unsafe class MatlabFunctionsTests
         double* xi = Copy(arena, sourceXi);
         double* yi = (double*)arena.AllocateRaw(expected.Length, sizeof(double));
 
-        MatlabFunctions.Interp1Q(0.0, 1.5, y, sourceY.Length, xi, sourceXi.Length, yi, arena);
+        Interp1QScratch scratch = Interp1QScratch.Bind(arena, sourceY.Length, sourceXi.Length);
+        MatlabFunctions.Interp1Q(0.0, 1.5, y, sourceY.Length, xi, sourceXi.Length, yi, scratch);
 
         AssertExact(expected, yi, "interp1Q");
     }
