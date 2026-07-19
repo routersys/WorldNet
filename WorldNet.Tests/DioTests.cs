@@ -45,6 +45,35 @@ public class DioTests
     }
 
     [Fact]
+    public void EstimateWithDecimationMatchesReference()
+    {
+        double[] meta = ReferenceData.Load("meta").Values;
+        int fs = (int)meta[0];
+        double framePeriod = meta[2];
+        double[] x = ReferenceData.Load("input_x").Values;
+        double[] expectedF0 = ReferenceData.Load("dio_f0_speed2").Values;
+
+        int f0Length = Dio.GetSamplesForDio(fs, x.Length, framePeriod);
+        Assert.Equal(expectedF0.Length, f0Length);
+
+        double[] positions = new double[f0Length];
+        double[] f0 = new double[f0Length];
+        using WorldArena arena = new();
+
+        DioOption option = DioOption.Default with { FramePeriod = framePeriod, Speed = 2 };
+        Dio.Estimate(x, fs, option, positions, f0, arena);
+
+        for (int i = 0; i < f0Length; ++i)
+        {
+            if (BitConverter.DoubleToInt64Bits(expectedF0[i])
+                != BitConverter.DoubleToInt64Bits(f0[i]))
+            {
+                Assert.Fail($"f0 {i}: expected {expectedF0[i]:E17} but was {f0[i]:E17}");
+            }
+        }
+    }
+
+    [Fact]
     public void GetSamplesForDioMatchesReference()
     {
         double[] expected = ReferenceData.Load("opt_samples_for_dio").Values;
