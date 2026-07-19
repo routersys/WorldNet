@@ -112,15 +112,29 @@ public sealed unsafe class WorldArena : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    internal void* AllocateRaw(int count, nuint elementSize)
+    public static nuint GetReservedBytes(int count, nuint elementSize)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentOutOfRangeException.ThrowIfNegative(count);
 
         nuint requested = checked((nuint)count * elementSize);
         nuint reserved = (requested + (AlignmentBytes - 1)) & ~(nuint)(AlignmentBytes - 1);
 
-        if (reserved < requested || reserved > _capacity - _offset)
+        if (reserved < requested)
+        {
+            throw new OverflowException(
+                "The requested allocation size cannot be aligned without overflowing.");
+        }
+
+        return reserved;
+    }
+
+    internal void* AllocateRaw(int count, nuint elementSize)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
+        nuint reserved = GetReservedBytes(count, elementSize);
+
+        if (reserved > _capacity - _offset)
         {
             throw new InvalidOperationException(
                 $"The arena has {_capacity - _offset} bytes available but {reserved} bytes were requested.");
