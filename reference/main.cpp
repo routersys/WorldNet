@@ -515,6 +515,36 @@ void DumpPipeline(const double *x, int x_length, int fs) {
   delete[] temporal_positions;
 }
 
+void DumpTranscendentals() {
+  const int count = 8192;
+  double *pow_input = new double[count];
+  double *pow_output = new double[count];
+  double *log10_input = new double[count];
+  double *log10_output = new double[count];
+
+  ResetSeed();
+  for (int i = 0; i < count; ++i) {
+    double u = (NextSample() + 1.0) / 2.0;
+    pow_input[i] = -3.0 * u;
+    pow_output[i] = pow(10.0, pow_input[i] / 1.0);
+  }
+  for (int i = 0; i < count; ++i) {
+    double u = (NextSample() + 1.0) / 2.0;
+    log10_input[i] = u < 1e-12 ? 1e-12 : u;
+    log10_output[i] = log10(log10_input[i]);
+  }
+
+  Write1D("tr_pow10_input", pow_input, count);
+  Write1D("tr_pow10_output", pow_output, count);
+  Write1D("tr_log10_input", log10_input, count);
+  Write1D("tr_log10_output", log10_output, count);
+
+  delete[] log10_output;
+  delete[] log10_input;
+  delete[] pow_output;
+  delete[] pow_input;
+}
+
 }  // namespace
 
 int main(int argc, char **argv) {
@@ -544,6 +574,7 @@ int main(int argc, char **argv) {
   DumpSpectrumHelpers();
   DumpOptionDefaults(fs);
   DumpFrameCounts();
+  DumpTranscendentals();
   DumpPipeline(x, x_length, fs);
 
   printf("reference data written to %s\n", g_outdir);
