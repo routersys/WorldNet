@@ -35,12 +35,16 @@ internal unsafe struct MinimumPhaseAnalysis
         ArenaAllocator allocator = new(arena);
         MinimumPhaseAnalysis analysis = default;
         Layout(ref allocator, fftSize, ref analysis);
-        analysis.FftSize = fftSize;
-        analysis.InverseFft.InitializeRealToComplex(
-            fftSize, analysis.LogSpectrum, analysis.Cepstrum);
-        analysis.ForwardFft.InitializeComplexToComplex(
-            fftSize, analysis.Cepstrum, analysis.MinimumPhaseSpectrum, FftDirection.Forward);
+        analysis.Initialize(fftSize);
         return analysis;
+    }
+
+    public void Initialize(int fftSize)
+    {
+        FftSize = fftSize;
+        InverseFft.InitializeRealToComplex(fftSize, LogSpectrum, Cepstrum);
+        ForwardFft.InitializeComplexToComplex(
+            fftSize, Cepstrum, MinimumPhaseSpectrum, FftDirection.Forward);
     }
 
     public readonly void GetMinimumPhaseSpectrum()
