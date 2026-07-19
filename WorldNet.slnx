@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="WorldNet/WorldNet.csproj" />
   <Project Path="WorldNet.Examples/WorldNet.Examples.csproj" />
+  <Project Path="WorldNet.SourceGenerator/WorldNet.SourceGenerator.csproj" />
   <Project Path="WorldNet.Tests/WorldNet.Tests.csproj" />
 </Solution>
