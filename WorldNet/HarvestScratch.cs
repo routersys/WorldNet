@@ -1,6 +1,7 @@
 namespace WorldNet;
 
-internal unsafe struct HarvestScratch
+[ScratchLayout]
+internal unsafe partial struct HarvestScratch
 {
     public double* Y;
     public FftComplex* YSpectrum;

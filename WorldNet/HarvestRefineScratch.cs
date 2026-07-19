@@ -1,6 +1,7 @@
 namespace WorldNet;
 
-internal unsafe struct HarvestRefineScratch
+[ScratchLayout]
+internal unsafe partial struct HarvestRefineScratch
 {
     public const int MaximumHarmonics = 6;
 

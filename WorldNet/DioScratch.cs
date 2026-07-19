@@ -1,6 +1,7 @@
 namespace WorldNet;
 
-internal unsafe struct DioScratch
+[ScratchLayout]
+internal unsafe partial struct DioScratch
 {
     public FftComplex* YSpectrum;
     public double* SpectrumY;
@@ -59,15 +60,6 @@ internal unsafe struct DioScratch
         scratch.PositiveIndex = (int*)allocator.Allocate(f0Length, sizeof(int));
         scratch.NegativeIndex = (int*)allocator.Allocate(f0Length, sizeof(int));
         scratch.F0Base = (double*)allocator.Allocate(f0Length, sizeof(double));
-    }
-
-    public static nuint GetRequiredArenaBytes(int numberOfBands, int xLength, int yLength,
-        int f0Length, int fftSize)
-    {
-        MeasuringAllocator allocator = default;
-        DioScratch scratch = default;
-        Layout(ref allocator, numberOfBands, xLength, yLength, f0Length, fftSize, ref scratch);
-        return allocator.Total;
     }
 
     public static DioScratch Bind(WorldArena arena, int numberOfBands, int xLength, int yLength,

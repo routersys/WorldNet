@@ -1,6 +1,7 @@
 namespace WorldNet;
 
-internal unsafe struct ZeroCrossings
+[ScratchLayout]
+internal unsafe partial struct ZeroCrossings
 {
     public double* NegativeIntervalLocations;
     public double* NegativeIntervals;

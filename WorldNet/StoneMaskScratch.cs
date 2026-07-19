@@ -1,6 +1,7 @@
 namespace WorldNet;
 
-internal unsafe struct StoneMaskScratch
+[ScratchLayout]
+internal unsafe partial struct StoneMaskScratch
 {
     public const int MaximumHarmonics = 6;
 
@@ -34,14 +35,6 @@ internal unsafe struct StoneMaskScratch
         scratch.InstantaneousFrequencyList =
             (double*)allocator.Allocate(MaximumHarmonics, sizeof(double));
         ForwardRealFft.Layout(ref allocator, fftSize, ref scratch.ForwardRealFft);
-    }
-
-    public static nuint GetRequiredArenaBytes(int baseTimeLength, int fftSize)
-    {
-        MeasuringAllocator allocator = default;
-        StoneMaskScratch scratch = default;
-        Layout(ref allocator, baseTimeLength, fftSize, ref scratch);
-        return allocator.Total;
     }
 
     public static StoneMaskScratch Bind(WorldArena arena, int baseTimeLength, int fftSize)
