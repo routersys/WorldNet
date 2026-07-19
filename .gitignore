@@ -361,3 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# WORLD reference harness
+reference/world-src/
+reference/data/
+reference/worldref.exe
