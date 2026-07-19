@@ -17,6 +17,7 @@
 #include "world/matlabfunctions.h"
 #include "world/stonemask.h"
 #include "world/synthesis.h"
+#include "world/synthesisrealtime.h"
 
 char g_outdir[1024];
 
@@ -459,6 +460,27 @@ void DumpPipeline(const double *x, int x_length, int fs) {
   Synthesis(refined_f0, f0_length, spectrogram, aperiodicity, fft_size,
       frame_period, fs, y_length, y);
   Write1D("synthesis_y", y, y_length);
+
+  {
+    const int realtime_buffer_size = 64;
+    WorldSynthesizer synthesizer = { 0 };
+    InitializeSynthesizer(fs, frame_period, fft_size, realtime_buffer_size, 1,
+        &synthesizer);
+    AddParameters(refined_f0, f0_length, spectrogram, aperiodicity, &synthesizer);
+
+    int capacity = y_length + realtime_buffer_size * 2;
+    double *realtime_y = new double[capacity];
+    for (int i = 0; i < capacity; ++i) realtime_y[i] = 0.0;
+    int produced = 0;
+    while (Synthesis2(&synthesizer) != 0) {
+      for (int j = 0; j < realtime_buffer_size; ++j) {
+        if (produced < capacity) realtime_y[produced++] = synthesizer.buffer[j];
+      }
+    }
+    DestroySynthesizer(&synthesizer);
+    Write1D("synthesis_realtime_y", realtime_y, y_length);
+    delete[] realtime_y;
+  }
 
   const int number_of_dimensions = 40;
   int number_of_aperiodicities = GetNumberOfAperiodicities(fs);
