@@ -23,6 +23,10 @@ internal static class ReferenceData
 
     public static bool IsAvailable => DirectoryPath.Value is not null;
 
+    public static string DataDirectory => DirectoryPath.Value
+        ?? throw new InvalidOperationException(
+            "Reference data was not found. Run reference/build.bat to generate it.");
+
     public static ReferenceArray Load(string name)
     {
         string? root = DirectoryPath.Value;
