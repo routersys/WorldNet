@@ -29,9 +29,13 @@ internal unsafe struct InverseComplexFft
         ArenaAllocator allocator = new(arena);
         InverseComplexFft fft = default;
         Layout(ref allocator, fftSize, ref fft);
-        fft.FftSize = fftSize;
-        fft.InverseFft.InitializeComplexToComplex(
-            fftSize, fft.Input, fft.Output, FftDirection.Backward);
+        fft.Initialize(fftSize);
         return fft;
+    }
+
+    public void Initialize(int fftSize)
+    {
+        FftSize = fftSize;
+        InverseFft.InitializeComplexToComplex(fftSize, Input, Output, FftDirection.Backward);
     }
 }
