@@ -34,7 +34,7 @@ if "%OUTPUT_DIR%"=="" set "OUTPUT_DIR=data"
 if not exist obj mkdir obj
 if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
 
-cl /nologo /O2 /EHsc /I world-src\src /I world-src\tools /I . /Fo:obj\ /Fe:worldref.exe main.cpp world-src\src\*.cpp world-src\tools\audioio.cpp || exit /b 1
+cl /nologo /O2 /EHsc /I world-src\src /I world-src\tools /I . /Fo:obj\ /Fe:worldref.exe main.cpp world-src\src\*.cpp world-src\tools\audioio.cpp world-src\tools\parameterio.cpp || exit /b 1
 
 .\worldref.exe "%INPUT_WAV%" "%OUTPUT_DIR%" || exit /b 1
 
