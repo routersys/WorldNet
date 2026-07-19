@@ -543,6 +543,49 @@ void DumpTranscendentals() {
   delete[] log10_input;
   delete[] pow_output;
   delete[] pow_input;
+
+  double *in2 = new double[count];
+  double *out2 = new double[count];
+
+  for (int i = 0; i < count; ++i) {
+    double u = (NextSample() + 1.0) / 2.0;
+    in2[i] = 0.001 + u * 0.998;
+    out2[i] = pow(in2[i], 2.0);
+  }
+  Write1D("tr_pow2_input", in2, count);
+  Write1D("tr_pow2_output", out2, count);
+
+  for (int i = 0; i < count; ++i) {
+    in2[i] = NextSample() * 1000.0;
+    out2[i] = cos(in2[i]);
+  }
+  Write1D("tr_cos_input", in2, count);
+  Write1D("tr_cos_output", out2, count);
+
+  for (int i = 0; i < count; ++i) {
+    in2[i] = NextSample() * 1000.0;
+    out2[i] = sin(in2[i]);
+  }
+  Write1D("tr_sin_input", in2, count);
+  Write1D("tr_sin_output", out2, count);
+
+  for (int i = 0; i < count; ++i) {
+    double u = (NextSample() + 1.0) / 2.0;
+    in2[i] = pow(10.0, -20.0 + u * 21.0);
+    out2[i] = log(in2[i]);
+  }
+  Write1D("tr_log_input", in2, count);
+  Write1D("tr_log_output", out2, count);
+
+  for (int i = 0; i < count; ++i) {
+    in2[i] = -20.0 + (NextSample() + 1.0) / 2.0 * 25.0;
+    out2[i] = exp(in2[i]);
+  }
+  Write1D("tr_exp_input", in2, count);
+  Write1D("tr_exp_output", out2, count);
+
+  delete[] out2;
+  delete[] in2;
 }
 
 }  // namespace
