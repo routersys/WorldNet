@@ -82,11 +82,46 @@ public unsafe class WorldArenaTests
     }
 
     [Fact]
-    public void ExceedingCapacityThrows()
+    public void OwnedArenaGrowsBeyondInitialCapacity()
     {
         using WorldArena arena = new(128);
 
-        Assert.Throws<InvalidOperationException>(() => arena.AllocateDouble(1024));
+        Span<double> values = arena.AllocateDouble(1024);
+
+        Assert.Equal(1024, values.Length);
+        Assert.True(arena.Capacity >= 8192);
+    }
+
+    [Fact]
+    public void GrowingKeepsEarlierPointersValid()
+    {
+        using WorldArena arena = new(128);
+
+        Span<double> first = arena.AllocateDouble(8);
+        first.Fill(7.0);
+
+        for (int i = 0; i < 64; ++i)
+        {
+            arena.AllocateDouble(4096).Fill(1.0);
+        }
+
+        Assert.All(first.ToArray(), value => Assert.Equal(7.0, value));
+    }
+
+    [Fact]
+    public void CallerSuppliedArenaThrowsWhenExhausted()
+    {
+        byte* buffer = (byte*)NativeMemory.AlignedAlloc(1024, 64);
+        try
+        {
+            using WorldArena arena = WorldArena.FromNativeMemory(buffer, 1024);
+
+            Assert.Throws<InvalidOperationException>(() => arena.AllocateDouble(1024));
+        }
+        finally
+        {
+            NativeMemory.AlignedFree(buffer);
+        }
     }
 
     [Fact]
@@ -141,12 +176,16 @@ public unsafe class WorldArenaTests
     }
 
     [Fact]
-    public void EnsureCapacityThrowsWhileAllocationsOutstanding()
+    public void EnsureCapacityGrowsWhileAllocationsOutstanding()
     {
         using WorldArena arena = new(128);
-        arena.AllocateDouble(8);
+        Span<double> first = arena.AllocateDouble(8);
+        first.Fill(5.0);
 
-        Assert.Throws<InvalidOperationException>(() => arena.EnsureCapacity(1 << 20));
+        arena.EnsureCapacity(1 << 20);
+
+        Assert.True(arena.Capacity >= 1 << 20);
+        Assert.All(first.ToArray(), value => Assert.Equal(5.0, value));
     }
 
     [Fact]
