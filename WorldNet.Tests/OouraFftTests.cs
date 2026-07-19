@@ -26,7 +26,7 @@ public unsafe class OouraFftTests
             waveform[i] = source[i];
         }
 
-        FftPlan plan = FftPlan.CreateRealToComplex(n, waveform, spectrum, arena);
+        FftPlan plan = FftPlan.BindRealToComplex(arena, n, waveform, spectrum);
         plan.Execute();
 
         Assert.Equal(n / 2 + 1, expected.Rows);
@@ -65,7 +65,7 @@ public unsafe class OouraFftTests
             spectrum[i].Imaginary = source[i * 2 + 1];
         }
 
-        FftPlan plan = FftPlan.CreateComplexToReal(n, spectrum, waveform, arena);
+        FftPlan plan = FftPlan.BindComplexToReal(arena, n, spectrum, waveform);
         plan.Execute();
 
         double[] actual = new double[n];
@@ -123,7 +123,7 @@ public unsafe class OouraFftTests
             input[i].Imaginary = source[i * 2 + 1];
         }
 
-        FftPlan plan = FftPlan.CreateComplexToComplex(n, input, output, direction, arena);
+        FftPlan plan = FftPlan.BindComplexToComplex(arena, n, input, output, direction);
         plan.Execute();
 
         double[] actual = new double[n * 2];
