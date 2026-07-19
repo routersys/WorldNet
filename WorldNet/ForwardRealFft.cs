@@ -29,8 +29,13 @@ internal unsafe struct ForwardRealFft
         ArenaAllocator allocator = new(arena);
         ForwardRealFft fft = default;
         Layout(ref allocator, fftSize, ref fft);
-        fft.FftSize = fftSize;
-        fft.ForwardFft.InitializeRealToComplex(fftSize, fft.Waveform, fft.Spectrum);
+        fft.Initialize(fftSize);
         return fft;
+    }
+
+    public void Initialize(int fftSize)
+    {
+        FftSize = fftSize;
+        ForwardFft.InitializeRealToComplex(fftSize, Waveform, Spectrum);
     }
 }
