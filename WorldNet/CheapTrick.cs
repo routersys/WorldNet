@@ -94,15 +94,17 @@ public static unsafe class CheapTrick
         double* smoothingLifter = scratch.SmoothingLifter;
         double* compensationLifter = scratch.CompensationLifter;
 
+        double doubledQ1 = 2.0 * q1;
+        double lifterBase = 1.0 - doubledQ1;
         smoothingLifter[0] = 1.0;
-        compensationLifter[0] = (1.0 - (2.0 * q1)) + (2.0 * q1);
+        compensationLifter[0] = lifterBase + doubledQ1;
         for (int i = 1; i <= scratch.ForwardRealFft.FftSize / 2; ++i)
         {
             double quefrency = (double)i / fs;
-            smoothingLifter[i] = Math.Sin(WorldConstants.Pi * f0 * quefrency) /
-                (WorldConstants.Pi * f0 * quefrency);
-            compensationLifter[i] = (1.0 - (2.0 * q1)) +
-                (2.0 * q1 * Math.Cos(2.0 * WorldConstants.Pi * quefrency * f0));
+            double phase = WorldConstants.Pi * f0 * quefrency;
+            smoothingLifter[i] = Math.Sin(phase) / phase;
+            compensationLifter[i] = lifterBase +
+                (doubledQ1 * Math.Cos(2.0 * WorldConstants.Pi * quefrency * f0));
         }
 
         double* waveform = scratch.ForwardRealFft.Waveform;
@@ -118,10 +120,11 @@ public static unsafe class CheapTrick
 
         FftComplex* forwardSpectrum = scratch.ForwardRealFft.Spectrum;
         FftComplex* inverseSpectrum = scratch.InverseRealFft.Spectrum;
+        double inverseFftSize = 1.0 / fftSize;
         for (int i = 0; i <= fftSize / 2; ++i)
         {
             inverseSpectrum[i].Real = forwardSpectrum[i].Real *
-                smoothingLifter[i] * compensationLifter[i] / fftSize;
+                smoothingLifter[i] * compensationLifter[i] * inverseFftSize;
             inverseSpectrum[i].Imaginary = 0.0;
         }
         scratch.InverseRealFft.InverseFft.Execute();
