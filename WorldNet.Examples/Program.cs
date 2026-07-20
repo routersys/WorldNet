@@ -15,6 +15,7 @@ try
         "aperiodicity" => AnalyzeAperiodicity(args),
         "synthesize" => SynthesizeFromFiles(args),
         "pipeline" => RunPipeline(args),
+        "bench" => Benchmark(args),
         _ => Usage(),
     };
 }
@@ -208,6 +209,61 @@ static double[] ReadAperiodicity(string path, int f0Length, int fftSize, int spe
     double[] decoded = new double[f0Length * spectrumLength];
     Codec.DecodeAperiodicity(coded, f0Length, fs, fftSize, decoded, arena);
     return decoded;
+}
+
+static double Measure(int repeats, Action action)
+{
+    double best = double.MaxValue;
+    for (int i = 0; i < repeats; ++i)
+    {
+        Stopwatch watch = Stopwatch.StartNew();
+        action();
+        watch.Stop();
+        best = Math.Min(best, watch.Elapsed.TotalMilliseconds);
+    }
+    return best;
+}
+
+static int Benchmark(string[] args)
+{
+    if (args.Length < 2)
+    {
+        return Usage();
+    }
+
+    double[] x = ReadWave(args[1], out int fs);
+    const int repeats = 2;
+    const double framePeriod = 5.0;
+
+    using WorldArena arena = new();
+    DioOption dioOption = DioOption.Default with { FramePeriod = framePeriod };
+    int f0Length = Dio.GetSamplesForDio(fs, x.Length, framePeriod);
+    double[] positions = new double[f0Length];
+    double[] f0 = new double[f0Length];
+    double[] refined = new double[f0Length];
+
+    Console.WriteLine($"BENCH Dio {Measure(repeats, () => Dio.Estimate(x, fs, dioOption, positions, f0, arena)):F2}");
+    Console.WriteLine($"BENCH StoneMask {Measure(repeats, () => StoneMask.Refine(x, fs, positions, f0, refined, arena)):F2}");
+
+    CheapTrickOption ctOption = CheapTrickOption.Create(fs);
+    int fftSize = ctOption.FftSize;
+    int spectrumLength = (fftSize / 2) + 1;
+    double[] spectrogram = new double[f0Length * spectrumLength];
+    double[] aperiodicity = new double[f0Length * spectrumLength];
+
+    Console.WriteLine($"BENCH CheapTrick {Measure(repeats, () => CheapTrick.Estimate(x, fs, ctOption, positions, refined, spectrogram, arena)):F2}");
+    Console.WriteLine($"BENCH D4C {Measure(repeats, () => D4C.Estimate(x, fs, D4COption.Default, positions, refined, fftSize, aperiodicity, arena)):F2}");
+
+    int yLength = (int)((f0Length - 1) * framePeriod / 1000.0 * fs) + 1;
+    double[] y = new double[yLength];
+    Console.WriteLine($"BENCH Synthesis {Measure(repeats, () => Synthesis.Synthesize(refined, spectrogram, aperiodicity, fftSize, framePeriod, fs, y, arena)):F2}");
+
+    HarvestOption hOption = HarvestOption.Default with { FramePeriod = framePeriod };
+    int hLength = Harvest.GetSamplesForHarvest(fs, x.Length, framePeriod);
+    double[] hPositions = new double[hLength];
+    double[] hF0 = new double[hLength];
+    Console.WriteLine($"BENCH Harvest {Measure(repeats, () => Harvest.Estimate(x, fs, hOption, hPositions, hF0, arena)):F2}");
+    return 0;
 }
 
 static int RunPipeline(string[] args)
