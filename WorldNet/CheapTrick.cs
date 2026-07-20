@@ -171,11 +171,17 @@ public static unsafe class CheapTrick
                 WorldMath.MinInt(xLength - 1, WorldMath.MaxInt(0, origin + baseIndex[i]));
         }
 
+        for (int i = 0; i <= halfWindowLength; ++i)
+        {
+            double position = baseIndex[halfWindowLength + i] / 1.5 / fs;
+            double value = (0.5 * Math.Cos(WorldConstants.Pi * position * currentF0)) + 0.5;
+            window[halfWindowLength + i] = value;
+            window[halfWindowLength - i] = value;
+        }
+
         double average = 0.0;
         for (int i = 0; i <= halfWindowLength * 2; ++i)
         {
-            double position = baseIndex[i] / 1.5 / fs;
-            window[i] = (0.5 * Math.Cos(WorldConstants.Pi * position * currentF0)) + 0.5;
             average += window[i] * window[i];
         }
         average = Math.Sqrt(average);
