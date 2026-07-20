@@ -179,10 +179,7 @@ public static unsafe class CheapTrick
             average += window[i] * window[i];
         }
         average = Math.Sqrt(average);
-        for (int i = 0; i <= halfWindowLength * 2; ++i)
-        {
-            window[i] /= average;
-        }
+        VectorOperations.DivideByScalar(window, (halfWindowLength * 2) + 1, average);
     }
 
     private static void GetWindowedWaveform(double* x, int xLength, int fs, double currentF0,
@@ -212,10 +209,8 @@ public static unsafe class CheapTrick
             tmpWeight2 += window[i];
         }
         double weightingCoefficient = tmpWeight1 / tmpWeight2;
-        for (int i = 0; i <= halfWindowLength * 2; ++i)
-        {
-            waveform[i] -= window[i] * weightingCoefficient;
-        }
+        VectorOperations.SubtractScaled(
+            waveform, window, (halfWindowLength * 2) + 1, weightingCoefficient);
     }
 
     private static void AddInfinitesimalNoise(double* inputSpectrum, int fftSize,
