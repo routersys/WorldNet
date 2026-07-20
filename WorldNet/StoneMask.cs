@@ -32,21 +32,75 @@ public static unsafe class StoneMask
             return;
         }
 
+        using WorldArenaScope scope = arena.BeginScope();
+
         fixed (double* xPointer = x)
         fixed (double* positionPointer = temporalPositions)
         fixed (double* f0Pointer = f0)
         fixed (double* refinedPointer = refinedF0)
         {
+            int* sizes = (int*)arena.AllocateRaw(MaximumRefineSizes, sizeof(int));
+            int* lengths = (int*)arena.AllocateRaw(MaximumRefineSizes, sizeof(int));
+            int distinct = 0;
+
             for (int i = 0; i < f0.Length; i++)
             {
-                refinedPointer[i] = GetRefinedF0(
-                    xPointer, x.Length, fs, positionPointer[i], f0Pointer[i], arena);
+                double initialF0 = f0Pointer[i];
+                if (initialF0 <= WorldConstants.FloorF0StoneMask || initialF0 > fs / 12.0)
+                {
+                    continue;
+                }
+                int halfWindowLength = (int)((1.5 * fs / initialF0) + 1.0);
+                int baseTimeLength = (halfWindowLength * 2) + 1;
+                int fftSize = GetRefineFftSize(halfWindowLength);
+
+                int index = 0;
+                while (index < distinct && sizes[index] != fftSize)
+                {
+                    ++index;
+                }
+                if (index == distinct)
+                {
+                    if (distinct == MaximumRefineSizes)
+                    {
+                        throw new InvalidOperationException(
+                            "The refinement stage needs more distinct FFT sizes than expected.");
+                    }
+                    sizes[distinct] = fftSize;
+                    lengths[distinct] = baseTimeLength;
+                    ++distinct;
+                }
+                else if (baseTimeLength > lengths[index])
+                {
+                    lengths[index] = baseTimeLength;
+                }
+            }
+
+            StoneMaskScratch* scratches = (StoneMaskScratch*)arena.AllocateRaw(
+                distinct, (nuint)sizeof(StoneMaskScratch));
+            for (int i = 0; i < distinct; ++i)
+            {
+                scratches[i] = StoneMaskScratch.Bind(arena, lengths[i], sizes[i]);
+            }
+
+            for (int i = 0; i < f0.Length; i++)
+            {
+                refinedPointer[i] = GetRefinedF0(xPointer, x.Length, fs, positionPointer[i],
+                    f0Pointer[i], scratches, sizes, distinct);
             }
         }
     }
 
+    private const int MaximumRefineSizes = 32;
+
+    private static int GetRefineFftSize(int halfWindowLength)
+    {
+        return (int)Math.Pow(
+            2.0, 2.0 + (int)(Math.Log((halfWindowLength * 2.0) + 1.0) / WorldConstants.Log2));
+    }
+
     private static double GetRefinedF0(double* x, int xLength, int fs, double currentPosition,
-        double initialF0, WorldArena arena)
+        double initialF0, StoneMaskScratch* scratches, int* sizes, int distinct)
     {
         if (initialF0 <= WorldConstants.FloorF0StoneMask || initialF0 > fs / 12.0)
         {
@@ -56,11 +110,14 @@ public static unsafe class StoneMask
         int halfWindowLength = (int)((1.5 * fs / initialF0) + 1.0);
         double windowLengthInTime = ((2.0 * halfWindowLength) + 1.0) / fs;
         int baseTimeLength = (halfWindowLength * 2) + 1;
-        int fftSize = (int)Math.Pow(
-            2.0, 2.0 + (int)(Math.Log((halfWindowLength * 2.0) + 1.0) / WorldConstants.Log2));
+        int fftSize = GetRefineFftSize(halfWindowLength);
 
-        using WorldArenaScope scope = arena.BeginScope();
-        StoneMaskScratch scratch = StoneMaskScratch.Bind(arena, baseTimeLength, fftSize);
+        int index = 0;
+        while (index < distinct && sizes[index] != fftSize)
+        {
+            ++index;
+        }
+        StoneMaskScratch scratch = scratches[index];
 
         for (int i = 0; i < baseTimeLength; i++)
         {
