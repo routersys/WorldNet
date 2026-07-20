@@ -752,6 +752,12 @@ int main(int argc, char **argv) {
   int fs, nbit;
   wavread(argv[1], &fs, &nbit, x);
 
+  if (getenv("WORLD_BENCH_ONLY")) {
+    BenchmarkStages(x, x_length, fs);
+    delete[] x;
+    return 0;
+  }
+
   DumpFft();
   DumpMatlabRound();
   DumpDecimate();
@@ -766,7 +772,6 @@ int main(int argc, char **argv) {
   DumpTranscendentals();
   DumpPipeline(x, x_length, fs);
 
-  if (getenv("WORLD_BENCH_ONLY")) { BenchmarkStages(x, x_length, fs); return 0; }
   BenchmarkStages(x, x_length, fs);
   printf("reference data written to %s\n", g_outdir);
   delete[] x;
