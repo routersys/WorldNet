@@ -127,7 +127,7 @@ The test suite compares against dumps produced by the original C++ built with MS
 
 The transcendental functions are measured separately. `Math.Cos`, `Math.Sin`, `Math.Log`, `Math.Exp` and `Math.Log10` return exactly the same doubles as the MSVC runtime over the sampled ranges. `Math.Pow(10, v)` and the squaring `v * v` differ from the MSVC `pow` by at most one unit in the last place on fewer than one percent of the sampled inputs, and the remaining tolerances above follow from this.
 
-Beyond equivalence, the suite covers degenerate input such as silence, direct current and white noise, extremely short input, determinism across repeated runs, thread safety with one arena per thread, operation on a caller-supplied arena, and full release of the arena after the pipeline. The suite contains 330 tests and all of them pass.
+Beyond equivalence, the suite covers degenerate input such as silence, direct current and white noise, extremely short input, determinism across repeated runs, thread safety with one arena per thread, operation on a caller-supplied arena, and full release of the arena after the pipeline. The suite contains 332 tests and all of them pass.
 
 ### 7. Performance
 
@@ -139,12 +139,12 @@ Measured outside CI on an Intel Core i7-1360P under Windows 11, with the sample 
 
 | Stage | C++ with MSVC | This port with Native AOT | Ratio |
 |---|---:|---:|---:|
-| Dio | 16.75 | 7.59 | 2.21x |
-| StoneMask | 17.30 | 5.76 | 3.00x |
-| CheapTrick | 14.60 | 15.03 | 0.97x |
-| D4C | 59.27 | 57.54 | 1.03x |
-| Synthesis | 17.78 | 15.54 | 1.14x |
-| Harvest | 284.32 | 219.43 | 1.30x |
+| Dio | 9.81 | 3.86 | 2.54x |
+| StoneMask | 9.40 | 3.03 | 3.10x |
+| CheapTrick | 7.84 | 8.66 | 0.91x |
+| D4C | 33.28 | 29.00 | 1.15x |
+| Synthesis | 9.78 | 8.98 | 1.09x |
+| Harvest | 161.49 | 122.36 | 1.32x |
 
 A ratio above 1.00 means this port is faster than the original C++.
 
