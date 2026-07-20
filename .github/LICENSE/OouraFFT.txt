@@ -1,0 +1,24 @@
+Ooura FFT Package
+
+The fast Fourier transform in WorldNet is a port of the FFT routines that WORLD
+carries in src/fft.cpp. Those routines were written by Takuya Ooura and are
+published at the following pages.
+
+    http://www.kurims.kyoto-u.ac.jp/~ooura/index.html
+    https://www.kurims.kyoto-u.ac.jp/~ooura/fft.html
+
+The author states the following terms for the package.
+
+    Copyright Takuya OOURA, 1996-2001
+
+    You may use, copy, modify and distribute this code for any purpose
+    (include commercial use) and without fee. Please refer to this package
+    when you modify this code.
+
+WORLD records the origin of these routines in the header of src/fft.cpp.
+
+    This file represents the functions about FFT (Fast Fourier Transform)
+    implemented by Mr. Ooura, and wrapper functions implemented by M. Morise.
+
+WORLD itself is distributed under the modified BSD license reproduced in
+WORLD.txt in this directory.
