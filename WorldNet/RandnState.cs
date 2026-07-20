@@ -17,23 +17,37 @@ internal struct RandnState
 
     public double Next()
     {
-        uint t = X ^ (X << 11);
-        X = Y;
-        Y = Z;
-        Z = W;
-        W = (W ^ (W >> 19)) ^ (t ^ (t >> 8));
+        uint a = X;
+        uint b = Y;
+        uint c = Z;
+        uint d = W;
+        uint accumulator = 0;
+        uint t;
 
-        uint accumulator = W >> 4;
-        for (int i = 0; i < 11; ++i)
+        for (int i = 0; i < 3; ++i)
         {
-            t = X ^ (X << 11);
-            X = Y;
-            Y = Z;
-            Z = W;
-            W = (W ^ (W >> 19)) ^ (t ^ (t >> 8));
-            accumulator += W >> 4;
+            t = a ^ (a << 11);
+            a = (d ^ (d >> 19)) ^ (t ^ (t >> 8));
+            accumulator += a >> 4;
+
+            t = b ^ (b << 11);
+            b = (a ^ (a >> 19)) ^ (t ^ (t >> 8));
+            accumulator += b >> 4;
+
+            t = c ^ (c << 11);
+            c = (b ^ (b >> 19)) ^ (t ^ (t >> 8));
+            accumulator += c >> 4;
+
+            t = d ^ (d << 11);
+            d = (c ^ (c >> 19)) ^ (t ^ (t >> 8));
+            accumulator += d >> 4;
         }
 
-        return accumulator / 268435456.0 - 6.0;
+        X = a;
+        Y = b;
+        Z = c;
+        W = d;
+
+        return (accumulator / 268435456.0) - 6.0;
     }
 }
