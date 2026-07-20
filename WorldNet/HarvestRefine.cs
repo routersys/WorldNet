@@ -138,9 +138,17 @@ public static unsafe partial class Harvest
             refinedScore, scratch.AmplitudeList, scratch.InstantaneousFrequencyList);
     }
 
+    private const int MaximumRefineSizes = 32;
+
+    private static int GetRefineFftSize(int halfWindowLength)
+    {
+        return (int)Math.Pow(2.0,
+            2.0 + (int)(Math.Log((halfWindowLength * 2.0) + 1.0) / WorldConstants.Log2));
+    }
+
     private static void GetRefinedF0(double* x, int xLength, double fs, double currentPosition,
         double currentF0, double f0Floor, double f0Ceil, double* refinedF0, double* refinedScore,
-        WorldArena arena)
+        HarvestRefineScratch* scratches, int* sizes, int distinct)
     {
         if (currentF0 <= 0.0)
         {
@@ -152,11 +160,15 @@ public static unsafe partial class Harvest
         int halfWindowLength = (int)((1.5 * fs / currentF0) + 1.0);
         double windowLengthInTime = ((2.0 * halfWindowLength) + 1.0) / fs;
         int baseTimeLength = (halfWindowLength * 2) + 1;
-        int fftSize = (int)Math.Pow(2.0,
-            2.0 + (int)(Math.Log((halfWindowLength * 2.0) + 1.0) / WorldConstants.Log2));
+        int fftSize = GetRefineFftSize(halfWindowLength);
 
-        using WorldArenaScope scope = arena.BeginScope();
-        HarvestRefineScratch scratch = HarvestRefineScratch.Bind(arena, fftSize, baseTimeLength);
+        int index = 0;
+        while (index < distinct && sizes[index] != fftSize)
+        {
+            ++index;
+        }
+
+        HarvestRefineScratch scratch = scratches[index];
         double* baseTime = scratch.BaseTime;
         for (int i = 0; i < baseTimeLength; i++)
         {
@@ -177,12 +189,62 @@ public static unsafe partial class Harvest
         double* temporalPositions, int f0Length, int maxCandidates, double f0Floor, double f0Ceil,
         double** refinedF0Candidates, double** f0Scores, WorldArena arena)
     {
+        using WorldArenaScope scope = arena.BeginScope();
+
+        int* sizes = (int*)arena.AllocateRaw(MaximumRefineSizes, sizeof(int));
+        int* lengths = (int*)arena.AllocateRaw(MaximumRefineSizes, sizeof(int));
+        int distinct = 0;
+
+        for (int i = 0; i < f0Length; i++)
+        {
+            for (int j = 0; j < maxCandidates; ++j)
+            {
+                double currentF0 = refinedF0Candidates[i][j];
+                if (currentF0 <= 0.0)
+                {
+                    continue;
+                }
+                int halfWindowLength = (int)((1.5 * fs / currentF0) + 1.0);
+                int baseTimeLength = (halfWindowLength * 2) + 1;
+                int fftSize = GetRefineFftSize(halfWindowLength);
+
+                int index = 0;
+                while (index < distinct && sizes[index] != fftSize)
+                {
+                    ++index;
+                }
+                if (index == distinct)
+                {
+                    if (distinct == MaximumRefineSizes)
+                    {
+                        throw new InvalidOperationException(
+                            "The refinement stage needs more distinct FFT sizes than expected.");
+                    }
+                    sizes[distinct] = fftSize;
+                    lengths[distinct] = baseTimeLength;
+                    ++distinct;
+                }
+                else if (baseTimeLength > lengths[index])
+                {
+                    lengths[index] = baseTimeLength;
+                }
+            }
+        }
+
+        HarvestRefineScratch* scratches = (HarvestRefineScratch*)arena.AllocateRaw(
+            distinct, (nuint)sizeof(HarvestRefineScratch));
+        for (int i = 0; i < distinct; ++i)
+        {
+            scratches[i] = HarvestRefineScratch.Bind(arena, sizes[i], lengths[i]);
+        }
+
         for (int i = 0; i < f0Length; i++)
         {
             for (int j = 0; j < maxCandidates; ++j)
             {
                 GetRefinedF0(x, xLength, fs, temporalPositions[i], refinedF0Candidates[i][j],
-                    f0Floor, f0Ceil, &refinedF0Candidates[i][j], &f0Scores[i][j], arena);
+                    f0Floor, f0Ceil, &refinedF0Candidates[i][j], &f0Scores[i][j], scratches,
+                    sizes, distinct);
             }
         }
     }
