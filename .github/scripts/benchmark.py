@@ -6,8 +6,8 @@ import sys
 from datetime import datetime, timezone
 
 STAGES = ["Dio", "StoneMask", "CheapTrick", "D4C", "Synthesis", "Harvest"]
-BEGIN = "<!-- BENCHMARK:BEGIN -->"
-END = "<!-- BENCHMARK:END -->"
+BEGIN = "<!-- BENCHMARK:CI:BEGIN -->"
+END = "<!-- BENCHMARK:CI:END -->"
 
 
 def run_once(command, environment):
@@ -72,8 +72,6 @@ def english_block(cpp, aot, runs, cpu, stamp, commit):
     for stage, a, b, ratio in rows(cpp, aot):
         lines.append(f"| {stage} | {a:.2f} | {b:.2f} | {ratio:.2f}x |")
     lines.append("")
-    lines.append("A ratio above 1.00 means this port is faster than the original C++.")
-    lines.append("")
     lines.append(END)
     return "\n".join(lines)
 
@@ -94,8 +92,6 @@ def japanese_block(cpp, aot, runs, cpu, stamp, commit):
     ]
     for stage, a, b, ratio in rows(cpp, aot):
         lines.append(f"| {stage} | {a:.2f} | {b:.2f} | {ratio:.2f}x |")
-    lines.append("")
-    lines.append("比が1.00を超える段は、本移植が原典のC++より速いことを示します。")
     lines.append("")
     lines.append(END)
     return "\n".join(lines)
@@ -119,7 +115,7 @@ def main():
     parser.add_argument("--aot", required=True)
     parser.add_argument("--wav", required=True)
     parser.add_argument("--data", required=True)
-    parser.add_argument("--runs", type=int, default=10)
+    parser.add_argument("--runs", type=int, default=20)
     parser.add_argument("--readme", required=True)
     parser.add_argument("--readme-ja", required=True)
     parser.add_argument("--commit", default="unknown")
