@@ -4,7 +4,7 @@
 [![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](#)
 [![Release](https://img.shields.io/github/v/release/routersys/WorldNet.svg)](https://github.com/routersys/WorldNet/releases)
 
-English | [日本語](README.ja.md)
+English | [日本語](https://github.com/routersys/WorldNet/blob/main/README.ja.md)
 
 ---
 
@@ -27,6 +27,7 @@ Correctness is not asserted from reading the source: each stage is compared agai
    - [4. Spectral envelope coding](#4-spectral-envelope-coding)
    - [5. Zero allocation and the arena](#5-zero-allocation-and-the-arena)
    - [6. Numerical verification](#6-numerical-verification)
+   - [7. Performance](#7-performance)
 5. [API Reference](#api-reference)
    - [Analysis](#analysis)
    - [Synthesis](#synthesis)
@@ -128,6 +129,21 @@ The transcendental functions are measured separately. `Math.Cos`, `Math.Sin`, `M
 
 Beyond equivalence, the suite covers degenerate input such as silence, direct current and white noise, extremely short input, determinism across repeated runs, thread safety with one arena per thread, operation on a caller-supplied arena, and full release of the arena after the pipeline. The suite contains 330 tests and all of them pass.
 
+### 7. Performance
+
+The table compares the original C++ compiled with MSVC at `/O2` against this port published with Native AOT. Both are compiled ahead of time, so the comparison is like for like. Figures are the best of ten runs in milliseconds, measured on an Intel Core i7-1360P under Windows 11 while analysing the 22050 Hz reference waveform of 17500 samples with a 5 ms frame period.
+
+| Stage | C++ with MSVC | This port with Native AOT |
+|---|---:|---:|
+| Dio | 18.23 | 10.00 |
+| StoneMask | 9.21 | 7.42 |
+| CheapTrick | 20.01 | 21.27 |
+| D4C | 67.04 | 91.94 |
+| Synthesis | 17.89 | 19.22 |
+| Harvest | 356.30 | 306.08 |
+
+Figures obtained through the just-in-time compiler are deliberately absent. The benchmark repeats each stage only twice, which is not enough for tiered compilation to settle. Disabling tiering with `DOTNET_TieredCompilation=0` brings the just-in-time figures back in line with the Native AOT column, which shows that the gap is a warm-up artefact of the measurement rather than a property of the port.
+
 ---
 
 ## API Reference
@@ -228,7 +244,7 @@ Beyond equivalence, the suite covers degenerate input such as silence, direct cu
 
 ## Notes
 
-- Processing cost: Harvest is by far the most expensive stage, followed by D4C. Dio with a higher `Speed` is the cheapest way to obtain a contour. Timings vary considerably between runs on the same machine, so no fixed figures are published here. `WorldNet.Examples bench <input.wav>` reports the per-stage timings on your own hardware, and the reference harness prints the same figures for the original C++ when `WORLD_BENCH_ONLY` is set.
+- Processing cost: Harvest is by far the most expensive stage, followed by D4C. Dio with a higher `Speed` is the cheapest way to obtain a contour. The figures in the performance table are indicative of one machine and vary between runs. `WorldNet.Examples bench <input.wav>` reports the per-stage timings on your own hardware, and the reference harness prints the same figures for the original C++ when `WORLD_BENCH_ONLY` is set.
 - Arena reuse: the arena grows during the first call and performs no further allocation. Creating a new arena for every call defeats the purpose and reintroduces native allocation.
 - Determinism: the pipeline produces identical output across repeated runs. The pseudo-random generator used by D4C and by the synthesizer is the xorshift generator of the original, reseeded to the same state, and it reproduces the original sequence and its final state exactly.
 - Scratch layout: a type marked with `[ScratchLayout]` must expose a `Layout` method generic over `IScratchAllocator`. The generator emits `GetRequiredArenaBytes` and `Bind` with a matching parameter list, and skips whichever of the two the type already declares.
@@ -249,7 +265,7 @@ The author accepts no liability for any damage arising from the use of or the in
 
 ## Third-Party Licenses
 
-WorldNet is a derivative work of the software below. The full license texts are stored in the repository under [`.github/LICENSE/WORLD.txt`](.github/LICENSE/WORLD.txt) and [`.github/LICENSE/OouraFFT.txt`](.github/LICENSE/OouraFFT.txt).
+WorldNet is a derivative work of the software below. The full license texts are stored in the repository under [`.github/LICENSE/WORLD.txt`](https://github.com/routersys/WorldNet/blob/main/.github/LICENSE/WORLD.txt) and [`.github/LICENSE/OouraFFT.txt`](https://github.com/routersys/WorldNet/blob/main/.github/LICENSE/OouraFFT.txt).
 
 WORLD is distributed under the modified BSD license, which requires that redistributions of source code retain its copyright notice, the list of conditions and the disclaimer. Those files carry that text unmodified. No third-party source code is vendored into this repository, and the reference harness downloads WORLD on demand.
 
@@ -262,4 +278,4 @@ WORLD is distributed under the modified BSD license, which requires that redistr
 
 ## License
 
-[MIT License](LICENSE.txt)
+[MIT License](https://github.com/routersys/WorldNet/blob/main/LICENSE.txt)
