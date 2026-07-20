@@ -67,7 +67,7 @@ jobs:
 
       - name: 計測を実行して README を更新
         run: |
-          AOT=$(find WorldNet.Examples/bin -name WorldNet.Examples.exe -path "*publish*" | head -1)
+          AOT=$(find WorldNet.Examples/bin -name WorldNet.Examples.exe -path "*publish*" -print -quit)
           if [ -z "${AOT}" ]; then
             echo "NativeAOT の実行ファイルが見つかりません"
             exit 1
