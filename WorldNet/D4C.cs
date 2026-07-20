@@ -203,21 +203,20 @@ public static unsafe class D4C
         int fftSize, double currentPosition, in ForwardRealFft forwardRealFft, double* centroid,
         WorldArena arena, ref RandnState randnState)
     {
-        for (int i = 0; i < fftSize; ++i)
-        {
-            forwardRealFft.Waveform[i] = 0.0;
-        }
+        new Span<double>(forwardRealFft.Waveform, fftSize).Clear();
         GetWindowedWaveform(x, xLength, fs, currentF0, currentPosition, WorldConstants.Blackman,
             4.0, forwardRealFft.Waveform, arena, ref randnState);
 
+        int powerLength = MatlabFunctions.MatlabRound(2.0 * fs / currentF0) * 2;
         double power = 0.0;
-        for (int i = 0; i <= MatlabFunctions.MatlabRound(2.0 * fs / currentF0) * 2; ++i)
+        for (int i = 0; i <= powerLength; ++i)
         {
             power += forwardRealFft.Waveform[i] * forwardRealFft.Waveform[i];
         }
-        for (int i = 0; i <= MatlabFunctions.MatlabRound(2.0 * fs / currentF0) * 2; ++i)
+        double normalizer = Math.Sqrt(power);
+        for (int i = 0; i <= powerLength; ++i)
         {
-            forwardRealFft.Waveform[i] /= Math.Sqrt(power);
+            forwardRealFft.Waveform[i] /= normalizer;
         }
 
         forwardRealFft.ForwardFft.Execute();
@@ -268,10 +267,7 @@ public static unsafe class D4C
         double currentF0, int fftSize, double currentPosition, in ForwardRealFft forwardRealFft,
         double* smoothedPowerSpectrum, WorldArena arena, ref RandnState randnState)
     {
-        for (int i = 0; i < fftSize; ++i)
-        {
-            forwardRealFft.Waveform[i] = 0.0;
-        }
+        new Span<double>(forwardRealFft.Waveform, fftSize).Clear();
         GetWindowedWaveform(x, xLength, fs, currentF0, currentPosition, WorldConstants.Hanning,
             4.0, forwardRealFft.Waveform, arena, ref randnState);
 
@@ -314,10 +310,7 @@ public static unsafe class D4C
         int boundary = MatlabFunctions.MatlabRound(fftSize * 8.0 / windowLength);
         int halfWindowLength = windowLength / 2;
 
-        for (int i = 0; i < fftSize; ++i)
-        {
-            forwardRealFft.Waveform[i] = 0.0;
-        }
+        new Span<double>(forwardRealFft.Waveform, fftSize).Clear();
 
         using WorldArenaScope scope = arena.BeginScope();
         double* powerSpectrum = (double*)arena.AllocateRaw((fftSize / 2) + 1, sizeof(double));
