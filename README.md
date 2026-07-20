@@ -139,12 +139,12 @@ Measured outside CI on an Intel Core i7-1360P under Windows 11. Both builds were
 
 | Stage | C++ with MSVC | This port with Native AOT | Ratio |
 |---|---:|---:|---:|
-| Dio | 16.35 | 7.98 | 2.05x |
-| StoneMask | 16.26 | 6.29 | 2.59x |
-| CheapTrick | 15.36 | 20.43 | 0.75x |
-| D4C | 57.33 | 85.40 | 0.67x |
-| Synthesis | 19.21 | 17.62 | 1.09x |
-| Harvest | 301.39 | 237.10 | 1.27x |
+| Dio | 15.77 | 7.85 | 2.01x |
+| StoneMask | 15.65 | 6.05 | 2.59x |
+| CheapTrick | 15.44 | 19.57 | 0.79x |
+| D4C | 59.18 | 69.75 | 0.85x |
+| Synthesis | 18.70 | 16.80 | 1.11x |
+| Harvest | 286.80 | 217.97 | 1.32x |
 
 A ratio above 1.00 means this port is faster than the original C++.
 
