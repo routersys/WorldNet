@@ -1,3 +1,6 @@
+using System.Numerics;
+using System.Runtime.CompilerServices;
+
 namespace WorldNet;
 
 internal enum FftDirection
@@ -128,34 +131,19 @@ internal unsafe struct FftPlan
     {
         if (CIn is null)
         {
-            for (int i = 0; i < N; ++i)
-            {
-                Input[i] = In[i];
-            }
+            Copy(In, Input, N);
             OouraFft.Rdft(N, 1, Input, Ip, W);
             COut[0].Real = Input[0];
             COut[0].Imaginary = 0.0;
-            for (int i = 1; i < N / 2; ++i)
-            {
-                COut[i].Real = Input[i * 2];
-                COut[i].Imaginary = -Input[i * 2 + 1];
-            }
+            CopyConjugate(Input + 2, (double*)(COut + 1), N - 2);
             COut[N / 2].Real = Input[1];
             COut[N / 2].Imaginary = 0.0;
         }
         else
         {
-            for (int i = 0; i < N; ++i)
-            {
-                Input[i * 2] = CIn[i].Real;
-                Input[i * 2 + 1] = CIn[i].Imaginary;
-            }
+            Copy((double*)CIn, Input, N * 2);
             OouraFft.Cdft(N * 2, 1, Input, Ip, W);
-            for (int i = 0; i < N; ++i)
-            {
-                COut[i].Real = Input[i * 2];
-                COut[i].Imaginary = -Input[i * 2 + 1];
-            }
+            CopyConjugate(Input, (double*)COut, N * 2);
         }
     }
 
@@ -163,32 +151,76 @@ internal unsafe struct FftPlan
     {
         if (COut is null)
         {
-            Input[0] = CIn[0].Real;
-            Input[1] = CIn[N / 2].Real;
-            for (int i = 1; i < N / 2; ++i)
-            {
-                Input[i * 2] = CIn[i].Real;
-                Input[i * 2 + 1] = -CIn[i].Imaginary;
-            }
+            double nyquist = CIn[N / 2].Real;
+            CopyConjugate((double*)CIn, Input, N);
+            Input[1] = nyquist;
             OouraFft.Rdft(N, -1, Input, Ip, W);
-            for (int i = 0; i < N; ++i)
-            {
-                Out[i] = Input[i] * 2.0;
-            }
+            Scale(Input, Out, N, 2.0);
         }
         else
         {
-            for (int i = 0; i < N; ++i)
-            {
-                Input[i * 2] = CIn[i].Real;
-                Input[i * 2 + 1] = CIn[i].Imaginary;
-            }
+            Copy((double*)CIn, Input, N * 2);
             OouraFft.Cdft(N * 2, -1, Input, Ip, W);
-            for (int i = 0; i < N; ++i)
+            CopyConjugate(Input, (double*)COut, N * 2);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void Copy(double* source, double* destination, int count)
+    {
+        Buffer.MemoryCopy(source, destination, (long)count * sizeof(double),
+            (long)count * sizeof(double));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void CopyConjugate(double* source, double* destination, int count)
+    {
+        int i = 0;
+        if (Vector.IsHardwareAccelerated && count >= Vector<double>.Count)
+        {
+            Vector<double> sign = AlternatingSign;
+            int limit = count - Vector<double>.Count;
+            for (; i <= limit; i += Vector<double>.Count)
             {
-                COut[i].Real = Input[i * 2];
-                COut[i].Imaginary = -Input[i * 2 + 1];
+                Unsafe.WriteUnaligned(destination + i,
+                    Unsafe.ReadUnaligned<Vector<double>>(source + i) * sign);
             }
         }
+        for (; i < count; ++i)
+        {
+            destination[i] = (i & 1) == 0 ? source[i] : -source[i];
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void Scale(double* source, double* destination, int count, double factor)
+    {
+        int i = 0;
+        if (Vector.IsHardwareAccelerated && count >= Vector<double>.Count)
+        {
+            Vector<double> scale = new(factor);
+            int limit = count - Vector<double>.Count;
+            for (; i <= limit; i += Vector<double>.Count)
+            {
+                Unsafe.WriteUnaligned(destination + i,
+                    Unsafe.ReadUnaligned<Vector<double>>(source + i) * scale);
+            }
+        }
+        for (; i < count; ++i)
+        {
+            destination[i] = source[i] * factor;
+        }
+    }
+
+    private static readonly Vector<double> AlternatingSign = CreateAlternatingSign();
+
+    private static Vector<double> CreateAlternatingSign()
+    {
+        Span<double> values = stackalloc double[Vector<double>.Count];
+        for (int i = 0; i < values.Length; ++i)
+        {
+            values[i] = (i & 1) == 0 ? 1.0 : -1.0;
+        }
+        return new Vector<double>(values);
     }
 }
