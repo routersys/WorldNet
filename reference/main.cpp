@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <chrono>
 
 #include "audioio.h"
 #include "parameterio.h"
@@ -631,6 +632,108 @@ void DumpTranscendentals() {
   delete[] in2;
 }
 
+
+double ElapsedMs(std::chrono::steady_clock::time_point a,
+    std::chrono::steady_clock::time_point b) {
+  return std::chrono::duration<double, std::milli>(b - a).count();
+}
+
+void BenchmarkStages(const double *x, int x_length, int fs) {
+  const double frame_period = 5.0;
+  const int repeats = 2;
+
+  DioOption dio_option;
+  InitializeDioOption(&dio_option);
+  dio_option.frame_period = frame_period;
+  int f0_length = GetSamplesForDIO(fs, x_length, frame_period);
+  double *tp = new double[f0_length];
+  double *f0 = new double[f0_length];
+  double *rf0 = new double[f0_length];
+
+  double best;
+  std::chrono::steady_clock::time_point a, b;
+
+  best = 1e30;
+  for (int r = 0; r < repeats; ++r) {
+    a = std::chrono::steady_clock::now();
+    Dio(x, x_length, fs, &dio_option, tp, f0);
+    b = std::chrono::steady_clock::now();
+    if (ElapsedMs(a, b) < best) best = ElapsedMs(a, b);
+  }
+  printf("BENCH Dio %.2f\n", best);
+
+  best = 1e30;
+  for (int r = 0; r < repeats; ++r) {
+    a = std::chrono::steady_clock::now();
+    StoneMask(x, x_length, fs, tp, f0, f0_length, rf0);
+    b = std::chrono::steady_clock::now();
+    if (ElapsedMs(a, b) < best) best = ElapsedMs(a, b);
+  }
+  printf("BENCH StoneMask %.2f\n", best);
+
+  CheapTrickOption ct_option;
+  InitializeCheapTrickOption(fs, &ct_option);
+  int fft_size = ct_option.fft_size;
+  int spectrum_length = fft_size / 2 + 1;
+  double **sp = new double *[f0_length];
+  double **ap = new double *[f0_length];
+  for (int i = 0; i < f0_length; ++i) {
+    sp[i] = new double[spectrum_length];
+    ap[i] = new double[spectrum_length];
+  }
+
+  best = 1e30;
+  for (int r = 0; r < repeats; ++r) {
+    a = std::chrono::steady_clock::now();
+    CheapTrick(x, x_length, fs, tp, rf0, f0_length, &ct_option, sp);
+    b = std::chrono::steady_clock::now();
+    if (ElapsedMs(a, b) < best) best = ElapsedMs(a, b);
+  }
+  printf("BENCH CheapTrick %.2f\n", best);
+
+  D4COption d4c_option;
+  InitializeD4COption(&d4c_option);
+  best = 1e30;
+  for (int r = 0; r < repeats; ++r) {
+    a = std::chrono::steady_clock::now();
+    D4C(x, x_length, fs, tp, rf0, f0_length, fft_size, &d4c_option, ap);
+    b = std::chrono::steady_clock::now();
+    if (ElapsedMs(a, b) < best) best = ElapsedMs(a, b);
+  }
+  printf("BENCH D4C %.2f\n", best);
+
+  int y_length = (int)((f0_length - 1) * frame_period / 1000.0 * fs) + 1;
+  double *y = new double[y_length];
+  best = 1e30;
+  for (int r = 0; r < repeats; ++r) {
+    a = std::chrono::steady_clock::now();
+    Synthesis(rf0, f0_length, sp, ap, fft_size, frame_period, fs, y_length, y);
+    b = std::chrono::steady_clock::now();
+    if (ElapsedMs(a, b) < best) best = ElapsedMs(a, b);
+  }
+  printf("BENCH Synthesis %.2f\n", best);
+
+  HarvestOption h_option;
+  InitializeHarvestOption(&h_option);
+  h_option.frame_period = frame_period;
+  int h_length = GetSamplesForHarvest(fs, x_length, frame_period);
+  double *htp = new double[h_length];
+  double *hf0 = new double[h_length];
+  best = 1e30;
+  for (int r = 0; r < repeats; ++r) {
+    a = std::chrono::steady_clock::now();
+    Harvest(x, x_length, fs, &h_option, htp, hf0);
+    b = std::chrono::steady_clock::now();
+    if (ElapsedMs(a, b) < best) best = ElapsedMs(a, b);
+  }
+  printf("BENCH Harvest %.2f\n", best);
+
+  delete[] hf0; delete[] htp; delete[] y;
+  for (int i = 0; i < f0_length; ++i) { delete[] sp[i]; delete[] ap[i]; }
+  delete[] sp; delete[] ap;
+  delete[] rf0; delete[] f0; delete[] tp;
+}
+
 }  // namespace
 
 int main(int argc, char **argv) {
@@ -663,6 +766,8 @@ int main(int argc, char **argv) {
   DumpTranscendentals();
   DumpPipeline(x, x_length, fs);
 
+  if (getenv("WORLD_BENCH_ONLY")) { BenchmarkStages(x, x_length, fs); return 0; }
+  BenchmarkStages(x, x_length, fs);
   printf("reference data written to %s\n", g_outdir);
   delete[] x;
   return 0;
