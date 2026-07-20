@@ -135,16 +135,16 @@ The table compares the original C++ compiled with MSVC at `/O2` against this por
 
 <!-- BENCHMARK:BEGIN -->
 
-Measured outside CI on an Intel Core i7-1360P under Windows 11. Figures are the best of 10 runs in milliseconds, analysing the 22050 Hz reference waveform of 17500 samples with a 5 ms frame period.
+Measured outside CI on an Intel Core i7-1360P under Windows 11. Both builds were measured back to back in one session, so the ratio is the meaningful quantity; the absolute values move with the thermal state of the machine. Figures are the best of 10 runs in milliseconds, analysing the 22050 Hz reference waveform of 17500 samples with a 5 ms frame period.
 
 | Stage | C++ with MSVC | This port with Native AOT | Ratio |
 |---|---:|---:|---:|
-| Dio | 18.23 | 10.00 | 1.82x |
-| StoneMask | 9.21 | 7.42 | 1.24x |
-| CheapTrick | 20.01 | 21.27 | 0.94x |
-| D4C | 67.04 | 91.94 | 0.73x |
-| Synthesis | 17.89 | 19.22 | 0.93x |
-| Harvest | 356.30 | 306.08 | 1.16x |
+| Dio | 16.35 | 7.98 | 2.05x |
+| StoneMask | 16.26 | 6.29 | 2.59x |
+| CheapTrick | 15.36 | 20.43 | 0.75x |
+| D4C | 57.33 | 85.40 | 0.67x |
+| Synthesis | 19.21 | 17.62 | 1.09x |
+| Harvest | 301.39 | 237.10 | 1.27x |
 
 A ratio above 1.00 means this port is faster than the original C++.
 
