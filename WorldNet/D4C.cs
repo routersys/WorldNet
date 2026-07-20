@@ -272,12 +272,8 @@ public static unsafe class D4C
             4.0, forwardRealFft.Waveform, arena, ref randnState);
 
         forwardRealFft.ForwardFft.Execute();
-        for (int i = 0; i <= fftSize / 2; ++i)
-        {
-            smoothedPowerSpectrum[i] =
-                (forwardRealFft.Spectrum[i].Real * forwardRealFft.Spectrum[i].Real) +
-                (forwardRealFft.Spectrum[i].Imaginary * forwardRealFft.Spectrum[i].Imaginary);
-        }
+        SpectrumMath.PowerSpectrum(
+            forwardRealFft.Spectrum, smoothedPowerSpectrum, (fftSize / 2) + 1);
         DcCorrection(smoothedPowerSpectrum, currentF0, fs, fftSize, smoothedPowerSpectrum, arena);
         LinearSmoothing(smoothedPowerSpectrum, currentF0, fs, fftSize, smoothedPowerSpectrum,
             arena);
@@ -314,6 +310,7 @@ public static unsafe class D4C
 
         using WorldArenaScope scope = arena.BeginScope();
         double* powerSpectrum = (double*)arena.AllocateRaw((fftSize / 2) + 1, sizeof(double));
+        double* sortScratch = (double*)arena.AllocateRaw((fftSize / 2) + 1, sizeof(double));
         for (int i = 0; i < numberOfAperiodicities; ++i)
         {
             int center = (int)(WorldConstants.FrequencyInterval * (i + 1) * fftSize / fs);
@@ -323,13 +320,9 @@ public static unsafe class D4C
                     staticGroupDelay[center - halfWindowLength + j] * window[j];
             }
             forwardRealFft.ForwardFft.Execute();
-            for (int j = 0; j <= fftSize / 2; ++j)
-            {
-                powerSpectrum[j] =
-                    (forwardRealFft.Spectrum[j].Real * forwardRealFft.Spectrum[j].Real) +
-                    (forwardRealFft.Spectrum[j].Imaginary * forwardRealFft.Spectrum[j].Imaginary);
-            }
-            new Span<double>(powerSpectrum, (fftSize / 2) + 1).Sort();
+            SpectrumMath.PowerSpectrum(
+                forwardRealFft.Spectrum, powerSpectrum, (fftSize / 2) + 1);
+            SpectrumMath.SortNonNegative(powerSpectrum, sortScratch, (fftSize / 2) + 1);
             for (int j = 1; j <= fftSize / 2; ++j)
             {
                 powerSpectrum[j] += powerSpectrum[j - 1];
