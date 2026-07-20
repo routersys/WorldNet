@@ -145,20 +145,26 @@ public static unsafe class D4C
 
         if (windowType == WorldConstants.Hanning)
         {
-            for (int i = 0; i <= halfWindowLength * 2; ++i)
+            for (int i = 0; i <= halfWindowLength; ++i)
             {
-                double position = (2.0 * baseIndex[i] / windowLengthRatio) / fs;
-                window[i] = (0.5 * Math.Cos(WorldConstants.Pi * position * currentF0)) + 0.5;
+                double position =
+                    (2.0 * baseIndex[halfWindowLength + i] / windowLengthRatio) / fs;
+                double value = (0.5 * Math.Cos(WorldConstants.Pi * position * currentF0)) + 0.5;
+                window[halfWindowLength + i] = value;
+                window[halfWindowLength - i] = value;
             }
         }
         else
         {
-            for (int i = 0; i <= halfWindowLength * 2; ++i)
+            for (int i = 0; i <= halfWindowLength; ++i)
             {
-                double position = (2.0 * baseIndex[i] / windowLengthRatio) / fs;
-                window[i] = 0.42 +
+                double position =
+                    (2.0 * baseIndex[halfWindowLength + i] / windowLengthRatio) / fs;
+                double value = 0.42 +
                     (0.5 * Math.Cos(WorldConstants.Pi * position * currentF0)) +
                     (0.08 * Math.Cos(WorldConstants.Pi * position * currentF0 * 2));
+                window[halfWindowLength + i] = value;
+                window[halfWindowLength - i] = value;
             }
         }
     }
