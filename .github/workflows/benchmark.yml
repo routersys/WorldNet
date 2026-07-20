@@ -9,7 +9,7 @@ on:
         description: "各段の実行回数"
         required: true
         type: string
-        default: "10"
+        default: "20"
       commit_result:
         description: "計測結果を README へ反映してコミットする"
         required: true
@@ -78,13 +78,13 @@ jobs:
             --aot "${AOT}" \
             --wav reference/world-src/test/vaiueo2d.wav \
             --data reference/data \
-            --runs "${{ inputs.runs || '10' }}" \
+            --runs "${{ inputs.runs || '20' }}" \
             --readme README.md \
             --readme-ja README.ja.md \
             --commit "${{ github.sha }}"
 
       - name: 計測結果をジョブ概要へ出力
-        run: sed -n '/BENCHMARK:BEGIN/,/BENCHMARK:END/p' README.md >> "$GITHUB_STEP_SUMMARY"
+        run: sed -n '/BENCHMARK:CI:BEGIN/,/BENCHMARK:CI:END/p' README.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: 更新した README をアーティファクトとして保存
         uses: actions/upload-artifact@v4
