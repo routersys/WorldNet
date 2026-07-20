@@ -4,6 +4,8 @@
 [![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](#)
 [![Release](https://img.shields.io/github/v/release/routersys/WorldNet.svg)](https://github.com/routersys/WorldNet/releases)
 
+English | [日本語](README.ja.md)
+
 ---
 
 A complete C# port of [WORLD](https://github.com/mmorise/World), the vocoder-based speech analysis, manipulation and synthesis system by M. Morise.
@@ -247,12 +249,14 @@ The author accepts no liability for any damage arising from the use of or the in
 
 ## Third-Party Licenses
 
-The algorithms in this library are a port of the following software. No third-party source code is redistributed in this repository; the reference harness downloads WORLD on demand.
+WorldNet is a derivative work of the software below. The full license texts are stored in the repository under [`.github/LICENSE/WORLD.txt`](.github/LICENSE/WORLD.txt) and [`.github/LICENSE/OouraFFT.txt`](.github/LICENSE/OouraFFT.txt).
+
+WORLD is distributed under the modified BSD license, which requires that redistributions of source code retain its copyright notice, the list of conditions and the disclaimer. Those files carry that text unmodified. No third-party source code is vendored into this repository, and the reference harness downloads WORLD on demand.
 
 | Software | Purpose | License | Copyright |
 |---|---|---|---|
 | [WORLD](https://github.com/mmorise/World) | Origin of every ported algorithm and of the reference implementation used for verification | Modified BSD License | Copyright (c) 2010 M. Morise |
-| [Ooura FFT](http://www.kurims.kyoto-u.ac.jp/~ooura/index.html) | Fast Fourier transform used by WORLD and ported here | Free use permitted by the author | Copyright (c) 1996-2001 Takuya Ooura |
+| [Ooura FFT](https://www.kurims.kyoto-u.ac.jp/~ooura/fft.html) | Fast Fourier transform carried by WORLD and ported here | Free use permitted by the author | Copyright Takuya OOURA, 1996-2001 |
 
 ---
 
