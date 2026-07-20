@@ -67,9 +67,10 @@ internal unsafe partial struct MinimumPhaseAnalysis
         for (int i = 0; i <= FftSize / 2; ++i)
         {
             double tmp = Math.Exp(MinimumPhaseSpectrum[i].Real * inverseFftSize);
-            double phase = MinimumPhaseSpectrum[i].Imaginary * inverseFftSize;
-            MinimumPhaseSpectrum[i].Real = tmp * Math.Cos(phase);
-            MinimumPhaseSpectrum[i].Imaginary = tmp * Math.Sin(phase);
+            (double sine, double cosine) =
+                Math.SinCos(MinimumPhaseSpectrum[i].Imaginary * inverseFftSize);
+            MinimumPhaseSpectrum[i].Real = tmp * cosine;
+            MinimumPhaseSpectrum[i].Imaginary = tmp * sine;
         }
     }
 }
