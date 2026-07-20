@@ -2,6 +2,8 @@ namespace WorldNet;
 
 public static unsafe partial class Harvest
 {
+    private const int OverlapParameter = 7;
+
     public static int GetSamplesForHarvest(int fs, int xLength, double framePeriod)
     {
         return (int)(1000.0 * xLength / fs / framePeriod) + 1;
@@ -89,6 +91,13 @@ public static unsafe partial class Harvest
         int numberOfCandidates = DetectOfficialF0Candidates(rawF0Candidates, numberOfChannels,
             f0Length, maxCandidates, f0Candidates, scratch);
 
+        if (numberOfCandidates * OverlapParameter > maxCandidates)
+        {
+            throw new InvalidOperationException(
+                $"The overlap stage needs {numberOfCandidates * OverlapParameter} columns " +
+                $"but only {maxCandidates} are reserved.");
+        }
+
         OverlapF0Candidates(f0Length, numberOfCandidates, f0Candidates);
 
         return numberOfCandidates;
@@ -120,8 +129,8 @@ public static unsafe partial class Harvest
 
         int lag = (int)(Math.Ceiling(140.0 / decimationRatio) * decimationRatio);
         int newXLength = xLength + (lag * 2);
-        int overlapParameter = 7;
-        int maxCandidates = MatlabFunctions.MatlabRound(numberOfChannels / 10.0) * overlapParameter;
+        int maxCandidates =
+            MatlabFunctions.MatlabRound(numberOfChannels / 10.0) * OverlapParameter;
 
         HarvestScratch scratch = HarvestScratch.Bind(arena, numberOfChannels, newXLength, yLength,
             f0Length, maxCandidates, fftSize);
@@ -136,7 +145,7 @@ public static unsafe partial class Harvest
 
         int numberOfCandidates = HarvestGeneralBodySub(boundaryF0List, numberOfChannels, f0Length,
             actualFs, yLength, temporalPositions, fftSize, f0Floor, f0Ceil, maxCandidates,
-            scratch.F0Candidates, scratch) * overlapParameter;
+            scratch.F0Candidates, scratch) * OverlapParameter;
 
         RefineF0Candidates(scratch.Y, yLength, actualFs, temporalPositions, f0Length,
             numberOfCandidates, f0Floor, f0Ceil, scratch.F0Candidates, scratch.F0CandidatesScore,
