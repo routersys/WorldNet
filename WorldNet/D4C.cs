@@ -214,10 +214,7 @@ public static unsafe class D4C
             power += forwardRealFft.Waveform[i] * forwardRealFft.Waveform[i];
         }
         double normalizer = Math.Sqrt(power);
-        for (int i = 0; i <= powerLength; ++i)
-        {
-            forwardRealFft.Waveform[i] /= normalizer;
-        }
+        VectorOperations.DivideByScalar(forwardRealFft.Waveform, powerLength + 1, normalizer);
 
         forwardRealFft.ForwardFft.Execute();
 
