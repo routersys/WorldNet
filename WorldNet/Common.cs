@@ -67,10 +67,8 @@ internal static unsafe class Common
             scratch.MirroringSegment, (fftSize / 2) + (boundary * 2) + 1, scratch.FrequencyAxis,
             (fftSize / 2) + 1, highLevels, scratch.Interpolation);
 
-        for (int i = 0; i <= fftSize / 2; ++i)
-        {
-            output[i] = (highLevels[i] - lowLevels[i]) / width;
-        }
+        VectorOperations.SubtractAndDivideByScalar(
+            highLevels, lowLevels, output, (fftSize / 2) + 1, width);
     }
 
     public static void NuttallWindow(int yLength, double* y)
