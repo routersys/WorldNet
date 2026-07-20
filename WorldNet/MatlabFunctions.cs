@@ -1,8 +1,13 @@
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+
 namespace WorldNet;
 
 internal static unsafe class MatlabFunctions
 {
     internal const int DecimateFactorLength = 9;
+
+    private const byte GatherScale = sizeof(double);
 
     public static void FftShift(double* x, int xLength, double* y)
     {
@@ -154,10 +159,7 @@ internal static unsafe class MatlabFunctions
         Diff(y, xLength, deltaY);
         deltaY[xLength - 1] = 0.0;
 
-        for (int i = 0; i < xiLength; ++i)
-        {
-            yi[i] = y[xiBase[i]] + (deltaY[xiBase[i]] * xiFraction[i]);
-        }
+        InterpolateAtIndices(y, deltaY, xiFraction, xiBase, xiLength, yi);
     }
 
     public static void FastFftFilt(double* x, int xLength, double* h, int hLength, int fftSize,
@@ -225,6 +227,30 @@ internal static unsafe class MatlabFunctions
         s /= xLength - 1;
 
         return Math.Sqrt(s);
+    }
+
+    private static void InterpolateAtIndices(double* y, double* deltaY, double* xiFraction,
+        int* xiBase, int xiLength, double* yi)
+    {
+        int i = 0;
+
+        if (Avx2.IsSupported)
+        {
+            for (; i + 4 <= xiLength; i += 4)
+            {
+                Vector128<int> indices = Sse2.LoadVector128(xiBase + i);
+                Avx.Store(yi + i, Avx.Add(
+                    Avx2.GatherVector256(y, indices, GatherScale),
+                    Avx.Multiply(
+                        Avx2.GatherVector256(deltaY, indices, GatherScale),
+                        Avx.LoadVector256(xiFraction + i))));
+            }
+        }
+
+        for (; i < xiLength; ++i)
+        {
+            yi[i] = y[xiBase[i]] + (deltaY[xiBase[i]] * xiFraction[i]);
+        }
     }
 
     private static void FilterForDecimate(double* x, int xLength, int r, double* y)
