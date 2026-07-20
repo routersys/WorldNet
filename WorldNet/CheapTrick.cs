@@ -148,11 +148,7 @@ public static unsafe class CheapTrick
 
         double* powerSpectrum = waveform;
         FftComplex* spectrum = scratch.ForwardRealFft.Spectrum;
-        for (int i = 0; i <= fftSize / 2; ++i)
-        {
-            powerSpectrum[i] = (spectrum[i].Real * spectrum[i].Real) +
-                (spectrum[i].Imaginary * spectrum[i].Imaginary);
-        }
+        SpectrumMath.PowerSpectrum(spectrum, powerSpectrum, (fftSize / 2) + 1);
 
         Common.DcCorrection(powerSpectrum, f0, fs, fftSize, powerSpectrum, frame.DcCorrection);
     }
