@@ -193,7 +193,7 @@ jobs:
         run: |
           PREV=$(git tag --sort=-version:refname \
             | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
-            | sed -n '2p')
+            | sed -n '2p' || true)
           echo "tag=${PREV}" >> "$GITHUB_OUTPUT"
 
       - name: コミット履歴からリリースノートを生成
@@ -204,7 +204,7 @@ jobs:
           if [ -n "${PREV}" ]; then
             LOG=$(git log "${PREV}..${CURRENT}" --pretty=format:"- %s (%h)" --no-merges)
           else
-            LOG=$(git log --pretty=format:"- %s (%h)" --no-merges | head -30)
+            LOG=$(git log -n 30 --pretty=format:"- %s (%h)" --no-merges)
           fi
           {
             echo "notes<<NOTES_EOF"
