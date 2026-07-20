@@ -19,13 +19,14 @@ internal static unsafe class Common
         double* lowFrequencyReplica = scratch.LowFrequencyReplica;
         double* lowFrequencyAxis = scratch.LowFrequencyAxis;
 
+        double inverseFftSize = 1.0 / fftSize;
         for (int i = 0; i < upperLimit; ++i)
         {
-            lowFrequencyAxis[i] = (double)i * fs / fftSize;
+            lowFrequencyAxis[i] = (double)i * fs * inverseFftSize;
         }
 
         int upperLimitReplica = upperLimit - 1;
-        MatlabFunctions.Interp1Q(f0 - lowFrequencyAxis[0], -(double)fs / fftSize, input,
+        MatlabFunctions.Interp1Q(f0 - lowFrequencyAxis[0], -(double)fs * inverseFftSize, input,
             upperLimit + 1, lowFrequencyAxis, upperLimitReplica, lowFrequencyReplica,
             scratch.Interpolation);
 
@@ -101,15 +102,18 @@ internal static unsafe class Common
                 powerSpectrum[(fftSize / 2) - (i - ((fftSize / 2) + boundary))];
         }
 
-        mirroringSegment[0] = mirroringSpectrum[0] * fs / fftSize;
+        double inverseFftSize = 1.0 / fftSize;
+        mirroringSegment[0] = mirroringSpectrum[0] * fs * inverseFftSize;
         for (int i = 1; i < (fftSize / 2) + (boundary * 2) + 1; ++i)
         {
-            mirroringSegment[i] = (mirroringSpectrum[i] * fs / fftSize) + mirroringSegment[i - 1];
+            mirroringSegment[i] =
+                (mirroringSpectrum[i] * fs * inverseFftSize) + mirroringSegment[i - 1];
         }
 
+        double halfWidth = width / 2.0;
         for (int i = 0; i <= fftSize / 2; ++i)
         {
-            frequencyAxis[i] = ((double)i / fftSize * fs) - (width / 2.0);
+            frequencyAxis[i] = ((double)i * inverseFftSize * fs) - halfWidth;
         }
     }
 }
