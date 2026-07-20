@@ -7,13 +7,47 @@
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <PackageId>WorldNet</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>routersys</Authors>
+    <Product>WorldNet</Product>
+    <Title>WorldNet</Title>
+    <Description>A complete C# port of the WORLD vocoder for .NET 10. Fundamental frequency estimation with Dio, Harvest and StoneMask, spectral envelope estimation with CheapTrick, aperiodicity estimation with D4C, batch and sequential synthesis, and the spectral envelope codec. Every stage runs without a managed allocation and the library is annotated for Native AOT. Each stage is compared against the original C++ built with MSVC: most are bit-exact and the remaining differences are bounded and measured in ULP.</Description>
+    <Copyright>Copyright (c) 2026 routersys</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/routersys/WorldNet</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/routersys/WorldNet</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>world;vocoder;speech;speech-analysis;speech-synthesis;dsp;signal-processing;fft;f0;pitch;native-aot;zero-allocation</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageReleaseNotes>See https://github.com/routersys/WorldNet/releases</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\icon.png" Pack="true" PackagePath="\" />
+    <None Include="..\.github\LICENSE\WORLD.txt" Pack="true" PackagePath="THIRD-PARTY-NOTICES\" />
+    <None Include="..\.github\LICENSE\OouraFFT.txt" Pack="true" PackagePath="THIRD-PARTY-NOTICES\" />
+  </ItemGroup>
+
   <ItemGroup>
     <InternalsVisibleTo Include="WorldNet.Tests" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\WorldNet.SourceGenerator\WorldNet.SourceGenerator.csproj"
-                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" />
   </ItemGroup>
 
 </Project>
