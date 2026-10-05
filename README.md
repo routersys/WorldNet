@@ -20,7 +20,8 @@ Correctness is not asserted from reading the source: each stage is compared agai
 1. [Overview](#overview)
 2. [Requirements](#requirements)
 3. [Installation](#installation)
-4. [Features](#features)
+4. [Usage](#usage)
+5. [Features](#features)
    - [1. Fundamental frequency estimation](#1-fundamental-frequency-estimation)
    - [2. Spectral envelope and aperiodicity](#2-spectral-envelope-and-aperiodicity)
    - [3. Waveform synthesis](#3-waveform-synthesis)
@@ -28,19 +29,19 @@ Correctness is not asserted from reading the source: each stage is compared agai
    - [5. Zero allocation and the arena](#5-zero-allocation-and-the-arena)
    - [6. Numerical verification](#6-numerical-verification)
    - [7. Performance](#7-performance)
-5. [API Reference](#api-reference)
+6. [API Reference](#api-reference)
    - [Analysis](#analysis)
    - [Synthesis](#synthesis)
    - [Coding](#coding)
    - [Memory](#memory)
    - [File I/O](#file-io)
    - [Option defaults](#option-defaults)
-6. [Building from source](#building-from-source)
-7. [Limitations](#limitations)
-8. [Notes](#notes)
-9. [Disclaimer](#disclaimer)
-10. [Third-Party Licenses](#third-party-licenses)
-11. [License](#license)
+7. [Building from source](#building-from-source)
+8. [Limitations](#limitations)
+9. [Notes](#notes)
+10. [Disclaimer](#disclaimer)
+11. [Third-Party Licenses](#third-party-licenses)
+12. [License](#license)
 
 ---
 
@@ -77,6 +78,45 @@ The original C++ is not vendored into this repository. The reference harness und
    ```
 
 2. Create a `WorldArena` once and reuse it for every call. The arena grows on first use and performs no further allocation afterwards.
+
+---
+
+## Usage
+
+The following program reads a monaural WAV file, estimates the F0 contour with Harvest, the spectral envelope with CheapTrick and the aperiodicity with D4C, and synthesizes a waveform from the three results.
+
+```csharp
+using WorldNet;
+
+int length = WaveFile.GetLength("input.wav");
+double[] x = new double[length];
+WaveFile.Read("input.wav", x, out int fs, out _);
+
+using WorldArena arena = new();
+
+HarvestOption harvestOption = HarvestOption.Default;
+int f0Length = Harvest.GetSamplesForHarvest(fs, x.Length, harvestOption.FramePeriod);
+double[] temporalPositions = new double[f0Length];
+double[] f0 = new double[f0Length];
+Harvest.Estimate(x, fs, harvestOption, temporalPositions, f0, arena);
+
+CheapTrickOption cheapTrickOption = CheapTrickOption.Create(fs);
+int fftSize = cheapTrickOption.FftSize;
+int spectrumLength = (fftSize / 2) + 1;
+double[] spectrogram = new double[f0Length * spectrumLength];
+CheapTrick.Estimate(x, fs, cheapTrickOption, temporalPositions, f0, spectrogram, arena);
+
+double[] aperiodicity = new double[f0Length * spectrumLength];
+D4C.Estimate(x, fs, D4COption.Default, temporalPositions, f0, fftSize, aperiodicity, arena);
+
+int yLength = (int)((f0Length - 1) * harvestOption.FramePeriod / 1000.0 * fs) + 1;
+double[] y = new double[yLength];
+Synthesis.Synthesize(f0, spectrogram, aperiodicity, fftSize, harvestOption.FramePeriod, fs, y, arena);
+
+WaveFile.Write("output.wav", y, fs);
+```
+
+The caller sizes every destination array. `Harvest.GetSamplesForHarvest` returns the number of frames. The spectrogram and the aperiodicity are flat arrays that hold one row of `fftSize / 2 + 1` values per frame. `Synthesis.Synthesize` takes the length of `y` as the length of the output. `WaveFile.Read` accepts only monaural PCM files whose format chunk is 16 bytes long and throws `InvalidDataException` for any other header.
 
 ---
 
