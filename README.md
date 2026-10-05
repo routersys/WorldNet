@@ -318,7 +318,7 @@ To use the checkout instead of the package, add `WorldNet/WorldNet.csproj` as a 
 - The batch synthesizer agrees with the original to within 64 units in the last place rather than exactly. D4C and the decoding of aperiodicity agree to within one unit in the last place. Both follow from `Math.Pow`, which neither the .NET runtime nor the MSVC runtime is required to round correctly.
 - Bit-exactness has been verified against WORLD compiled with MSVC on Windows x64. Other compilers, other runtimes and other architectures may round the transcendental functions differently, and the agreement above is not claimed for them.
 - `WorldArena` is not thread-safe. Concurrent analysis requires one arena per thread, which the test suite exercises.
-- An arena created by `FromNativeMemory` cannot grow. Determine the size by running once with a growing arena and reading `Used`, or by summing the `GetRequiredArenaBytes` of the stages you invoke.
+- An arena created by `FromNativeMemory` cannot grow. Run the same calls once with a growing arena, read `Capacity`, and pass a buffer of at least that many bytes plus 64 bytes for the arena header. `Used` cannot serve this purpose, because each call releases its scratch memory and `Used` is zero once the calls return. The size depends on the length and the sampling rate of the input and on the options.
 - Running the comparison tests requires the reference data. Without `reference/data` those tests cannot execute.
 - The sample application under `WorldNet.Examples` reads and writes files and therefore allocates managed memory. The zero-allocation guarantee applies to the library.
 
