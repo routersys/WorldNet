@@ -11,7 +11,7 @@
 M. Morise氏による音声分析変換合成システム[WORLD](https://github.com/mmorise/World)をC#へ完全移植したライブラリです。
 全ての段がマネージドヒープを一切確保せずに動作するため、ガベージコレクタが解析と合成の経路を観測しません。
 作業領域はネイティブのアリーナから供給し、主要な演算はunsafeなポインタで記述し、ライブラリ全体をNative AOT向けに注釈しています。
-正しさはソースの読解ではなく、MSVCでビルドした原典C++が出力した基準データとの突合で確認しています。
+正しさはソースの読解ではなく、MSVCでビルドした原典C++が出力した参照データとの照合で確認しています。
 
 ---
 
@@ -46,11 +46,11 @@ M. Morise氏による音声分析変換合成システム[WORLD](https://github.
 
 ## 概要
 
-WorldNetはWORLDの11個のソースファイルをC#へ移植しています。基本周波数の推定はDioとHarvestとStoneMaskが担い、スペクトル包絡の推定はCheapTrickが、非周期性指標の推定はD4Cが、波形の生成は一括合成と逐次合成が、低次元表現はスペクトル包絡の符号化が担います。WAVの入出力と解析パラメータのファイル形式も移植の対象です。
+WorldNetはWORLDの11個のソースファイルをC#へ移植しています。基本周波数の推定はDioとHarvestとStoneMaskが担い、スペクトル包絡の推定はCheapTrickが、非周期性指標の推定はD4Cが、波形の生成は一括合成と実時間合成が、低次元表現はスペクトル包絡の符号化が担います。WAVの入出力と解析パラメータのファイル形式も移植の対象です。
 
-公開する面はモダンなC#です。波形とパラメータは`ReadOnlySpan<double>`と`Span<double>`で受け渡し、オプションは`init`アクセサを持つ`readonly struct`として既定値の生成器を備え、各算法は静的クラスとして公開します。ポインタを用いる内部実装は公開しません。
+公開する面はモダンなC#です。波形とパラメータは`ReadOnlySpan<double>`と`Span<double>`で受け渡し、オプションは`init`アクセサを持つ`readonly struct`として既定値の生成器を備え、各アルゴリズムは静的クラスとして公開します。ポインタを用いる内部実装は公開しません。
 
-作業領域は全て`WorldArena`が供給します。`NativeMemory.AlignedAlloc`による64バイト境界の確保をバンプ方式で切り出す構造で、塊を連結して管理するため、容量が増えても既に渡したポインタは無効になりません。作業領域の要求は専用の型の`Layout`メソッドに一度だけ記述します。ソースジェネレータがその署名を読んで必要量の照会と束縛の両方を生成するため、報告する必要量と実際の消費量が食い違いません。
+作業領域は全て`WorldArena`が供給します。`NativeMemory.AlignedAlloc`による64バイト境界の確保をバンプ方式で切り出す構造で、塊を連結して管理するため、容量が増えても既に渡したポインタは無効になりません。作業領域の要求は専用の型の`Layout`メソッドに一度だけ記述します。ソースジェネレータがそのシグネチャを読んで必要量の照会とバインドの両方を生成するため、報告する必要量と実際の消費量が食い違いません。
 
 原典のC++は本リポジトリに同梱していません。`reference`配下の参照ハーネスがWORLDを取得してMSVCでビルドし、各段の入力と出力を倍精度のまま書き出します。テストはその出力を読み込んでC#側の結果と突き合わせます。
 
@@ -64,7 +64,7 @@ WorldNetはWORLDの11個のソースファイルをC#へ移植しています。
 | SDK | .NET SDK 10.0 |
 | 言語 | C# 14以降。`LangVersion`は`latest`を指定しています |
 | unsafeコード | `WorldArena.FromNativeMemory`を使う場合のみ、利用側の設定が必要です |
-| 基準データ | MSVCのC++ツールセットとGit。テストが使う基準データを再生成する場合のみ必要です |
+| 参照データ | MSVCのC++ツールセットとGit。テストが使う参照データを再生成する場合のみ必要です |
 
 ---
 
@@ -84,25 +84,25 @@ WorldNetはWORLDの11個のソースファイルをC#へ移植しています。
 
 ### 1. 基本周波数の推定
 
-Dioは帯域通過させた信号の周期性からF0の系列を推定し、時刻の系列と併せて返します。`Speed`オプションを上げると間引きの経路を通り、探索の前に標本化周波数を落とします。Harvestは瞬時周波数による候補から系列を推定し、計算量と引き換えにより頑健な結果を返します。StoneMaskは既存の系列を瞬時周波数で精密化するもので、通常はDioの出力に適用します。
+Dioは帯域通過させた信号の周期性からF0の系列を推定し、時刻の系列と併せて返します。`Speed`オプションを上げると間引きの経路を通り、探索の前にサンプリング周波数を落とします。Harvestは瞬時周波数による候補から系列を推定し、計算量と引き換えにより頑健な結果を返します。StoneMaskは既存の系列を瞬時周波数で精密化するもので、通常はDioの出力に適用します。
 
-DioとHarvestとStoneMaskはいずれも、基準波形において原典とビット単位で一致します。Dioの間引きの経路も一致します。
+DioとHarvestとStoneMaskはいずれも、参照波形において原典とビット単位で一致します。Dioの間引きの経路も一致します。
 
 ### 2. スペクトル包絡と非周期性指標
 
-CheapTrickはF0に適応した窓とピッチ同期の平滑化によってスペクトル包絡を推定します。FFTの寸法は標本化周波数とF0の下限から`CheapTrick.GetFftSize`が導き、`CheapTrick.GetF0Floor`が逆の関係を返します。
+CheapTrickはF0に適応した窓とピッチ同期の平滑化によってスペクトル包絡を推定します。FFTサイズはサンプリング周波数とF0の下限から`CheapTrick.GetFftSize`が導き、`CheapTrick.GetF0Floor`が逆の関係を返します。
 
 D4Cは帯域ごとの非周期性指標を推定し、D4C LoveTrainの段を含みます。結果は原典と1 ULP以内で一致します。差の原因は`Math.Pow`にあり、この関数は正しい丸めを要求されておらず、MSVCの実行時ライブラリと常に同じ値を返すとは限りません。
 
 ### 3. 波形合成
 
-`Synthesis.Synthesize`はF0の系列とスペクトログラムと非周期性指標から波形を一括で生成します。`WorldSynthesizer`は逐次合成を実装しており、`AddParameters`でパラメータの塊を受け取り、内部の環状バッファを管理しながら`Synthesize`で出力を生成します。
+`Synthesis.Synthesize`はF0の系列とスペクトログラムと非周期性指標から波形を一括で生成します。`WorldSynthesizer`は実時間合成を実装しており、`AddParameters`でパラメータの塊を受け取り、内部のリングバッファを管理しながら`Synthesize`で出力を生成します。
 
-逐次合成は原典とビット単位で一致します。一括合成は64 ULP以内で一致します。これは同じ`Math.Pow`の差が重畳加算の累積によって拡大したものです。
+実時間合成は原典とビット単位で一致します。一括合成は64 ULP以内で一致します。これは同じ`Math.Pow`の差がオーバーラップ加算の累積によって拡大したものです。
 
 ### 4. スペクトル包絡の符号化
 
-符号化はスペクトル包絡と非周期性指標をメル尺度上の低次元表現へ変換し、また元へ戻します。`Codec.GetNumberOfAperiodicities`は標本化周波数に対する係数の個数を返します。
+符号化はスペクトル包絡と非周期性指標をメル尺度上の低次元表現へ変換し、また元へ戻します。`Codec.GetNumberOfAperiodicities`はサンプリング周波数に対する係数の個数を返します。
 
 非周期性指標の符号化と、スペクトル包絡の符号化および復号は、原典とビット単位で一致します。非周期性指標の復号のみ1 ULP以内の一致で、これも`Math.Pow`に起因します。
 
@@ -110,9 +110,9 @@ D4Cは帯域ごとの非周期性指標を推定し、D4C LoveTrainの段を含�
 
 `WorldArena`はネイティブの塊の連結から64バイト境界の領域を切り出します。`BeginScope`が現在位置を記録し、破棄時に復帰するため、繰り返しの内側で取った作業領域を解放処理なしで戻せます。`FromNativeMemory`は呼び出し側が所有する領域を包みます。この形態のアリーナは拡張せず、容量が尽きると例外を投げます。
 
-作業領域の要求は、確保器を型引数に取る`Layout`メソッドとして一度だけ記述します。測定用の確保器で実行すればメモリに触れずに必要量が求まり、アリーナの確保器で実行すれば実際の束縛が行われます。ソースジェネレータはこの一つの署名から`GetRequiredArenaBytes`と`Bind`を生成します。
+作業領域の要求は、確保器を型引数に取る`Layout`メソッドとして一度だけ記述します。測定用の確保器で実行すればメモリに触れずに必要量が求まり、アリーナの確保器で実行すれば実際のバインドが行われます。ソースジェネレータはこの一つのシグネチャから`GetRequiredArenaBytes`と`Bind`を生成します。
 
-マネージドヒープを確保しないことは主張ではなく測定で確かめています。`GC.GetAllocatedBytesForCurrentThread`は、解析から合成までの全経路と逐次合成のいずれについても増分0バイトを報告します。
+マネージドヒープを確保しないことは主張ではなく測定で確かめています。`GC.GetAllocatedBytesForCurrentThread`は、解析から合成までの全経路と実時間合成のいずれについても増分0バイトを報告します。
 
 ### 6. 数値検証
 
@@ -120,12 +120,12 @@ D4Cは帯域ごとの非周期性指標を推定し、D4C LoveTrainの段を含�
 
 | 対象 | 一致の水準 |
 |---|---|
-| 大浦FFT、4種の変換、寸法8から4096 | 完全一致 |
-| matlabfunctions、common | 完全一致 |
-| Dio、間引きの経路を含む | 完全一致 |
-| StoneMask、Harvest、CheapTrick | 完全一致 |
-| 逐次合成、WAV入出力、パラメータファイル入出力 | 完全一致 |
-| 非周期性指標の符号化、スペクトル包絡の符号化と復号 | 完全一致 |
+| Ooura FFT、4種の変換、サイズ8から4096 | ビット単位で一致 |
+| matlabfunctions、common | ビット単位で一致 |
+| Dio、間引きの経路を含む | ビット単位で一致 |
+| StoneMask、Harvest、CheapTrick | ビット単位で一致 |
+| 実時間合成、WAV入出力、パラメータファイル入出力 | ビット単位で一致 |
+| 非周期性指標の符号化、スペクトル包絡の符号化と復号 | ビット単位で一致 |
 | D4C、非周期性指標の復号 | 1 ULP以内 |
 | 一括合成 | 64 ULP以内 |
 
@@ -139,7 +139,7 @@ MSVCで`/O2`を指定してビルドした原典C++と、本移植をNative AOT�
 
 一つ目の表は専用の計算機で取った固定の記録です。再生成しません。
 
-Intel Core i7-1360Pを搭載したWindows 11、実行例は`x86-64-v3`を基準命令セットとして発行、12回実行した最小値、単位はミリ秒、標本化周波数22050Hz、17500標本の基準波形を枠の移動量5ミリ秒で解析しています。
+Intel Core i7-1360Pを搭載したWindows 11、実行例は`x86-64-v3`を基準命令セットとして発行、12回実行した最小値、単位はミリ秒、サンプリング周波数22050Hz、17500サンプルの参照波形をフレーム周期5ミリ秒で解析しています。
 
 | 段 | MSVCのC++ | 本移植のNativeAOT | 比 |
 |---|---:|---:|---:|
@@ -154,7 +154,7 @@ Intel Core i7-1360Pを搭載したWindows 11、実行例は`x86-64-v3`を基準�
 
 <!-- BENCHMARK:CI:BEGIN -->
 
-GitHub Actionsの`windows-latest`ランナー上でCIが計測した値です。搭載する演算装置はAMD EPYC 7763 64-Core Processorです。20回実行した最小値を掲載しており、単位はミリ秒です。標本化周波数22050Hz、17500標本の基準波形を枠の移動量5ミリ秒で解析しています。計測日は2026-07-20、対象のコミットは`5cfba94`です。
+GitHub Actionsの`windows-latest`ランナー上でCIが計測した値です。搭載する演算装置はAMD EPYC 7763 64-Core Processorです。20回実行した最小値を掲載しており、単位はミリ秒です。サンプリング周波数22050Hz、17500サンプルの参照波形をフレーム周期5ミリ秒で解析しています。計測日は2026-07-20、対象のコミットは`5cfba94`です。
 
 | 段 | MSVCのC++ | 本移植のNativeAOT | 比 |
 |---|---:|---:|---:|
@@ -169,7 +169,7 @@ GitHub Actionsの`windows-latest`ランナー上でCIが計測した値です。
 
 比が1.00を超える段は、本移植が原典のC++より速いことを示します。
 
-実行時コンパイラを通した数値は意図して載せていません。計測が各段を2回しか繰り返さないため、段階的コンパイルが安定しないからです。`DOTNET_TieredCompilation=0`で段階化を無効にすると、実行時コンパイラの数値はNative AOTの列とほぼ一致します。したがってこの差は計測手法による暖機不足であり、移植の性質ではありません。
+実行時コンパイラを通した数値は意図して載せていません。計測が各段を2回しか繰り返さないため、段階的コンパイルが安定しないからです。`DOTNET_TieredCompilation=0`で段階化を無効にすると、実行時コンパイラの数値はNative AOTの列とほぼ一致します。したがってこの差は計測手法によるウォームアップ不足であり、移植の性質ではありません。
 
 ---
 
@@ -179,13 +179,13 @@ GitHub Actionsの`windows-latest`ランナー上でCIが計測した値です。
 
 | メンバー | 説明 |
 |---|---|
-| `Dio.GetSamplesForDio(fs, xLength, framePeriod)` | 系列に含まれる枠の個数を返します。 |
+| `Dio.GetSamplesForDio(fs, xLength, framePeriod)` | 系列に含まれるフレームの個数を返します。 |
 | `Dio.Estimate(x, fs, option, temporalPositions, f0, arena)` | F0の系列と時刻の系列を推定します。 |
-| `Harvest.GetSamplesForHarvest(fs, xLength, framePeriod)` | 系列に含まれる枠の個数を返します。 |
+| `Harvest.GetSamplesForHarvest(fs, xLength, framePeriod)` | 系列に含まれるフレームの個数を返します。 |
 | `Harvest.Estimate(x, fs, option, temporalPositions, f0, arena)` | F0の系列と時刻の系列を推定します。 |
 | `StoneMask.Refine(x, fs, temporalPositions, f0, refinedF0, arena)` | 既存の系列を瞬時周波数で精密化します。 |
-| `CheapTrick.GetFftSize(fs, f0Floor)` | 標本化周波数とF0の下限から定まるFFTの寸法を返します。 |
-| `CheapTrick.GetF0Floor(fs, fftSize)` | 標本化周波数とFFTの寸法から定まるF0の下限を返します。 |
+| `CheapTrick.GetFftSize(fs, f0Floor)` | サンプリング周波数とF0の下限から定まるFFTサイズを返します。 |
+| `CheapTrick.GetF0Floor(fs, fftSize)` | サンプリング周波数とFFTサイズから定まるF0の下限を返します。 |
 | `CheapTrick.Estimate(x, fs, option, temporalPositions, f0, spectrogram, arena)` | スペクトル包絡を推定します。 |
 | `D4C.Estimate(x, fs, option, temporalPositions, f0, fftSize, aperiodicity, arena)` | 帯域ごとの非周期性指標を推定します。 |
 
@@ -194,7 +194,7 @@ GitHub Actionsの`windows-latest`ランナー上でCIが計測した値です。
 | メンバー | 説明 |
 |---|---|
 | `Synthesis.Synthesize(f0, spectrogram, aperiodicity, fftSize, framePeriod, fs, y, arena)` | 波形を一括で生成します。 |
-| `new WorldSynthesizer(arena, fs, framePeriod, fftSize, bufferSize, numberOfPointers, maxFramesPerAdd)` | 逐次合成を生成します。 |
+| `new WorldSynthesizer(arena, fs, framePeriod, fftSize, bufferSize, numberOfPointers, maxFramesPerAdd)` | 実時間合成を生成します。 |
 | `WorldSynthesizer.AddParameters(f0, spectrogram, aperiodicity)` | パラメータの塊を投入し、受理したかどうかを返します。 |
 | `WorldSynthesizer.Synthesize()` | 次の区間を生成し、出力が得られたかどうかを返します。 |
 | `WorldSynthesizer.Buffer` | 現在の出力区間を参照します。 |
@@ -228,7 +228,7 @@ GitHub Actionsの`windows-latest`ランナー上でCIが計測した値です。
 
 | メンバー | 説明 |
 |---|---|
-| `WaveFile.GetLength(path)` | ファイルに含まれる標本の個数を返します。 |
+| `WaveFile.GetLength(path)` | ファイルに含まれるサンプルの個数を返します。 |
 | `WaveFile.Read(path, destination, out sampleRate, out bitDepth)` | WAVファイルを読み込みます。 |
 | `WaveFile.Write(path, x, sampleRate)` | 16ビットのWAVファイルを書き出します。 |
 | `ParameterFile.WriteF0`、`ParameterFile.ReadF0` | F0の系列を解析パラメータの形式で入出力します。 |
@@ -243,18 +243,18 @@ GitHub Actionsの`windows-latest`ランナー上でCIが計測した値です。
 | `DioOption` | `F0Floor` | 71.0 | 探索範囲の下限です。単位はヘルツです。 |
 | `DioOption` | `F0Ceil` | 800.0 | 探索範囲の上限です。単位はヘルツです。 |
 | `DioOption` | `ChannelsInOctave` | 2.0 | 1オクターブあたりの帯域通過フィルタの本数です。 |
-| `DioOption` | `FramePeriod` | 5.0 | 枠の移動量です。単位はミリ秒です。 |
+| `DioOption` | `FramePeriod` | 5.0 | フレーム周期です。単位はミリ秒です。 |
 | `DioOption` | `Speed` | 1 | 1から12までの間引き比です。大きいほど速く粗くなります。 |
 | `DioOption` | `AllowedRange` | 0.1 | 系列を補正する際のしきい値です。 |
 | `HarvestOption` | `F0Floor` | 71.0 | 探索範囲の下限です。単位はヘルツです。 |
 | `HarvestOption` | `F0Ceil` | 800.0 | 探索範囲の上限です。単位はヘルツです。 |
-| `HarvestOption` | `FramePeriod` | 5.0 | 枠の移動量です。単位はミリ秒です。 |
+| `HarvestOption` | `FramePeriod` | 5.0 | フレーム周期です。単位はミリ秒です。 |
 | `CheapTrickOption` | `Q1` | -0.15 | スペクトルの復元に用いる係数です。 |
-| `CheapTrickOption` | `F0Floor` | 71.0 | FFTの寸法を決めるF0の下限です。 |
-| `CheapTrickOption` | `FftSize` | 導出値 | `CheapTrickOption.Create`が標本化周波数から算出します。 |
+| `CheapTrickOption` | `F0Floor` | 71.0 | FFTサイズを決めるF0の下限です。 |
+| `CheapTrickOption` | `FftSize` | 導出値 | `CheapTrickOption.Create`がサンプリング周波数から算出します。 |
 | `D4COption` | `Threshold` | 0.85 | D4C LoveTrainの段のしきい値です。 |
 
-`DioOption.Default`と`HarvestOption.Default`と`D4COption.Default`は上の値を返します。`CheapTrickOption`はFFTの寸法が標本化周波数に依存するため、代わりに`CheapTrickOption.Create(fs)`を使います。4つとも`init`アクセサを持つ`readonly struct`ですので、一部を変えた複製は`with`式で作れます。
+`DioOption.Default`と`HarvestOption.Default`と`D4COption.Default`は上の値を返します。`CheapTrickOption`はFFTサイズがサンプリング周波数に依存するため、代わりに`CheapTrickOption.Create(fs)`を使います。4つとも`init`アクセサを持つ`readonly struct`ですので、一部を変えた複製は`with`式で作れます。
 
 ---
 
@@ -268,7 +268,7 @@ dotnet build WorldNet.slnx -c Release
 
 パッケージの代わりにソースを使う場合は、`WorldNet/WorldNet.csproj`をプロジェクト参照として追加してください。
 
-1. テストを実行する前に`reference/build.bat`を実行してください。WORLDを取得してMSVCでビルドし、`reference/data`へ基準データを書き出します。
+1. テストを実行する前に`reference/build.bat`を実行してください。WORLDを取得してMSVCでビルドし、`reference/data`へ参照データを書き出します。
 2. 実行例をNative AOTで発行する場合は`publish-aot.bat`を実行してください。
 
 ---
@@ -279,7 +279,7 @@ dotnet build WorldNet.slnx -c Release
 - ビット単位の一致は、Windows x64においてMSVCでビルドしたWORLDに対して確認したものです。他のコンパイラ、他の実行時ライブラリ、他の命令セットでは超越関数の丸めが異なる可能性があり、同じ一致を主張しません。
 - `WorldArena`はスレッド安全ではありません。並行して解析する場合はスレッドごとにアリーナを分けてください。テストはこの形態を検証しています。
 - `FromNativeMemory`で生成したアリーナは拡張しません。必要量は、拡張するアリーナで一度実行して`Used`を読むか、利用する段の`GetRequiredArenaBytes`を合計して求めてください。
-- 突合のテストは基準データを必要とします。`reference/data`が存在しない場合、該当のテストは実行できません。
+- 照合のテストは参照データを必要とします。`reference/data`が存在しない場合、該当のテストは実行できません。
 - `WorldNet.Examples`配下の実行例はファイルを読み書きするため、マネージドヒープを確保します。無確保の保証はライブラリに対するものです。
 
 ---
@@ -291,7 +291,7 @@ dotnet build WorldNet.slnx -c Release
 - 決定性: 経路は繰り返し実行しても同一の出力を返します。D4Cと合成が使う擬似乱数は原典と同じxorshiftで、同じ状態から開始し、系列と最終状態まで原典を再現します。
 - 作業領域の記述: `[ScratchLayout]`を付けた型は、`IScratchAllocator`を型引数に取る`Layout`メソッドを備える必要があります。ジェネレータは引数の並びを揃えた`GetRequiredArenaBytes`と`Bind`を生成し、型が既に宣言している側は生成しません。
 - Native AOT: ライブラリは`IsAotCompatible`を指定しており、トリムと単一ファイルとAOTの各解析器が有効になります。`publish-aot.bat`は実行例を`win-x64`向けに発行します。ネイティブのリンクにMSVCのツールセットが必要です。
-- 基準データの再生成: `reference/build.bat`がWORLDを`reference/world-src`へ取得してビルドし、出力を書き出します。どちらのディレクトリもバージョン管理の対象外です。
+- 参照データの再生成: `reference/build.bat`がWORLDを`reference/world-src`へ取得してビルドし、出力を書き出します。どちらのディレクトリもバージョン管理の対象外です。
 
 ---
 
@@ -313,8 +313,8 @@ WORLDは修正BSDライセンスで配布されており、ソース形式での
 
 | ソフトウェア | 用途 | ライセンス | 著作権表示 |
 |---|---|---|---|
-| [WORLD](https://github.com/mmorise/World) | 移植した全ての算法の出典、および検証に用いる参照実装 | 修正BSDライセンス | Copyright (c) 2010 M. Morise |
-| [大浦FFT](https://www.kurims.kyoto-u.ac.jp/~ooura/fft.html) | WORLDが収録し本ライブラリが移植した高速フーリエ変換 | 作者が自由な利用を許諾 | Copyright Takuya OOURA, 1996-2001 |
+| [WORLD](https://github.com/mmorise/World) | 移植した全てのアルゴリズムの出典、および検証に用いる参照実装 | 修正BSDライセンス | Copyright (c) 2010 M. Morise |
+| [Ooura FFT](https://www.kurims.kyoto-u.ac.jp/~ooura/fft.html) | WORLDが収録し本ライブラリが移植した高速フーリエ変換 | 作者が自由な利用を許諾 | Copyright Takuya OOURA, 1996-2001 |
 
 ---
 
