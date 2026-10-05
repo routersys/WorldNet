@@ -35,11 +35,12 @@ Correctness is not asserted from reading the source: each stage is compared agai
    - [Memory](#memory)
    - [File I/O](#file-io)
    - [Option defaults](#option-defaults)
-6. [Limitations](#limitations)
-7. [Notes](#notes)
-8. [Disclaimer](#disclaimer)
-9. [Third-Party Licenses](#third-party-licenses)
-10. [License](#license)
+6. [Building from source](#building-from-source)
+7. [Limitations](#limitations)
+8. [Notes](#notes)
+9. [Disclaimer](#disclaimer)
+10. [Third-Party Licenses](#third-party-licenses)
+11. [License](#license)
 
 ---
 
@@ -69,10 +70,13 @@ The original C++ is not vendored into this repository. The reference harness und
 
 ## Installation
 
-1. Clone the repository and add `WorldNet/WorldNet.csproj` as a project reference, or build it and reference the resulting assembly.
+1. Add the package from [NuGet](https://www.nuget.org/packages/WorldNet).
+
+   ```sh
+   dotnet add package WorldNet
+   ```
+
 2. Create a `WorldArena` once and reuse it for every call. The arena grows on first use and performs no further allocation afterwards.
-3. To run the test suite, generate the reference data first by executing `reference/build.bat`, which clones WORLD, builds it with MSVC and writes the dumps to `reference/data`.
-4. To produce a Native AOT binary of the sample application, run `publish-aot.bat`.
 
 ---
 
@@ -251,6 +255,21 @@ Figures obtained through the just-in-time compiler are deliberately absent. The 
 | `D4COption` | `Threshold` | 0.85 | Threshold of the D4C LoveTrain stage. |
 
 `DioOption.Default`, `HarvestOption.Default` and `D4COption.Default` return the values above. `CheapTrickOption.Create(fs)` is used instead because the FFT size depends on the sampling rate. All four are `readonly struct` types with `init` accessors, so a modified copy is produced with a `with` expression.
+
+---
+
+## Building from source
+
+Clone the repository and build it with the .NET SDK 10.0 by running the following command in its root directory.
+
+```sh
+dotnet build WorldNet.slnx -c Release
+```
+
+To use the checkout instead of the package, add `WorldNet/WorldNet.csproj` as a project reference.
+
+1. To run the test suite, generate the reference data first by executing `reference/build.bat`, which clones WORLD, builds it with MSVC and writes the dumps to `reference/data`.
+2. To produce a Native AOT binary of the sample application, run `publish-aot.bat`.
 
 ---
 
