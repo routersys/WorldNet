@@ -365,7 +365,7 @@ The author accepts no liability for any damage arising from the use of or the in
 
 ## Third-Party Licenses
 
-WorldNet is a derivative work of the software below. The full license texts are stored in the repository under [`.github/LICENSE/WORLD.txt`](https://github.com/routersys/WorldNet/blob/main/.github/LICENSE/WORLD.txt) and [`.github/LICENSE/OouraFFT.txt`](https://github.com/routersys/WorldNet/blob/main/.github/LICENSE/OouraFFT.txt).
+WorldNet is a derivative work of the software below. The full license texts are stored in the repository under [`.github/LICENSE/WORLD.txt`](https://github.com/routersys/WorldNet/blob/main/.github/LICENSE/WORLD.txt) and [`.github/LICENSE/OouraFFT.txt`](https://github.com/routersys/WorldNet/blob/main/.github/LICENSE/OouraFFT.txt), and in the NuGet package under `THIRD-PARTY-NOTICES/`.
 
 WORLD is distributed under the modified BSD license, which requires that redistributions of source code retain its copyright notice, the list of conditions and the disclaimer. Those files carry that text unmodified. No third-party source code is vendored into this repository, and the reference harness downloads WORLD on demand.
 
