@@ -39,9 +39,10 @@ Correctness is not asserted from reading the source: each stage is compared agai
 7. [Building from source](#building-from-source)
 8. [Limitations](#limitations)
 9. [Notes](#notes)
-10. [Disclaimer](#disclaimer)
-11. [Third-Party Licenses](#third-party-licenses)
-12. [License](#license)
+10. [Reporting issues](#reporting-issues)
+11. [Disclaimer](#disclaimer)
+12. [Third-Party Licenses](#third-party-licenses)
+13. [License](#license)
 
 ---
 
@@ -333,6 +334,22 @@ To use the checkout instead of the package, add `WorldNet/WorldNet.csproj` as a 
 - Native AOT: the library sets `IsAotCompatible`, which enables the trim, single-file and AOT analyzers. `publish-aot.bat` publishes the sample application for `win-x64` and requires the MSVC toolset for the native linker.
 - Regenerating reference data: `reference/build.bat` clones WORLD into `reference/world-src`, builds it, and writes the dumps. Both directories are excluded from version control.
 - Network access: the library opens no network connection and sends no data.
+
+---
+
+## Reporting issues
+
+Report problems on GitHub [Issues](https://github.com/routersys/WorldNet/issues). The library does not send any report automatically.
+
+Please include the following in the report.
+
+| Item | Content |
+|---|---|
+| Environment | The version of WorldNet, the version of the .NET SDK or runtime, the operating system and the processor architecture |
+| Input | The sampling rate and the length of the waveform, and the stage in which the problem appears |
+| Steps | The calls in the order they were made, including every option that differs from its default |
+| Result | The expected result and the actual result. For a numerical difference, the stage, the index and both values |
+| Exception | The type, the message and the stack trace, unmodified |
 
 ---
 
