@@ -246,10 +246,10 @@ Figures obtained through the just-in-time compiler are deliberately absent. The 
 | Member | Description |
 |---|---|
 | `Codec.GetNumberOfAperiodicities(fs)` | Returns the number of aperiodicity coefficients. |
-| `Codec.CodeAperiodicity(aperiodicity, f0Length, fs, fftSize, codedAperiodicity)` | Reduces the aperiodicity to coefficients. |
-| `Codec.DecodeAperiodicity(codedAperiodicity, f0Length, fs, fftSize, aperiodicity)` | Restores the aperiodicity from coefficients. |
-| `Codec.CodeSpectralEnvelope(spectrogram, f0Length, fs, fftSize, dimensions, coded)` | Reduces the spectral envelope on the mel scale. |
-| `Codec.DecodeSpectralEnvelope(coded, f0Length, fs, fftSize, dimensions, spectrogram)` | Restores the spectral envelope. |
+| `Codec.CodeAperiodicity(aperiodicity, f0Length, fs, fftSize, codedAperiodicity, arena)` | Reduces the aperiodicity to coefficients. |
+| `Codec.DecodeAperiodicity(codedAperiodicity, f0Length, fs, fftSize, aperiodicity, arena)` | Restores the aperiodicity from coefficients. |
+| `Codec.CodeSpectralEnvelope(spectrogram, f0Length, fs, fftSize, numberOfDimensions, codedSpectralEnvelope, arena)` | Reduces the spectral envelope on the mel scale. |
+| `Codec.DecodeSpectralEnvelope(codedSpectralEnvelope, f0Length, fs, fftSize, numberOfDimensions, spectrogram, arena)` | Restores the spectral envelope. |
 
 ### Memory
 
