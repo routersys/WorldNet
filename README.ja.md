@@ -332,6 +332,7 @@ dotnet build WorldNet.slnx -c Release
 - 作業領域の記述: `[ScratchLayout]`を付けた型は、`IScratchAllocator`を型引数に取る`Layout`メソッドを備える必要があります。ジェネレータは引数の並びを揃えた`GetRequiredArenaBytes`と`Bind`を生成し、型が既に宣言している側は生成しません。
 - Native AOT: ライブラリは`IsAotCompatible`を指定しており、トリムと単一ファイルとAOTの各解析器が有効になります。`publish-aot.bat`は実行例を`win-x64`向けに発行します。ネイティブのリンクにMSVCのツールセットが必要です。
 - 参照データの再生成: `reference/build.bat`がWORLDを`reference/world-src`へ取得してビルドし、出力を書き出します。どちらのディレクトリもバージョン管理の対象外です。
+- ネットワーク通信: 本ライブラリはネットワークへ接続せず、データを送信しません。
 
 ---
 
