@@ -332,6 +332,7 @@ To use the checkout instead of the package, add `WorldNet/WorldNet.csproj` as a 
 - Scratch layout: a type marked with `[ScratchLayout]` must expose a `Layout` method generic over `IScratchAllocator`. The generator emits `GetRequiredArenaBytes` and `Bind` with a matching parameter list, and skips whichever of the two the type already declares.
 - Native AOT: the library sets `IsAotCompatible`, which enables the trim, single-file and AOT analyzers. `publish-aot.bat` publishes the sample application for `win-x64` and requires the MSVC toolset for the native linker.
 - Regenerating reference data: `reference/build.bat` clones WORLD into `reference/world-src`, builds it, and writes the dumps. Both directories are excluded from version control.
+- Network access: the library opens no network connection and sends no data.
 
 ---
 
