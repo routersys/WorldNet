@@ -20,7 +20,8 @@ M. Morise氏による音声分析変換合成システム[WORLD](https://github.
 1. [概要](#概要)
 2. [動作要件](#動作要件)
 3. [インストール方法](#インストール方法)
-4. [主な機能](#主な機能)
+4. [使い方](#使い方)
+5. [主な機能](#主な機能)
    - [1. 基本周波数の推定](#1-基本周波数の推定)
    - [2. スペクトル包絡と非周期性指標](#2-スペクトル包絡と非周期性指標)
    - [3. 波形合成](#3-波形合成)
@@ -28,19 +29,19 @@ M. Morise氏による音声分析変換合成システム[WORLD](https://github.
    - [5. 無確保とアリーナ](#5-無確保とアリーナ)
    - [6. 数値検証](#6-数値検証)
    - [7. 性能](#7-性能)
-5. [APIリファレンス](#apiリファレンス)
+6. [APIリファレンス](#apiリファレンス)
    - [解析](#解析)
    - [合成](#合成)
    - [符号化](#符号化)
    - [メモリ](#メモリ)
    - [ファイル入出力](#ファイル入出力)
    - [オプションの既定値](#オプションの既定値)
-6. [ビルド方法](#ビルド方法)
-7. [制限事項](#制限事項)
-8. [注意事項](#注意事項)
-9. [免責事項](#免責事項)
-10. [サードパーティライセンス](#サードパーティライセンス)
-11. [ライセンス](#ライセンス)
+7. [ビルド方法](#ビルド方法)
+8. [制限事項](#制限事項)
+9. [注意事項](#注意事項)
+10. [免責事項](#免責事項)
+11. [サードパーティライセンス](#サードパーティライセンス)
+12. [ライセンス](#ライセンス)
 
 ---
 
@@ -77,6 +78,45 @@ WorldNetはWORLDの11個のソースファイルをC#へ移植しています。
    ```
 
 2. `WorldArena`は一度だけ生成し、以後の呼び出しで使い回してください。アリーナは初回の呼び出しで拡張し、以降は追加の確保を行いません。
+
+---
+
+## 使い方
+
+次のプログラムは、モノラルのWAVファイルを読み込み、HarvestでF0の系列を、CheapTrickでスペクトル包絡を、D4Cで非周期性指標を推定し、その3つの結果から波形を合成します。
+
+```csharp
+using WorldNet;
+
+int length = WaveFile.GetLength("input.wav");
+double[] x = new double[length];
+WaveFile.Read("input.wav", x, out int fs, out _);
+
+using WorldArena arena = new();
+
+HarvestOption harvestOption = HarvestOption.Default;
+int f0Length = Harvest.GetSamplesForHarvest(fs, x.Length, harvestOption.FramePeriod);
+double[] temporalPositions = new double[f0Length];
+double[] f0 = new double[f0Length];
+Harvest.Estimate(x, fs, harvestOption, temporalPositions, f0, arena);
+
+CheapTrickOption cheapTrickOption = CheapTrickOption.Create(fs);
+int fftSize = cheapTrickOption.FftSize;
+int spectrumLength = (fftSize / 2) + 1;
+double[] spectrogram = new double[f0Length * spectrumLength];
+CheapTrick.Estimate(x, fs, cheapTrickOption, temporalPositions, f0, spectrogram, arena);
+
+double[] aperiodicity = new double[f0Length * spectrumLength];
+D4C.Estimate(x, fs, D4COption.Default, temporalPositions, f0, fftSize, aperiodicity, arena);
+
+int yLength = (int)((f0Length - 1) * harvestOption.FramePeriod / 1000.0 * fs) + 1;
+double[] y = new double[yLength];
+Synthesis.Synthesize(f0, spectrogram, aperiodicity, fftSize, harvestOption.FramePeriod, fs, y, arena);
+
+WaveFile.Write("output.wav", y, fs);
+```
+
+出力先の配列の大きさは、呼び出し側が決めます。`Harvest.GetSamplesForHarvest`はフレームの個数を返します。スペクトログラムと非周期性指標は、1フレームにつき`fftSize / 2 + 1`個の値を並べた1次元の配列です。`Synthesis.Synthesize`は、`y`の長さを出力の長さとして扱います。`WaveFile.Read`が受け付けるのは、フォーマットチャンクが16バイトのモノラルPCMファイルだけで、それ以外のヘッダーでは`InvalidDataException`を投げます。
 
 ---
 
