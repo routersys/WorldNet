@@ -365,7 +365,7 @@ dotnet build WorldNet.slnx -c Release
 
 ## サードパーティライセンス
 
-WorldNetは以下のソフトウェアの派生物です。ライセンスの全文は、リポジトリの[`.github/LICENSE/WORLD.txt`](.github/LICENSE/WORLD.txt)と[`.github/LICENSE/OouraFFT.txt`](.github/LICENSE/OouraFFT.txt)に収録しています。
+WorldNetは以下のソフトウェアの派生物です。ライセンスの全文は、リポジトリの[`.github/LICENSE/WORLD.txt`](.github/LICENSE/WORLD.txt)と[`.github/LICENSE/OouraFFT.txt`](.github/LICENSE/OouraFFT.txt)と、NuGetパッケージの`THIRD-PARTY-NOTICES/`に収録しています。
 
 WORLDは修正BSDライセンスで配布されており、ソース形式での再配布に際して著作権表示と条件文と免責文を保持することを求めます。上記のファイルはその文面を改変せずに収録しています。本リポジトリはサードパーティのソースコードを同梱しておらず、参照ハーネスが必要に応じてWORLDを取得します。
 
