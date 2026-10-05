@@ -319,7 +319,7 @@ To use the checkout instead of the package, add `WorldNet/WorldNet.csproj` as a 
 - Bit-exactness has been verified against WORLD compiled with MSVC on Windows x64. Other compilers, other runtimes and other architectures may round the transcendental functions differently, and the agreement above is not claimed for them.
 - `WorldArena` is not thread-safe. Concurrent analysis requires one arena per thread, which the test suite exercises.
 - An arena created by `FromNativeMemory` cannot grow. Run the same calls once with a growing arena, read `Capacity`, and pass a buffer of at least that many bytes plus 64 bytes for the arena header. `Used` cannot serve this purpose, because each call releases its scratch memory and `Used` is zero once the calls return. The size depends on the length and the sampling rate of the input and on the options.
-- Running the comparison tests requires the reference data. Without `reference/data` those tests cannot execute.
+- Running the comparison tests requires the reference data. Without `reference/data` those tests fail with an `InvalidOperationException`, and the remaining tests do not depend on it.
 - The sample application under `WorldNet.Examples` reads and writes files and therefore allocates managed memory. The zero-allocation guarantee applies to the library.
 
 ---
