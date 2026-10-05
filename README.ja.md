@@ -246,10 +246,10 @@ GitHub Actionsの`windows-latest`ランナー上でCIが計測した値です。
 | メンバー | 説明 |
 |---|---|
 | `Codec.GetNumberOfAperiodicities(fs)` | 非周期性指標の係数の個数を返します。 |
-| `Codec.CodeAperiodicity(aperiodicity, f0Length, fs, fftSize, codedAperiodicity)` | 非周期性指標を係数へ縮約します。 |
-| `Codec.DecodeAperiodicity(codedAperiodicity, f0Length, fs, fftSize, aperiodicity)` | 係数から非周期性指標を復元します。 |
-| `Codec.CodeSpectralEnvelope(spectrogram, f0Length, fs, fftSize, dimensions, coded)` | スペクトル包絡をメル尺度上で縮約します。 |
-| `Codec.DecodeSpectralEnvelope(coded, f0Length, fs, fftSize, dimensions, spectrogram)` | スペクトル包絡を復元します。 |
+| `Codec.CodeAperiodicity(aperiodicity, f0Length, fs, fftSize, codedAperiodicity, arena)` | 非周期性指標を係数へ縮約します。 |
+| `Codec.DecodeAperiodicity(codedAperiodicity, f0Length, fs, fftSize, aperiodicity, arena)` | 係数から非周期性指標を復元します。 |
+| `Codec.CodeSpectralEnvelope(spectrogram, f0Length, fs, fftSize, numberOfDimensions, codedSpectralEnvelope, arena)` | スペクトル包絡をメル尺度上で縮約します。 |
+| `Codec.DecodeSpectralEnvelope(codedSpectralEnvelope, f0Length, fs, fftSize, numberOfDimensions, spectrogram, arena)` | スペクトル包絡を復元します。 |
 
 ### メモリ
 
