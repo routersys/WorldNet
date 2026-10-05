@@ -19,7 +19,7 @@ M. Morise氏による音声分析変換合成システム[WORLD](https://github.
 
 1. [概要](#概要)
 2. [動作要件](#動作要件)
-3. [導入方法](#導入方法)
+3. [インストール方法](#インストール方法)
 4. [主な機能](#主な機能)
    - [1. 基本周波数の推定](#1-基本周波数の推定)
    - [2. スペクトル包絡と非周期性指標](#2-スペクトル包絡と非周期性指標)
@@ -35,11 +35,12 @@ M. Morise氏による音声分析変換合成システム[WORLD](https://github.
    - [メモリ](#メモリ)
    - [ファイル入出力](#ファイル入出力)
    - [オプションの既定値](#オプションの既定値)
-6. [制限事項](#制限事項)
-7. [注意事項](#注意事項)
-8. [免責事項](#免責事項)
-9. [サードパーティライセンス](#サードパーティライセンス)
-10. [ライセンス](#ライセンス)
+6. [ビルド方法](#ビルド方法)
+7. [制限事項](#制限事項)
+8. [注意事項](#注意事項)
+9. [免責事項](#免責事項)
+10. [サードパーティライセンス](#サードパーティライセンス)
+11. [ライセンス](#ライセンス)
 
 ---
 
@@ -67,12 +68,15 @@ WorldNetはWORLDの11個のソースファイルをC#へ移植しています。
 
 ---
 
-## 導入方法
+## インストール方法
 
-1. リポジトリを取得し、`WorldNet/WorldNet.csproj`をプロジェクト参照として追加するか、ビルドした成果物を参照してください。
+1. [NuGet](https://www.nuget.org/packages/WorldNet)からパッケージを追加してください。
+
+   ```sh
+   dotnet add package WorldNet
+   ```
+
 2. `WorldArena`は一度だけ生成し、以後の呼び出しで使い回してください。アリーナは初回の呼び出しで拡張し、以降は追加の確保を行いません。
-3. テストを実行する前に`reference/build.bat`を実行してください。WORLDを取得してMSVCでビルドし、`reference/data`へ基準データを書き出します。
-4. 実行例をNative AOTで発行する場合は`publish-aot.bat`を実行してください。
 
 ---
 
@@ -251,6 +255,21 @@ GitHub Actionsの`windows-latest`ランナー上でCIが計測した値です。
 | `D4COption` | `Threshold` | 0.85 | D4C LoveTrainの段のしきい値です。 |
 
 `DioOption.Default`と`HarvestOption.Default`と`D4COption.Default`は上の値を返します。`CheapTrickOption`はFFTの寸法が標本化周波数に依存するため、代わりに`CheapTrickOption.Create(fs)`を使います。4つとも`init`アクセサを持つ`readonly struct`ですので、一部を変えた複製は`with`式で作れます。
+
+---
+
+## ビルド方法
+
+.NET SDK 10.0を用意してリポジトリを取得し、直下で次のコマンドを実行します。
+
+```sh
+dotnet build WorldNet.slnx -c Release
+```
+
+パッケージの代わりにソースを使う場合は、`WorldNet/WorldNet.csproj`をプロジェクト参照として追加してください。
+
+1. テストを実行する前に`reference/build.bat`を実行してください。WORLDを取得してMSVCでビルドし、`reference/data`へ基準データを書き出します。
+2. 実行例をNative AOTで発行する場合は`publish-aot.bat`を実行してください。
 
 ---
 
