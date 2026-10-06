@@ -219,14 +219,16 @@ The following table was measured on Linux x64 against the original C++ built wit
 
 | Stage | C++ with GCC | This port with Native AOT | Ratio | This port with JIT | Ratio |
 |---|---:|---:|---:|---:|---:|
-| Dio | 5.79 | 4.79 | 1.21x | 4.61 | 1.26x |
-| StoneMask | 3.52 | 3.56 | 0.99x | 3.42 | 1.03x |
-| CheapTrick | 9.00 | 8.91 | 1.01x | 8.82 | 1.02x |
-| D4C | 33.36 | 29.49 | 1.13x | 29.70 | 1.12x |
-| Synthesis | 8.43 | 9.51 | 0.89x | 9.10 | 0.93x |
-| Harvest | 125.04 | 122.40 | 1.02x | 123.50 | 1.01x |
+| Dio | 5.86 | 3.85 | 1.52x | 4.16 | 1.41x |
+| StoneMask | 3.67 | 3.45 | 1.06x | 3.69 | 0.99x |
+| CheapTrick | 9.07 | 9.61 | 0.94x | 9.14 | 0.99x |
+| D4C | 35.59 | 31.16 | 1.14x | 31.12 | 1.14x |
+| Synthesis | 8.62 | 10.09 | 0.85x | 9.38 | 0.92x |
+| Harvest | 127.90 | 72.07 | 1.77x | 67.18 | 1.90x |
 
-The routines that contain loops, together with the routines of the Ooura FFT, are marked with `MethodImplOptions.AggressiveOptimization`, so that they are optimized at the first call instead of starting in the unoptimized tier. Before they were marked, the same measurement took 126.67 ms from Dio to Synthesis and 141.68 ms for Harvest, against 55.65 ms and 123.50 ms now. Once a process has warmed up, the speed does not depend on the mark: the best of 100 repeats within one process took 54.35 ms from Dio to Synthesis before the routines were marked and 54.20 ms after.
+The routines that contain loops, together with the routines of the Ooura FFT, are marked with `MethodImplOptions.AggressiveOptimization`, so that they are optimized at the first call instead of starting in the unoptimized tier. Before they were marked, the same measurement took 126.67 ms from Dio to Synthesis and 141.68 ms for Harvest, against 55.65 ms and 123.50 ms after they were marked. Once a process has warmed up, the speed does not depend on the mark: the best of 100 repeats within one process took 54.35 ms from Dio to Synthesis before the routines were marked and 54.20 ms after.
+
+Harvest and Dio were sped up afterwards without changing any output value. The refinement stage of Harvest used to transform the waveform again for every candidate, although the candidates of one frame can share a window length. It now orders the candidates of a frame by window length and reuses the spectra while the length stays the same. The zero-crossing detection shared by Dio and Harvest finds the points where the signal turns from positive to zero or below with vector comparisons instead of scanning one sample at a time. Against the previous Linux table, the ratio to GCC in the JIT column rose from 1.01x to 1.90x for Harvest and from 1.26x to 1.41x for Dio. The tests that compare every stage with the reference pass unchanged, and a new test compares the zero-crossing detection with a straightforward implementation bit for bit.
 
 ---
 
