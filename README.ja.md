@@ -155,6 +155,8 @@ D4Cは、帯域ごとの非周期性指標を推定します。D4C LoveTrainの�
 
 作業領域の要求は、アロケーターを型引数に取る`Layout`メソッドに、一度だけ書きます。測定用のアロケーターで実行すると、メモリに触れずに必要量が求まります。アリーナのアロケーターで実行すると、実際のバインドが行われます。ソースジェネレーターは、この一つのシグネチャから`GetRequiredArenaBytes`と`Bind`を生成します。
 
+アリーナが渡すメモリは、消去されません。`Reset`のあと、またはスコープが終わったあとには、同じ領域が古い内容のまま再び渡されます。`AllocateDouble`や`AllocateInt`が返したスパンは、取得したときに開いていたスコープが終わるまで、アリーナが`Reset`されるまで、アリーナが破棄されるまで、有効です。`WorldSynthesizer`は、アリーナへの参照を保持するので、合成器に到達できる間は、アリーナが回収されません。ただし、アリーナがそのメモリを確保し続ける必要は残ります。合成器を使っている間は、アリーナを`Reset`したり、外側のスコープを終えたりしないでください。アリーナが破棄されたあとは、合成器のメンバーが`ObjectDisposedException`を投げます。アリーナが破棄されたあとにスコープを終えても、何も起きません。
+
 マネージドヒープを確保しないことは、主張ではなく測定で確かめています。`GC.GetAllocatedBytesForCurrentThread`の増分は、解析から合成までの全体でも、実時間合成でも0バイトです。
 
 ### 6. 数値検証
@@ -278,7 +280,7 @@ GitHub Actionsの`windows-latest`ランナー上で、CIが計測した値です
 | `WorldSynthesizer.AddParameters(f0, spectrogram, aperiodicity)` | パラメーターの塊を投入し、受理したかどうかを返します。 |
 | `WorldSynthesizer.Synthesize()` | 次の区間を生成し、出力が得られたかどうかを返します。 |
 | `WorldSynthesizer.Buffer` | 現在の出力区間を参照します。 |
-| `WorldSynthesizer.IsLocked` | 内部バッファーが満杯かどうかを返します。 |
+| `WorldSynthesizer.IsLocked` | キューが満杯で、`Synthesize`がこれ以上出力を作れないことを返します。このとき、どちらの呼び出しも、`Refresh`を呼ぶまで進みません。 |
 | `WorldSynthesizer.Refresh()` | 投入済みのパラメーターと内部状態を破棄します。 |
 
 ### 符号化
