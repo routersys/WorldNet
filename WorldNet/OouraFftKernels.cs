@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace WorldNet;
 
 internal static unsafe partial class OouraFft
@@ -502,6 +504,7 @@ internal static unsafe partial class OouraFft
         a[3] = x0i;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void RftFSub(int n, double* a, int nc, double* c)
     {
         int m = n >> 1;
@@ -524,6 +527,7 @@ internal static unsafe partial class OouraFft
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void RftBSub(int n, double* a, int nc, double* c)
     {
         int m = n >> 1;
