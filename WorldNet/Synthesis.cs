@@ -2,6 +2,11 @@ namespace WorldNet;
 
 public static unsafe class Synthesis
 {
+    public static int GetSamplesForSynthesis(int fs, int f0Length, double framePeriod)
+    {
+        return (int)((f0Length - 1) * framePeriod / 1000.0 * fs) + 1;
+    }
+
     public static void Synthesize(ReadOnlySpan<double> f0, ReadOnlySpan<double> spectrogram,
         ReadOnlySpan<double> aperiodicity, int fftSize, double framePeriod, int fs,
         Span<double> y, WorldArena arena)
