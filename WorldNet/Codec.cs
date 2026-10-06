@@ -6,6 +6,8 @@ public static unsafe class Codec
 {
     public static int GetNumberOfAperiodicities(int fs)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fs);
+
         return (int)(WorldMath.MinDouble(WorldConstants.UpperLimit,
             (fs / 2.0) - WorldConstants.FrequencyInterval) / WorldConstants.FrequencyInterval);
     }
