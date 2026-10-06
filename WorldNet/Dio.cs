@@ -129,14 +129,7 @@ public static unsafe class Dio
         forwardFft.Execute();
 
         FftComplex* ySpectrum = scratch.YSpectrum;
-        for (int i = 0; i <= fftSize / 2; ++i)
-        {
-            double tmp = (ySpectrum[i].Real * filterSpectrum[i].Real)
-                - (ySpectrum[i].Imaginary * filterSpectrum[i].Imaginary);
-            ySpectrum[i].Imaginary = (ySpectrum[i].Real * filterSpectrum[i].Imaginary)
-                + (ySpectrum[i].Imaginary * filterSpectrum[i].Real);
-            ySpectrum[i].Real = tmp;
-        }
+        SpectrumMath.MultiplySpectra(ySpectrum, filterSpectrum, ySpectrum, (fftSize / 2) + 1);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
