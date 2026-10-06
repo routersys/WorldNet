@@ -1,7 +1,10 @@
+using System.Runtime.CompilerServices;
+
 namespace WorldNet;
 
 internal static unsafe partial class OouraFft
 {
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CftF1st(int n, double* a, double* w)
     {
         int mh = n >> 3;
@@ -207,6 +210,7 @@ internal static unsafe partial class OouraFft
         a[j3 + 3] = wk3i * x0i - wk3r * x0r;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CftB1st(int n, double* a, double* w)
     {
         int mh = n >> 3;
@@ -412,6 +416,7 @@ internal static unsafe partial class OouraFft
         a[j3 + 3] = wk3i * x0i - wk3r * x0r;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CftMdl1(int n, double* a, double* w)
     {
         int mh = n >> 3;
@@ -518,6 +523,7 @@ internal static unsafe partial class OouraFft
         a[j3 + 1] = -wn4r * (x0i - x0r);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CftMdl2(int n, double* a, double* w)
     {
         int mh = n >> 3;
