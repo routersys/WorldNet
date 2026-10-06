@@ -12,4 +12,15 @@ internal static class Validation
                 $"The FFT size must be a positive power of two but was {fftSize}.", paramName);
         }
     }
+
+    public static void ThrowIfContainsNaN(ReadOnlySpan<double> f0, string paramName)
+    {
+        foreach (double value in f0)
+        {
+            if (double.IsNaN(value))
+            {
+                throw new ArgumentException("The F0 contour must not contain NaN.", paramName);
+            }
+        }
+    }
 }
