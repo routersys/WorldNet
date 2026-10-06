@@ -9,7 +9,7 @@
 
   <PropertyGroup>
     <PackageId>WorldNet</PackageId>
-    <Version>1.2.0</Version>
+    <Version>1.2.1</Version>
     <Authors>routersys</Authors>
     <Product>WorldNet</Product>
     <Title>WorldNet</Title>
