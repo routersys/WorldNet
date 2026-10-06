@@ -1,9 +1,12 @@
+using System.Runtime.CompilerServices;
+
 namespace WorldNet;
 
 internal static unsafe class MatlabFunctions
 {
     internal const int DecimateFactorLength = 9;
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void FftShift(double* x, int xLength, double* y)
     {
         for (int i = 0; i < xLength / 2; ++i)
@@ -13,6 +16,7 @@ internal static unsafe class MatlabFunctions
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void Histc(double* x, int xLength, double* edges, int edgesLength, int* index)
     {
         int count = 1;
@@ -48,6 +52,7 @@ internal static unsafe class MatlabFunctions
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void Interp1(double* x, double* y, int xLength, double* xi, int xiLength,
         double* yi, in Interp1Scratch scratch)
     {
@@ -72,6 +77,7 @@ internal static unsafe class MatlabFunctions
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static int GetDecimateOutputLength(int xLength, int r)
     {
         int nout = ((xLength - 1) / r) + 1;
@@ -84,6 +90,7 @@ internal static unsafe class MatlabFunctions
         return count;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void Decimate(double* x, int xLength, int r, double* y,
         in DecimateScratch scratch)
     {
@@ -130,6 +137,7 @@ internal static unsafe class MatlabFunctions
         return x > 0 ? (int)(x + 0.5) : (int)(x - 0.5);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void Diff(double* x, int xLength, double* y)
     {
         for (int i = 0; i < xLength - 1; ++i)
@@ -138,6 +146,7 @@ internal static unsafe class MatlabFunctions
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void Interp1Q(double x, double shift, double* y, int xLength, double* xi,
         int xiLength, double* yi, in Interp1QScratch scratch)
     {
@@ -160,6 +169,7 @@ internal static unsafe class MatlabFunctions
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void FastFftFilt(double* x, int xLength, double* h, int hLength, int fftSize,
         in ForwardRealFft forwardRealFft, in InverseRealFft inverseRealFft, double* y,
         in FastFftFiltScratch scratch)
@@ -208,6 +218,7 @@ internal static unsafe class MatlabFunctions
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static double MatlabStd(double* x, int xLength)
     {
         double average = 0.0;
@@ -227,6 +238,7 @@ internal static unsafe class MatlabFunctions
         return Math.Sqrt(s);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void FilterForDecimate(double* x, int xLength, int r, double* y)
     {
         double a0;
