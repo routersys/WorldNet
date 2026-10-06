@@ -30,6 +30,8 @@ public static unsafe class StoneMask
                 "The destination is shorter than the F0 contour.", nameof(refinedF0));
         }
 
+        Validation.ThrowIfContainsNaN(f0, nameof(f0));
+
         if (f0.IsEmpty)
         {
             return;
