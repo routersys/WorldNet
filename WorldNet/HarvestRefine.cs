@@ -112,10 +112,9 @@ public static unsafe partial class Harvest
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    private static void GetMeanF0(double* x, int xLength, double fs, double currentPosition,
-        double currentF0, int fftSize, double windowLengthInTime, double* baseTime,
-        int baseTimeLength, double* refinedF0, double* refinedScore,
-        in HarvestRefineScratch scratch)
+    private static void GetSpectralTerms(double* x, int xLength, double fs,
+        double currentPosition, int fftSize, double windowLengthInTime, double* baseTime,
+        int baseTimeLength, in HarvestRefineScratch scratch)
     {
         FftComplex* mainSpectrum = scratch.MainSpectrum;
         FftComplex* diffSpectrum = scratch.DiffSpectrum;
@@ -140,10 +139,16 @@ public static unsafe partial class Harvest
             powerSpectrum[j] = (mainSpectrum[j].Real * mainSpectrum[j].Real) +
                 (mainSpectrum[j].Imaginary * mainSpectrum[j].Imaginary);
         }
+    }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    private static void GetMeanF0(double fs, double currentF0, int fftSize, double* refinedF0,
+        double* refinedScore, in HarvestRefineScratch scratch)
+    {
         int numberOfHarmonics = WorldMath.MinInt((int)(fs / 2.0 / currentF0), 6);
-        FixF0(powerSpectrum, numeratorI, fftSize, fs, currentF0, numberOfHarmonics, refinedF0,
-            refinedScore, scratch.AmplitudeList, scratch.InstantaneousFrequencyList);
+        FixF0(scratch.PowerSpectrum, scratch.NumeratorI, fftSize, fs, currentF0,
+            numberOfHarmonics, refinedF0, refinedScore, scratch.AmplitudeList,
+            scratch.InstantaneousFrequencyList);
     }
 
     private const int MaximumRefineSizes = 32;
@@ -157,15 +162,8 @@ public static unsafe partial class Harvest
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetRefinedF0(double* x, int xLength, double fs, double currentPosition,
         double currentF0, double f0Floor, double f0Ceil, double* refinedF0, double* refinedScore,
-        HarvestRefineScratch* scratches, int* sizes, int distinct)
+        HarvestRefineScratch* scratches, int* sizes, int distinct, ref int cachedHalfWindowLength)
     {
-        if (currentF0 <= 0.0)
-        {
-            *refinedF0 = 0.0;
-            *refinedScore = 0.0;
-            return;
-        }
-
         int halfWindowLength = (int)((1.5 * fs / currentF0) + 1.0);
         double windowLengthInTime = ((2.0 * halfWindowLength) + 1.0) / fs;
         int baseTimeLength = (halfWindowLength * 2) + 1;
@@ -178,14 +176,20 @@ public static unsafe partial class Harvest
         }
 
         HarvestRefineScratch scratch = scratches[index];
-        double* baseTime = scratch.BaseTime;
-        for (int i = 0; i < baseTimeLength; i++)
+        if (halfWindowLength != cachedHalfWindowLength)
         {
-            baseTime[i] = (-halfWindowLength + i) / fs;
+            double* baseTime = scratch.BaseTime;
+            for (int i = 0; i < baseTimeLength; i++)
+            {
+                baseTime[i] = (-halfWindowLength + i) / fs;
+            }
+
+            GetSpectralTerms(x, xLength, fs, currentPosition, fftSize, windowLengthInTime,
+                baseTime, baseTimeLength, scratch);
+            cachedHalfWindowLength = halfWindowLength;
         }
 
-        GetMeanF0(x, xLength, fs, currentPosition, currentF0, fftSize, windowLengthInTime,
-            baseTime, baseTimeLength, refinedF0, refinedScore, scratch);
+        GetMeanF0(fs, currentF0, fftSize, refinedF0, refinedScore, scratch);
 
         if (*refinedF0 < f0Floor || *refinedF0 > f0Ceil || *refinedScore < 2.5)
         {
@@ -248,13 +252,39 @@ public static unsafe partial class Harvest
             scratches[i] = HarvestRefineScratch.Bind(arena, sizes[i], lengths[i]);
         }
 
+        int* order = (int*)arena.AllocateRaw(maxCandidates, sizeof(int));
+        int* keys = (int*)arena.AllocateRaw(maxCandidates, sizeof(int));
+
         for (int i = 0; i < f0Length; i++)
         {
+            int count = 0;
             for (int j = 0; j < maxCandidates; ++j)
             {
+                double currentF0 = refinedF0Candidates[i][j];
+                if (currentF0 <= 0.0)
+                {
+                    refinedF0Candidates[i][j] = 0.0;
+                    f0Scores[i][j] = 0.0;
+                    continue;
+                }
+
+                keys[j] = (int)((1.5 * fs / currentF0) + 1.0);
+                int position = count++;
+                while (position > 0 && keys[order[position - 1]] > keys[j])
+                {
+                    order[position] = order[position - 1];
+                    --position;
+                }
+                order[position] = j;
+            }
+
+            int cachedHalfWindowLength = -1;
+            for (int k = 0; k < count; ++k)
+            {
+                int j = order[k];
                 GetRefinedF0(x, xLength, fs, temporalPositions[i], refinedF0Candidates[i][j],
                     f0Floor, f0Ceil, &refinedF0Candidates[i][j], &f0Scores[i][j], scratches,
-                    sizes, distinct);
+                    sizes, distinct, ref cachedHalfWindowLength);
             }
         }
     }
