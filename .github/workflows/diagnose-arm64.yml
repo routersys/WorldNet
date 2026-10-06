@@ -1,6 +1,10 @@
 name: ARM64診断
 
 on:
+  push:
+    branches: ["develop"]
+    paths:
+      - ".github/workflows/diagnose-arm64.yml"
   workflow_dispatch:
 
 permissions:
