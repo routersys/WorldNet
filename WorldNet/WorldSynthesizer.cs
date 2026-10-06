@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace WorldNet;
 
 public sealed unsafe class WorldSynthesizer
@@ -131,6 +133,7 @@ public sealed unsafe class WorldSynthesizer
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public void Refresh()
     {
         ClearRingBuffer(0, _numberOfPointers);
@@ -225,6 +228,7 @@ public sealed unsafe class WorldSynthesizer
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public bool Synthesize()
     {
         if (!CheckSynthesizer())
@@ -285,6 +289,7 @@ public sealed unsafe class WorldSynthesizer
             (((long)pointer * _maxFrames * _spectrumLength) + ((long)index * _spectrumLength));
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private void ClearRingBuffer(int start, int end)
     {
         for (int i = start; i < end; ++i)
@@ -294,6 +299,7 @@ public sealed unsafe class WorldSynthesizer
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private void SeekSynthesizer(double currentLocation)
     {
         int frameNumber = (int)(currentLocation / _framePeriod);
@@ -313,6 +319,7 @@ public sealed unsafe class WorldSynthesizer
         _currentPointer2 = tmpPointer;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private void SearchPointer(int frame, int flag, double** front, double** next)
     {
         int pointer = _currentPointer2 % _numberOfPointers;
@@ -342,6 +349,7 @@ public sealed unsafe class WorldSynthesizer
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private void RemoveDCComponent(double* periodicResponse, double* newPeriodicResponse)
     {
         double dcComponent = 0.0;
@@ -359,6 +367,7 @@ public sealed unsafe class WorldSynthesizer
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private void GetNoiseSpectrum(int noiseSize)
     {
         double average = 0.0;
@@ -380,6 +389,7 @@ public sealed unsafe class WorldSynthesizer
         _forwardRealFft.ForwardFft.Execute();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private void GetAperiodicResponse(int noiseSize, double* spectrum, double* aperiodicRatio,
         double currentVuv, double* aperiodicResponse)
     {
@@ -420,6 +430,7 @@ public sealed unsafe class WorldSynthesizer
         MatlabFunctions.FftShift(_inverseRealFft.Waveform, _fftSize, aperiodicResponse);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private void GetPeriodicResponse(double* spectrum, double* aperiodicRatio, double currentVuv,
         double* periodicResponse)
     {
@@ -452,6 +463,7 @@ public sealed unsafe class WorldSynthesizer
         RemoveDCComponent(periodicResponse, periodicResponse);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private void GetSpectralEnvelope(double currentLocation, double* spectralEnvelope)
     {
         int currentFrameFloor = (int)(currentLocation / _framePeriod);
@@ -479,6 +491,7 @@ public sealed unsafe class WorldSynthesizer
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private void GetAperiodicRatio(double currentLocation, double* aperiodicSpectrum)
     {
         int currentFrameFloor = (int)(currentLocation / _framePeriod);
@@ -518,6 +531,7 @@ public sealed unsafe class WorldSynthesizer
         return InterpolatedVuvSlot(pointer)[currentLocation - startSample + 1];
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private void GetOneFrameSegment(int noiseSize, int currentLocation)
     {
         double tmpLocation = (double)currentLocation / _fs;
@@ -540,6 +554,7 @@ public sealed unsafe class WorldSynthesizer
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private void GetTemporalParametersForTimeBase(double* f0, int f0Length)
     {
         int cumulativeFrame = WorldMath.MaxInt(0, _cumulativeFrame - f0Length);
@@ -554,6 +569,7 @@ public sealed unsafe class WorldSynthesizer
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private void GetPulseLocationsForTimeBase(double* interpolatedF0, int numberOfSamples)
     {
         _totalPhase[0] = _handoff == 1
@@ -601,6 +617,7 @@ public sealed unsafe class WorldSynthesizer
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private void GetTimeBase(double* f0, int f0Length, int startSample, int numberOfSamples)
     {
         GetTemporalParametersForTimeBase(f0, f0Length);
@@ -628,6 +645,7 @@ public sealed unsafe class WorldSynthesizer
         _handoffF0 = _interpolatedF0[numberOfSamples - 1];
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private int GetNextPulseLocationIndex()
     {
         int pointer = _currentPointer % _numberOfPointers;
@@ -651,6 +669,7 @@ public sealed unsafe class WorldSynthesizer
         return 0;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private void UpdateSynthesizer()
     {
         int pointer = _currentPointer % _numberOfPointers;
@@ -679,6 +698,7 @@ public sealed unsafe class WorldSynthesizer
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private bool CheckSynthesizer()
     {
         if (_synthesizedSample + _bufferSize >= _lastLocation)
@@ -699,6 +719,7 @@ public sealed unsafe class WorldSynthesizer
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetDCRemover(int fftSize, double* dcRemover)
     {
         double dcComponent = 0.0;
