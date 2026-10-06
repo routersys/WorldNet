@@ -150,6 +150,37 @@ public class CheapTrickTests
         EstimateWith(fs, fftSize);
     }
 
+    [Theory]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(44100.0)]
+    [InlineData(1e6)]
+    public void EstimateRejectsF0ThatTheAnalysisCannotRepresent(double value)
+    {
+        using WorldArena arena = new();
+        double[] x = new double[11025];
+        double[] positions = new double[5];
+        double[] f0 = [200.0, 200.0, value, 200.0, 200.0];
+        CheapTrickOption option = CheapTrickOption.Create(44100);
+        double[] spectrogram = new double[5 * ((option.FftSize / 2) + 1)];
+
+        Assert.ThrowsAny<ArgumentException>(
+            () => CheapTrick.Estimate(x, 44100, option, positions, f0, spectrogram, arena));
+    }
+
+    [Fact]
+    public void EstimateAcceptsF0BelowTheNyquistFrequency()
+    {
+        using WorldArena arena = new();
+        double[] x = new double[11025];
+        double[] positions = new double[5];
+        double[] f0 = [0.0, 71.0, 200.0, 5000.0, 11000.0];
+        CheapTrickOption option = CheapTrickOption.Create(44100);
+        double[] spectrogram = new double[5 * ((option.FftSize / 2) + 1)];
+
+        CheapTrick.Estimate(x, 44100, option, positions, f0, spectrogram, arena);
+    }
+
     private static void EstimateWith(int fs, int fftSize)
     {
         using WorldArena arena = new();
