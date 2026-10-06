@@ -85,6 +85,12 @@ internal static unsafe partial class OouraFft
             return;
         }
 
+        if (VectorPath == FftVectorPath.Narrow)
+        {
+            CftLeafNarrow(n, isplt, a, nw, w);
+            return;
+        }
+
         if (n == 512)
         {
             CftMdl1(128, a, &w[nw - 64]);
@@ -155,6 +161,12 @@ internal static unsafe partial class OouraFft
         if (VectorPath == FftVectorPath.Wide)
         {
             CftFx41Pairs(n, a, nw, w);
+            return;
+        }
+
+        if (VectorPath == FftVectorPath.Narrow)
+        {
+            CftFx41Narrow(n, a, nw, w);
             return;
         }
 
