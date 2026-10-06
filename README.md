@@ -211,7 +211,18 @@ Measured by CI on a GitHub Actions `windows-latest` runner with AMD EPYC 7763 64
 
 A ratio above 1.00 means this port is faster than the original C++.
 
-Figures obtained through the just-in-time compiler are deliberately absent. The benchmark repeats each stage only twice, which is not enough for tiered compilation to settle. Disabling tiering with `DOTNET_TieredCompilation=0` brings the just-in-time figures back in line with the Native AOT column, which shows that the gap is a warm-up artefact of the measurement rather than a property of the port.
+The two tables above use Native AOT. The following table adds the just-in-time compiler with its default settings. It was measured on Linux x64 against the original C++ built with GCC 13.3 at `-O2`, on a virtual machine with an Intel Xeon at 2.10 GHz and four cores. Each figure is the best of 15 runs in milliseconds. Every run is a fresh process that analyses the same 22050 Hz reference waveform of 17500 samples with a 5 ms frame period, so the just-in-time column includes the cost of compiling the code and of running it before tiered compilation has optimized it. It is a fixed record and is not regenerated.
+
+| Stage | C++ with GCC | This port with Native AOT | Ratio | This port with JIT | Ratio |
+|---|---:|---:|---:|---:|---:|
+| Dio | 5.66 | 4.66 | 1.21x | 5.92 | 0.96x |
+| StoneMask | 3.55 | 3.59 | 0.99x | 4.34 | 0.82x |
+| CheapTrick | 9.05 | 9.12 | 0.99x | 11.09 | 0.82x |
+| D4C | 33.55 | 29.79 | 1.13x | 33.84 | 0.99x |
+| Synthesis | 8.25 | 9.40 | 0.88x | 13.03 | 0.63x |
+| Harvest | 121.54 | 122.66 | 0.99x | 137.65 | 0.88x |
+
+The loop-heavy routines of the library are marked with `MethodImplOptions.AggressiveOptimization`, so that they are optimized at the first call instead of starting in the unoptimized tier. Before they were marked, the same measurement took 131.14 ms from Dio to Synthesis, against 68.22 ms now. Once a process has warmed up, the speed does not depend on the mark: the best of 400 repeats within one process took 55.63 ms from Dio to Synthesis before the routines were marked and 54.30 ms after.
 
 ---
 
@@ -334,6 +345,7 @@ To use the checkout instead of the package, add `WorldNet/WorldNet.csproj` as a 
 - Determinism: the pipeline produces identical output across repeated runs. The pseudo-random generator used by D4C and by the synthesizer is the xorshift generator of the original, reseeded to the same state, and it reproduces the original sequence and its final state exactly.
 - Scratch layout: a type marked with `[ScratchLayout]` must expose a `Layout` method generic over `IScratchAllocator`. The generator emits `GetRequiredArenaBytes` and `Bind` with a matching parameter list, and skips whichever of the two the type already declares.
 - Native AOT: the library sets `IsAotCompatible`, which enables the trim, single-file and AOT analyzers. `publish-aot.bat` publishes the sample application for `win-x64` and requires the MSVC toolset for the native linker.
+- Just-in-time compilation: the loop-heavy routines carry `MethodImplOptions.AggressiveOptimization`, which skips the unoptimized first tier and compiles them with full optimization at the first call. The first call in a process therefore pays the compilation time. Once the process has warmed up, the speed is the same with and without the mark.
 - Regenerating reference data: `reference/build.bat` on Windows and `reference/build.sh` on Linux clone WORLD into `reference/world-src`, build it, and write the dumps. Both directories are excluded from version control.
 - Network access: the library opens no network connection and sends no data.
 
