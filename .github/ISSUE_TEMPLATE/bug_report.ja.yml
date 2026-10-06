@@ -1,0 +1,178 @@
+name: 不具合報告
+description: ライブラリが文書化している挙動や保証と異なる動きを報告します。
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        脆弱性はここへ書かないでください。前の画面の脆弱性報告のリンクを使ってください。
+        細工したファイルや引数の値で起きる異常終了や範囲外アクセスは、脆弱性の可能性があります。
+
+        報告が動くのは、他人が再現できるときだけです。以下の項目は、このライブラリで
+        再現できるかどうかを決めるものに絞ってあります。
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: 領域
+      description: 挙動が現れる場所です。ご自身のコードではなく、失敗した箇所に近いものを選んでください。
+      options:
+        - Dio、Harvest、StoneMask
+        - CheapTrick
+        - D4C
+        - Synthesis
+        - WorldSynthesizer
+        - Codec
+        - WaveFile、ParameterFile
+        - WorldArena
+        - ソースジェネレーター
+        - パッケージ、NuGet、Native AOT
+        - 判断がつかない
+    validations:
+      required: true
+
+  - type: dropdown
+    id: symptom
+    attributes:
+      label: 症状
+      options:
+        - 例外が投げられる
+        - 出力が原典のWORLDと異なる
+        - 出力が誤っているが、原典のWORLDとは比べていない
+        - プロセスが異常終了する
+        - マネージドメモリの確保やメモリの増加が起きる
+        - 想定より遅い
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: パッケージの版数
+      description: 参照している WorldNet パッケージの正確な版数を書いてください。
+      placeholder: WorldNet 1.2.1
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待した挙動
+      description: 何を期待したか。文書に根拠がある場合はその箇所も書いてください。
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 実際の挙動
+      description: |
+        代わりに何が起きたか。例外が出た場合は種別とメッセージとスタックトレースを省略せずに貼ってください。
+        数値の差であれば、処理の段階、添字、両方の値を書いてください。
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: 再現手順
+      description: |
+        問題を示す最小のコードです。既定値と異なるオプションはすべて含めてください。
+        これが無い報告は、情報不足として閉じられることが多くなります。
+      render: csharp
+    validations:
+      required: true
+
+  - type: textarea
+    id: input
+    attributes:
+      label: 入力
+      description: |
+        標本化周波数、標本数、波形の作り方です。問題を再現する合成信号が最も望ましいです。
+        添付したファイルは誰でも見られるため、再配布する権利のある音声だけを添付してください。
+    validations:
+      required: true
+
+  - type: dropdown
+    id: comparison
+    attributes:
+      label: 原典のWORLDとの比較
+      description: |
+        WorldNet は WORLD の移植です。原典も同じ挙動を示すなら、移植の不具合ではありません。
+        原典が同じ結果を返すかどうかで、この二つを分けます。
+      options:
+        - 原典のWORLDは異なる結果を返す
+        - 原典のWORLDは同じ結果を返す
+        - 比べていない
+        - 該当しない
+    validations:
+      required: true
+
+  - type: input
+    id: original
+    attributes:
+      label: 原典のWORLDのビルド
+      description: 比べた場合だけ書いてください。WORLD のコミットと、コンパイラーとその版数です。
+      placeholder: WORLDのコミットハッシュ, GCC 13.3
+
+  - type: input
+    id: runtime
+    attributes:
+      label: .NETランタイムとターゲットフレームワーク
+      description: |
+        プロセスを動かしているランタイムを dotnet --list-runtimes で調べたものと、ご自身のプロジェクトの
+        ターゲットフレームワークです。パッケージは net8.0 と net10.0 のそれぞれのビルドを含みます。
+      placeholder: Microsoft.NETCore.App 10.0.0, target net10.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: 実行方式
+      options:
+        - JIT
+        - ReadyToRun
+        - Native AOT
+        - WebAssembly
+        - 判断がつかない
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OSとアーキテクチャー
+      placeholder: Windows 11 24H2 x64, Ubuntu 24.04 ARM64
+    validations:
+      required: true
+
+  - type: input
+    id: processor
+    attributes:
+      label: プロセッサーとベクトル命令の対応
+      description: |
+        プロセッサーの型番、Avx2.IsSupported、Vector256.IsHardwareAccelerated、Vector128.IsHardwareAccelerated が
+        真かどうか、設定している DOTNET_Enable* 変数です。ベクトル化した処理は、これらから実行経路を選びます。
+      placeholder: AMD EPYC 9V74, Avx2 true, Vector256 true, Vector128 true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: その他
+      description: |
+        確保や時間をどう測ったか、WorldArena.Capacity の値、アリーナをスレッド間で共有しているか、
+        その他関係すると思われることを書いてください。
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 提出の前に
+      options:
+        - label: 最新の公開版を使っています。使えない場合はその理由を上に書きました。
+          required: true
+        - label: 既存のIssueを検索し、重複でないことを確認しました。
+          required: true
+        - label: READMEの制限事項を読み、そこに挙げられた制限ではないことを確認しました。
+          required: true
