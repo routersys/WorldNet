@@ -2,7 +2,7 @@ namespace WorldNet.Tests;
 
 public unsafe class MatlabFunctionsTests
 {
-    [Fact]
+    [ReferenceFact]
     public void MatlabRoundMatchesReference()
     {
         double[] input = ReferenceData.Load("mf_round_input").Values;
@@ -14,7 +14,7 @@ public unsafe class MatlabFunctionsTests
         }
     }
 
-    [Theory]
+    [ReferenceTheory]
     [InlineData(2)]
     [InlineData(3)]
     [InlineData(4)]
@@ -48,7 +48,7 @@ public unsafe class MatlabFunctionsTests
         AssertExact(expected, y, $"decimate r={r}");
     }
 
-    [Fact]
+    [ReferenceFact]
     public void Interp1MatchesReference()
     {
         double[] sourceX = ReferenceData.Load("mf_interp1_x").Values;
@@ -68,7 +68,7 @@ public unsafe class MatlabFunctionsTests
         AssertExact(expected, yi, "interp1");
     }
 
-    [Fact]
+    [ReferenceFact]
     public void HistcMatchesReference()
     {
         double[] sourceX = ReferenceData.Load("mf_interp1_x").Values;
@@ -92,7 +92,7 @@ public unsafe class MatlabFunctionsTests
         }
     }
 
-    [Fact]
+    [ReferenceFact]
     public void DiffMatchesReference()
     {
         double[] source = ReferenceData.Load("mf_interp1_y").Values;
@@ -107,7 +107,7 @@ public unsafe class MatlabFunctionsTests
         AssertExact(expected, output, "diff");
     }
 
-    [Fact]
+    [ReferenceFact]
     public void MatlabStdMatchesReference()
     {
         double[] source = ReferenceData.Load("mf_interp1_y").Values;
@@ -119,7 +119,7 @@ public unsafe class MatlabFunctionsTests
         Assert.Equal(expected, MatlabFunctions.MatlabStd(y, source.Length));
     }
 
-    [Fact]
+    [ReferenceFact]
     public void FftShiftMatchesReference()
     {
         double[] source = ReferenceData.Load("mf_interp1_y").Values;
@@ -134,7 +134,7 @@ public unsafe class MatlabFunctionsTests
         AssertExact(expected, output, "fftshift");
     }
 
-    [Fact]
+    [ReferenceFact]
     public void Interp1QMatchesReference()
     {
         double[] sourceY = ReferenceData.Load("mf_interp1_y").Values;
@@ -152,7 +152,7 @@ public unsafe class MatlabFunctionsTests
         AssertExact(expected, yi, "interp1Q");
     }
 
-    [Fact]
+    [ReferenceFact]
     public void RandnMatchesReference()
     {
         double[] expected = ReferenceData.Load("mf_randn_values").Values;

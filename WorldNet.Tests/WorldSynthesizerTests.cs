@@ -4,7 +4,7 @@ public class WorldSynthesizerTests
 {
     private const int BufferSize = 64;
 
-    [Fact]
+    [ReferenceFact]
     public void RealtimeSynthesisMatchesReference()
     {
         double[] meta = ReferenceData.Load("meta").Values;

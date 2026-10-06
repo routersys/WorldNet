@@ -45,7 +45,7 @@ public class CodecTests
         }
     }
 
-    [Fact]
+    [ReferenceFact]
     public void CodeAperiodicityMatchesReference()
     {
         double[] meta = ReferenceData.Load("meta").Values;
@@ -64,7 +64,7 @@ public class CodecTests
         AssertExact(expected.Values, coded, "coded aperiodicity");
     }
 
-    [Fact]
+    [ReferenceFact]
     public void DecodeAperiodicityMatchesReferenceWithinOneUlp()
     {
         double[] meta = ReferenceData.Load("meta").Values;
@@ -81,7 +81,7 @@ public class CodecTests
         AssertWithinOneUlp(expected.Values, decoded, "decoded aperiodicity");
     }
 
-    [Fact]
+    [ReferenceFact]
     public void CodeSpectralEnvelopeMatchesReference()
     {
         double[] meta = ReferenceData.Load("meta").Values;
@@ -101,7 +101,7 @@ public class CodecTests
         AssertExact(expected.Values, coded, "coded spectrum");
     }
 
-    [Fact]
+    [ReferenceFact]
     public void DecodeSpectralEnvelopeMatchesReference()
     {
         double[] meta = ReferenceData.Load("meta").Values;

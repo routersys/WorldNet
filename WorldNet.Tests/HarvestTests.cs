@@ -2,7 +2,7 @@ namespace WorldNet.Tests;
 
 public class HarvestTests
 {
-    [Fact]
+    [ReferenceFact]
     public void EstimateMatchesReference()
     {
         double[] meta = ReferenceData.Load("meta").Values;
@@ -44,7 +44,7 @@ public class HarvestTests
         }
     }
 
-    [Fact]
+    [ReferenceFact]
     public void GetSamplesForHarvestMatchesReference()
     {
         double[] expected = ReferenceData.Load("opt_samples_for_harvest").Values;

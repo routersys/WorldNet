@@ -37,7 +37,7 @@ public class ParameterFileTests
     private static string TempPath() =>
         Path.Combine(Path.GetTempPath(), $"worldnet_{Guid.NewGuid():N}.bin");
 
-    [Fact]
+    [ReferenceFact]
     public void WriteF0BinaryMatchesReferenceBytes()
     {
         double[] meta = ReferenceData.Load("meta").Values;
@@ -56,7 +56,7 @@ public class ParameterFileTests
         }
     }
 
-    [Fact]
+    [ReferenceFact]
     public void WriteF0TextMatchesReferenceContent()
     {
         double[] meta = ReferenceData.Load("meta").Values;
@@ -86,7 +86,7 @@ public class ParameterFileTests
         }
     }
 
-    [Fact]
+    [ReferenceFact]
     public void WriteSpectralEnvelopeMatchesReferenceBytes()
     {
         double[] meta = ReferenceData.Load("meta").Values;
@@ -105,7 +105,7 @@ public class ParameterFileTests
         }
     }
 
-    [Fact]
+    [ReferenceFact]
     public void WriteAperiodicityMatchesReferenceBytes()
     {
         double[] meta = ReferenceData.Load("meta").Values;
@@ -124,7 +124,7 @@ public class ParameterFileTests
         }
     }
 
-    [Fact]
+    [ReferenceFact]
     public void ReadF0MatchesReferenceValues()
     {
         double[] expected = ReferenceData.Load("stonemask_f0").Values;
@@ -141,7 +141,7 @@ public class ParameterFileTests
         }
     }
 
-    [Fact]
+    [ReferenceFact]
     public void ReadSpectralEnvelopeMatchesReferenceValues()
     {
         ReferenceArray expected = ReferenceData.Load("cheaptrick_spectrogram");
@@ -160,7 +160,7 @@ public class ParameterFileTests
         }
     }
 
-    [Fact]
+    [ReferenceFact]
     public void GetHeaderInformationMatchesReference()
     {
         double[] meta = ReferenceData.Load("meta").Values;

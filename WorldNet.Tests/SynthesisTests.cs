@@ -2,7 +2,7 @@ namespace WorldNet.Tests;
 
 public class SynthesisTests
 {
-    [Fact]
+    [ReferenceFact]
     public void SynthesizeMatchesReferenceWithinTolerance()
     {
         double[] meta = ReferenceData.Load("meta").Values;

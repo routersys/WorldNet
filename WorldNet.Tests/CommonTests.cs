@@ -6,7 +6,7 @@ public unsafe class CommonTests
     private const int SampleRate = 44100;
     private const double TestF0 = 200.0;
 
-    [Fact]
+    [ReferenceFact]
     public void GetSuitableFftSizeMatchesReference()
     {
         double[] expected = ReferenceData.Load("cm_suitable_fft_size").Values;
@@ -17,7 +17,7 @@ public unsafe class CommonTests
         }
     }
 
-    [Theory]
+    [ReferenceTheory]
     [InlineData(2)]
     [InlineData(3)]
     [InlineData(8)]
@@ -37,7 +37,7 @@ public unsafe class CommonTests
         AssertExact(expected, y, $"nuttall {length}");
     }
 
-    [Fact]
+    [ReferenceFact]
     public void DcCorrectionMatchesReference()
     {
         double[] source = ReferenceData.Load("cm_power_spectrum").Values;
@@ -56,7 +56,7 @@ public unsafe class CommonTests
         AssertExact(expected, output, "DC correction");
     }
 
-    [Fact]
+    [ReferenceFact]
     public void LinearSmoothingMatchesReference()
     {
         double[] source = ReferenceData.Load("cm_power_spectrum").Values;
@@ -73,7 +73,7 @@ public unsafe class CommonTests
         AssertExact(expected, output, "linear smoothing");
     }
 
-    [Fact]
+    [ReferenceFact]
     public void MinimumPhaseSpectrumMatchesReference()
     {
         double[] source = ReferenceData.Load("cm_power_spectrum").Values;
@@ -98,7 +98,7 @@ public unsafe class CommonTests
         }
     }
 
-    [Fact]
+    [ReferenceFact]
     public void FastFftFiltMatchesReference()
     {
         double[] sourceX = ReferenceData.Load("mf_fastfftfilt_x").Values;

@@ -2,7 +2,7 @@ namespace WorldNet.Tests;
 
 public class D4CTests
 {
-    [Fact]
+    [ReferenceFact]
     public void EstimateMatchesReferenceWithinOneUlp()
     {
         double[] meta = ReferenceData.Load("meta").Values;
@@ -48,7 +48,7 @@ public class D4CTests
         }
     }
 
-    [Fact]
+    [ReferenceFact]
     public void OptionMatchesReference()
     {
         double expected = ReferenceData.Load("opt_d4c").Values[0];

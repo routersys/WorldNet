@@ -2,7 +2,7 @@ namespace WorldNet.Tests;
 
 public unsafe class OouraFftTests
 {
-    [Theory]
+    [ReferenceTheory]
     [InlineData(8)]
     [InlineData(16)]
     [InlineData(32)]
@@ -40,7 +40,7 @@ public unsafe class OouraFftTests
         AssertMatches(expected.Values, actual, $"r2c n={n}");
     }
 
-    [Theory]
+    [ReferenceTheory]
     [InlineData(8)]
     [InlineData(16)]
     [InlineData(32)]
@@ -77,7 +77,7 @@ public unsafe class OouraFftTests
         AssertMatches(expected.Values, actual, $"c2r n={n}");
     }
 
-    [Theory]
+    [ReferenceTheory]
     [InlineData(8)]
     [InlineData(16)]
     [InlineData(32)]
@@ -93,7 +93,7 @@ public unsafe class OouraFftTests
         AssertComplexToComplex(n, FftDirection.Forward, $"fft_c2c_forward_{n}");
     }
 
-    [Theory]
+    [ReferenceTheory]
     [InlineData(8)]
     [InlineData(16)]
     [InlineData(32)]

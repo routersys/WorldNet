@@ -5,7 +5,7 @@ public class CheapTrickTests
     private static readonly int[] Rates =
         [8000, 16000, 22050, 24000, 32000, 44100, 48000, 96000];
 
-    [Fact]
+    [ReferenceFact]
     public void EstimateMatchesReference()
     {
         double[] meta = ReferenceData.Load("meta").Values;
@@ -40,7 +40,7 @@ public class CheapTrickTests
         }
     }
 
-    [Fact]
+    [ReferenceFact]
     public void OptionMatchesReference()
     {
         double[] expected = ReferenceData.Load("opt_cheaptrick").Values;
@@ -53,7 +53,7 @@ public class CheapTrickTests
         Assert.Equal((int)expected[2], option.FftSize);
     }
 
-    [Fact]
+    [ReferenceFact]
     public void GetFftSizeMatchesReference()
     {
         double[] expected = ReferenceData.Load("opt_fft_size_by_rate").Values;
@@ -64,7 +64,7 @@ public class CheapTrickTests
         }
     }
 
-    [Fact]
+    [ReferenceFact]
     public void GetF0FloorMatchesReference()
     {
         double[] expected = ReferenceData.Load("opt_f0_floor_by_rate").Values;

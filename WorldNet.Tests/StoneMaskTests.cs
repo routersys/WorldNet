@@ -2,7 +2,7 @@ namespace WorldNet.Tests;
 
 public class StoneMaskTests
 {
-    [Fact]
+    [ReferenceFact]
     public void RefineMatchesReference()
     {
         double[] meta = ReferenceData.Load("meta").Values;

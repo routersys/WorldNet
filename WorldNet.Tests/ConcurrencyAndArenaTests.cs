@@ -51,7 +51,7 @@ public unsafe class ConcurrencyAndArenaTests
         }
     }
 
-    [Fact]
+    [ReferenceFact]
     public void PipelineIsDeterministicAcrossRuns()
     {
         double[] x = Input();
@@ -67,7 +67,7 @@ public unsafe class ConcurrencyAndArenaTests
         AssertBitEqual(a, c, "reused arena");
     }
 
-    [Fact]
+    [ReferenceFact]
     public void PipelineIsThreadSafeWithSeparateArenas()
     {
         double[] x = Input();
@@ -90,7 +90,7 @@ public unsafe class ConcurrencyAndArenaTests
         }
     }
 
-    [Fact]
+    [ReferenceFact]
     public void PipelineWorksWithCallerSuppliedArena()
     {
         double[] x = Input();

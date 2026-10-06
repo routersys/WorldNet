@@ -60,7 +60,7 @@ public class PipelineAllocationTests
             w.FramePeriod, w.Fs, w.Y, arena);
     }
 
-    [Fact]
+    [ReferenceFact]
     public void FullPipelineDoesNotAllocateManagedMemory()
     {
         Workspace workspace = CreateWorkspace();
@@ -81,7 +81,7 @@ public class PipelineAllocationTests
         Assert.Equal(0L, after - before);
     }
 
-    [Fact]
+    [ReferenceFact]
     public void ArenaIsFullyReleasedAfterPipeline()
     {
         Workspace workspace = CreateWorkspace();
@@ -98,7 +98,7 @@ public class PipelineAllocationTests
         Assert.Equal(capacityAfterFirst, arena.Capacity);
     }
 
-    [Fact]
+    [ReferenceFact]
     public void RealtimeSynthesizerDoesNotAllocateManagedMemory()
     {
         Workspace workspace = CreateWorkspace();

@@ -2,7 +2,7 @@ namespace WorldNet.Tests;
 
 public class DioTests
 {
-    [Fact]
+    [ReferenceFact]
     public void EstimateMatchesReference()
     {
         double[] meta = ReferenceData.Load("meta").Values;
@@ -44,7 +44,7 @@ public class DioTests
         }
     }
 
-    [Fact]
+    [ReferenceFact]
     public void EstimateWithDecimationMatchesReference()
     {
         double[] meta = ReferenceData.Load("meta").Values;
@@ -73,7 +73,7 @@ public class DioTests
         }
     }
 
-    [Fact]
+    [ReferenceFact]
     public void GetSamplesForDioMatchesReference()
     {
         double[] expected = ReferenceData.Load("opt_samples_for_dio").Values;

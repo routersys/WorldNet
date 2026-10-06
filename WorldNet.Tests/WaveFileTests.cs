@@ -8,7 +8,7 @@ public class WaveFileTests
     private static string ReferenceWavePath =>
         Path.Combine(ReferenceData.DataDirectory, "synthesis_y.wav");
 
-    [Fact]
+    [ReferenceFact]
     public void ReadMatchesReferenceWaveform()
     {
         double[] expected = ReferenceData.Load("input_x").Values;
@@ -33,7 +33,7 @@ public class WaveFileTests
         }
     }
 
-    [Fact]
+    [ReferenceFact]
     public void WriteMatchesReferenceFileBytes()
     {
         double[] meta = ReferenceData.Load("meta").Values;
@@ -90,7 +90,7 @@ public class WaveFileTests
         }
     }
 
-    [Fact]
+    [ReferenceFact]
     public void ReadRejectsShortDestination()
     {
         double[] destination = new double[10];

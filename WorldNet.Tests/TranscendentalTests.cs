@@ -48,43 +48,43 @@ public class TranscendentalTests
         }
     }
 
-    [Fact]
+    [ReferenceFact]
     public void CosMatchesReference()
     {
         AssertExact("cos", Math.Cos);
     }
 
-    [Fact]
+    [ReferenceFact]
     public void SinMatchesReference()
     {
         AssertExact("sin", Math.Sin);
     }
 
-    [Fact]
+    [ReferenceFact]
     public void LogMatchesReference()
     {
         AssertExact("log", Math.Log);
     }
 
-    [Fact]
+    [ReferenceFact]
     public void ExpMatchesReference()
     {
         AssertExact("exp", Math.Exp);
     }
 
-    [Fact]
+    [ReferenceFact]
     public void Log10MatchesReference()
     {
         AssertExact("log10", Math.Log10);
     }
 
-    [Fact]
+    [ReferenceFact]
     public void Pow10MatchesReferenceWithinOneUlp()
     {
         AssertWithinOneUlp("pow10", v => Math.Pow(10.0, v));
     }
 
-    [Fact]
+    [ReferenceFact]
     public void SquareMatchesReferenceWithinOneUlp()
     {
         AssertWithinOneUlp("pow2", v => v * v);
