@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace WorldNet;
 
 public static unsafe partial class Harvest
@@ -47,6 +49,7 @@ public static unsafe partial class Harvest
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void HarvestBody(double* x, int xLength, int fs, double f0Floor, double f0Ceil,
         double framePeriod, double* temporalPositions, double* f0, WorldArena arena)
     {
@@ -103,6 +106,7 @@ public static unsafe partial class Harvest
         return numberOfCandidates;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void HarvestGeneralBody(double* x, int xLength, int fs, int framePeriod,
         double f0Floor, double f0Ceil, double channelsInOctave, int speed,
         double* temporalPositions, double* f0, WorldArena arena)
