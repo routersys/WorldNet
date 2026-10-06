@@ -162,6 +162,11 @@ public sealed unsafe class WorldSynthesizer
     public bool AddParameters(ReadOnlySpan<double> f0, ReadOnlySpan<double> spectrogram,
         ReadOnlySpan<double> aperiodicity)
     {
+        if (f0.IsEmpty)
+        {
+            throw new ArgumentException("The F0 contour must not be empty.", nameof(f0));
+        }
+
         int f0Length = f0.Length;
         ArgumentOutOfRangeException.ThrowIfGreaterThan(f0Length, _maxFrames, nameof(f0));
 
