@@ -25,7 +25,7 @@ env:
 
 jobs:
   benchmark:
-    name: 原典C++とNativeAOTを同一環境で比較
+    name: 原典C++とNativeAOTとJITを同一環境で比較
     runs-on: windows-latest
     defaults:
       run:
@@ -65,6 +65,9 @@ jobs:
         shell: cmd
         run: publish-aot.bat
 
+      - name: 実行例を JIT 用にビルド
+        run: dotnet build WorldNet.Examples/WorldNet.Examples.csproj -c Release
+
       - name: 計測を実行して README を更新
         run: |
           AOT=$(find WorldNet.Examples/bin -name WorldNet.Examples.exe -path "*publish*" -print -quit)
@@ -76,6 +79,7 @@ jobs:
           python .github/scripts/benchmark.py \
             --cpp reference/worldref.exe \
             --aot "${AOT}" \
+            --jit WorldNet.Examples/bin/Release/net10.0/WorldNet.Examples.dll \
             --wav reference/world-src/test/vaiueo2d.wav \
             --data reference/data \
             --runs "${{ inputs.runs || '20' }}" \
