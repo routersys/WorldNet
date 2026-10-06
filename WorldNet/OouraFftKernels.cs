@@ -520,7 +520,7 @@ internal static unsafe partial class OouraFft
         int ks = 2 * nc / m;
         int kk = 0;
         int j = 2;
-        if (Avx2.IsSupported)
+        if (VectorPath == FftVectorPath.Wide)
         {
             for (; j + 2 < m; j += 4)
             {
@@ -564,7 +564,7 @@ internal static unsafe partial class OouraFft
         int ks = 2 * nc / m;
         int kk = 0;
         int j = 2;
-        if (Avx2.IsSupported)
+        if (VectorPath == FftVectorPath.Wide)
         {
             for (; j + 2 < m; j += 4)
             {

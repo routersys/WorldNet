@@ -44,7 +44,7 @@ internal static unsafe partial class OouraFft
         double wk3i = 0;
         int j0;
         int scalarEnd = mh - 2;
-        if (Avx2.IsSupported)
+        if (VectorPath == FftVectorPath.Wide)
         {
             Vector256<double> carried = CftFirstLoop(mh, m, a, w, csc1, csc3, false);
             wd1r = carried.GetElement(0);
@@ -260,7 +260,7 @@ internal static unsafe partial class OouraFft
         double wk3i = 0;
         int j0;
         int scalarEnd = mh - 2;
-        if (Avx2.IsSupported)
+        if (VectorPath == FftVectorPath.Wide)
         {
             Vector256<double> carried = CftFirstLoop(mh, m, a, w, csc1, csc3, true);
             wd1r = carried.GetElement(0);
@@ -465,7 +465,7 @@ internal static unsafe partial class OouraFft
         double wn4r = w[1];
         int k = 0;
         int scalarEnd = mh;
-        if (Avx2.IsSupported)
+        if (VectorPath == FftVectorPath.Wide)
         {
             CftMiddleLoop1(mh, m, a, w);
             scalarEnd = 2;
@@ -583,7 +583,7 @@ internal static unsafe partial class OouraFft
         int k = 0;
         int kr = 2 * m;
         int scalarEnd = mh;
-        if (Avx2.IsSupported)
+        if (VectorPath == FftVectorPath.Wide)
         {
             CftMiddleLoop2(mh, m, a, w);
             scalarEnd = 2;

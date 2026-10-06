@@ -4,8 +4,26 @@ using System.Runtime.Intrinsics.X86;
 
 namespace WorldNet;
 
+internal enum FftVectorPath
+{
+    Scalar,
+    Narrow,
+    Wide,
+}
+
 internal static unsafe partial class OouraFft
 {
+    internal static FftVectorPath VectorPath = SelectVectorPath();
+
+    private static FftVectorPath SelectVectorPath()
+    {
+        if (Avx2.IsSupported)
+        {
+            return FftVectorPath.Wide;
+        }
+        return Vector128.IsHardwareAccelerated ? FftVectorPath.Narrow : FftVectorPath.Scalar;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector256<double> SwapHalves(Vector256<double> value)
     {

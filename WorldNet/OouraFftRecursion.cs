@@ -72,7 +72,7 @@ internal static unsafe partial class OouraFft
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CftLeaf(int n, int isplt, double* a, int nw, double* w)
     {
-        if (Avx2.IsSupported)
+        if (VectorPath == FftVectorPath.Wide)
         {
             if (n == 512)
             {
@@ -152,7 +152,7 @@ internal static unsafe partial class OouraFft
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CftFx41(int n, double* a, int nw, double* w)
     {
-        if (Avx2.IsSupported)
+        if (VectorPath == FftVectorPath.Wide)
         {
             CftFx41Pairs(n, a, nw, w);
             return;
