@@ -1,7 +1,10 @@
+using System.Runtime.CompilerServices;
+
 namespace WorldNet;
 
 internal static unsafe partial class OouraFft
 {
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CftRec4(int n, double* a, int nw, double* w)
     {
         int m = n;
@@ -20,6 +23,7 @@ internal static unsafe partial class OouraFft
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static int CftTree(int n, int j, int k, double* a, int nw, double* w)
     {
         int isplt;
@@ -64,6 +68,7 @@ internal static unsafe partial class OouraFft
         return isplt;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CftLeaf(int n, int isplt, double* a, int nw, double* w)
     {
         if (n == 512)
@@ -130,6 +135,7 @@ internal static unsafe partial class OouraFft
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CftFx41(int n, double* a, int nw, double* w)
     {
         if (n == 128)
