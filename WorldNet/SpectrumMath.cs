@@ -191,9 +191,7 @@ internal static unsafe class SpectrumMath
             {
                 Vector256<double> value = Avx.LoadVector256(source + (i * 2));
                 Vector256<double> coefficient = Avx.LoadVector256(target + (i * 2));
-                Vector256<double> product = Avx.AddSubtract(
-                    Avx.Multiply(value, Avx.Permute(coefficient, 0x0)),
-                    Avx.Multiply(Avx.Permute(value, 0x5), Avx.Permute(coefficient, 0xF)));
+                Vector256<double> product = ProductAvx(value, coefficient);
                 Avx.Store(target + (i * 2), product);
                 Avx.Store(target + ((fftSize - i - 2) * 2), Avx.Permute2x128(product, product, 1));
             }
@@ -204,10 +202,7 @@ internal static unsafe class SpectrumMath
             {
                 Vector128<double> value = Sse2.LoadVector128(source + (i * 2));
                 Vector128<double> coefficient = Sse2.LoadVector128(target + (i * 2));
-                Vector128<double> product = Sse3.AddSubtract(
-                    Sse2.Multiply(value, Sse2.Shuffle(coefficient, coefficient, 0)),
-                    Sse2.Multiply(Sse2.Shuffle(value, value, 1),
-                        Sse2.Shuffle(coefficient, coefficient, 3)));
+                Vector128<double> product = ProductSse3(value, coefficient);
                 Sse2.Store(target + (i * 2), product);
                 Sse2.Store(target + ((fftSize - i - 1) * 2), product);
             }
@@ -218,12 +213,7 @@ internal static unsafe class SpectrumMath
             {
                 Vector128<double> value = AdvSimd.LoadVector128(source + (i * 2));
                 Vector128<double> coefficient = AdvSimd.LoadVector128(target + (i * 2));
-                Vector128<double> product = AdvSimd.Arm64.Add(
-                    AdvSimd.Arm64.Multiply(value,
-                        AdvSimd.Arm64.DuplicateSelectedScalarToVector128(coefficient, 0)),
-                    AdvSimd.Arm64.Multiply(AdvSimd.ExtractVector128(value, value, 1),
-                        AdvSimd.Arm64.DuplicateSelectedScalarToVector128(coefficient, 1))
-                    ^ Vector128.Create(-0.0, 0.0));
+                Vector128<double> product = ProductAdvSimd(value, coefficient);
                 AdvSimd.Store(target + (i * 2), product);
                 AdvSimd.Store(target + ((fftSize - i - 1) * 2), product);
             }
@@ -239,5 +229,36 @@ internal static unsafe class SpectrumMath
             filter[fftSize - i - 1].Real = filter[i].Real;
             filter[fftSize - i - 1].Imaginary = filter[i].Imaginary;
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Vector256<double> ProductAvx(Vector256<double> value,
+        Vector256<double> coefficient)
+    {
+        return Avx.AddSubtract(
+            Avx.Multiply(value, Avx.Permute(coefficient, 0x0)),
+            Avx.Multiply(Avx.Permute(value, 0x5), Avx.Permute(coefficient, 0xF)));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Vector128<double> ProductSse3(Vector128<double> value,
+        Vector128<double> coefficient)
+    {
+        return Sse3.AddSubtract(
+            Sse2.Multiply(value, Sse2.Shuffle(coefficient, coefficient, 0)),
+            Sse2.Multiply(Sse2.Shuffle(value, value, 1),
+                Sse2.Shuffle(coefficient, coefficient, 3)));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Vector128<double> ProductAdvSimd(Vector128<double> value,
+        Vector128<double> coefficient)
+    {
+        return AdvSimd.Arm64.Add(
+            AdvSimd.Arm64.Multiply(value,
+                AdvSimd.Arm64.DuplicateSelectedScalarToVector128(coefficient, 0)),
+            AdvSimd.Arm64.Multiply(AdvSimd.ExtractVector128(value, value, 1),
+                AdvSimd.Arm64.DuplicateSelectedScalarToVector128(coefficient, 1))
+            ^ Vector128.Create(-0.0, 0.0));
     }
 }
