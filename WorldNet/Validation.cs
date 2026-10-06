@@ -23,4 +23,13 @@ internal static class Validation
             }
         }
     }
+
+    public static void ThrowIfFftSizeTooSmallForPulses(int fftSize, int fs, string paramName)
+    {
+        if (fftSize < (int)Math.Ceiling(fs / WorldConstants.DefaultF0) + 2)
+        {
+            throw new ArgumentException(
+                "The FFT size is smaller than the pulse interval of the sampling rate.", paramName);
+        }
+    }
 }
