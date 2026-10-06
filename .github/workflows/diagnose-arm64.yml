@@ -16,9 +16,16 @@ env:
 
 jobs:
   diagnose:
-    name: Windows ARM64 の参照データを派生させて比較
-    runs-on: windows-11-arm
+    name: ${{ matrix.runner }} の合成の誤差を測定
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [windows-latest, windows-11-arm, ubuntu-latest, ubuntu-24.04-arm]
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: ソースコードを取得
@@ -31,21 +38,67 @@ jobs:
             8.x
             10.x
 
-      - name: 参照データを生成
+      - name: 参照データを生成 (Windows)
+        if: runner.os == 'Windows'
         shell: cmd
         run: reference\build.bat
 
-      - name: 二乗を Math.Pow に置き換えた版で試験
-        shell: pwsh
+      - name: 参照データを生成 (Linux)
+        if: runner.os == 'Linux'
+        run: reference/build.sh
+
+      - name: 誤差を測る試験を書き出す
         run: |
-          foreach ($f in 'WorldNet\Synthesis.cs', 'WorldNet\WorldSynthesizer.cs') {
-            $text = Get-Content $f -Raw
-            $text = $text -replace 'aperiodicSpectrum\[i\] = safe \* safe;', 'aperiodicSpectrum[i] = Math.Pow(safe, DiagExponent.Two);'
-            $text = $text -replace 'aperiodicSpectrum\[i\] = blended \* blended;', 'aperiodicSpectrum[i] = Math.Pow(blended, DiagExponent.Two);'
-            Set-Content -Path $f -Value $text -NoNewline
+          cat > WorldNet.Tests/DiagSynthesis.cs <<'EOS'
+          namespace WorldNet.Tests;
+
+          public class DiagSynthesis
+          {
+              [ReferenceFact]
+              public void Report()
+              {
+                  double[] meta = ReferenceData.Load("meta").Values;
+                  int fs = (int)meta[0];
+                  double framePeriod = meta[2];
+                  int fftSize = (int)meta[3];
+                  double[] f0 = ReferenceData.Load("stonemask_f0").Values;
+                  ReferenceArray spectrogram = ReferenceData.Load("cheaptrick_spectrogram");
+                  ReferenceArray aperiodicity = ReferenceData.Load("d4c_aperiodicity");
+                  double[] expected = ReferenceData.Load("synthesis_y").Values;
+                  int yLength = Synthesis.GetSamplesForSynthesis(fs, f0.Length, framePeriod);
+                  double[] y = new double[yLength];
+                  using WorldArena arena = new();
+                  Synthesis.Synthesize(f0, spectrogram.Values, aperiodicity.Values, fftSize, framePeriod, fs, y, arena);
+
+                  double peak = 0;
+                  double maxAbs = 0;
+                  int worst = -1;
+                  long mismatches = 0;
+                  long maxUlp = 0;
+                  int maxUlpIndex = -1;
+                  for (int i = 0; i < yLength; ++i)
+                  {
+                      peak = Math.Max(peak, Math.Abs(expected[i]));
+                      double d = Math.Abs(expected[i] - y[i]);
+                      if (d > maxAbs) { maxAbs = d; worst = i; }
+                      long a = BitConverter.DoubleToInt64Bits(expected[i]);
+                      long b = BitConverter.DoubleToInt64Bits(y[i]);
+                      if (a != b)
+                      {
+                          ++mismatches;
+                          long u = Math.Abs(a - b);
+                          if (u > maxUlp) { maxUlp = u; maxUlpIndex = i; }
+                      }
+                  }
+
+                  double eps = 2.220446049250313E-16;
+                  Assert.Fail($"DIAG arch={System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture} peak={peak:E6} maxAbs={maxAbs:E6} worstIndex={worst} maxAbsOverPeakOverEps={maxAbs / peak / eps:F4} mismatches={mismatches}/{yLength} maxUlp={maxUlp} atIndex={maxUlpIndex} expectedThere={expected[maxUlpIndex]:E6} actualThere={y[maxUlpIndex]:E6}");
+              }
           }
-          git diff --stat
-          Set-Content -Path WorldNet\DiagExponent.cs -Value 'namespace WorldNet; internal static class DiagExponent { public static double Two = 2.0; }'
-          dotnet build WorldNet.slnx -c Release 2>&1 | Select-String -Pattern "error|Build succeeded"
-          dotnet test WorldNet.Tests\WorldNet.Tests.csproj -c Release --no-build -f net10.0 2>&1 | Select-String -Pattern "Failed |maxUlp|sample |expected|Passed!|Failed!"
-          exit 0
+          EOS
+          sed -i 's/^          //' WorldNet.Tests/DiagSynthesis.cs
+
+      - name: 誤差を測る
+        run: |
+          dotnet build WorldNet.Tests/WorldNet.Tests.csproj -c Release
+          dotnet test WorldNet.Tests/WorldNet.Tests.csproj -c Release --no-build -f net10.0 --filter "FullyQualifiedName~DiagSynthesis" 2>&1 | grep -E "DIAG|Passed!|Failed!" || true
