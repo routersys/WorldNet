@@ -54,7 +54,7 @@ WorldNetは、WORLDの11個のソースファイルをC#へ移植したもので
 
 作業領域は、すべて`WorldArena`が供給します。`WorldArena`は、`NativeMemory.AlignedAlloc`で64バイト境界に確保した領域を、バンプアロケーターとして切り出します。領域は塊をつないで管理するため、容量が増えても、すでに渡したポインターは無効になりません。作業領域の要求は、専用の型の`Layout`メソッドに一度だけ書きます。ソースジェネレーターがそのシグネチャを読み、必要量の照会とバインドの両方を生成するため、報告する必要量と実際の消費量は食い違いません。
 
-原典のC++は、このリポジトリに同梱していません。`reference`ディレクトリの参照ハーネスがWORLDを取得してMSVCでビルドし、各処理の入力と出力を倍精度のまま書き出します。テストはその出力を読み込み、C#の結果と照合します。
+原典のC++は、このリポジトリに同梱していません。`reference`ディレクトリの参照ハーネスがWORLDを取得し、WindowsではMSVCで、LinuxではGCCでビルドして、各処理の入力と出力を倍精度のまま書き出します。テストはその出力を読み込み、C#の結果と照合します。
 
 ---
 
@@ -66,7 +66,7 @@ WorldNetは、WORLDの11個のソースファイルをC#へ移植したもので
 | SDK | .NET SDK 10.0 |
 | 言語 | C# 14以降。`LangVersion`は`latest`を指定しています |
 | unsafeコード | `WorldArena.FromNativeMemory`を使う場合だけ、利用するプロジェクトでunsafeコードを許可する設定が必要です |
-| 参照データ | MSVCのC++ツールセットとGit。テストが使う参照データを再生成する場合だけ必要です |
+| 参照データ | WindowsではMSVCのC++ツールセット、LinuxではGCC、およびGit。テストが使う参照データを再生成する場合だけ必要です |
 
 ---
 
@@ -318,7 +318,7 @@ dotnet build WorldNet.slnx -c Release
 
 パッケージの代わりにソースを使う場合は、`WorldNet/WorldNet.csproj`をプロジェクト参照として追加してください。
 
-1. テストを実行する前に`reference/build.bat`を実行してください。WORLDを取得してMSVCでビルドし、`reference/data`へ参照データを書き出します。
+1. テストを実行する前に、Windowsでは`reference/build.bat`を、Linuxでは`reference/build.sh`を実行してください。どちらもWORLDを取得してビルドし、`reference/data`へ参照データを書き出します。
 2. 実行例をNative AOTで発行する場合は`publish-aot.bat`を実行してください。
 
 ---
@@ -341,7 +341,7 @@ dotnet build WorldNet.slnx -c Release
 - 決定性: 処理は、繰り返し実行しても同じ出力を返します。D4Cと合成が使う擬似乱数は、原典と同じxorshiftです。同じ状態から開始し、系列と最終の状態まで原典を再現します。
 - 作業領域の記述: `[ScratchLayout]`を付けた型は、`IScratchAllocator`を型引数に取る`Layout`メソッドを備える必要があります。ジェネレーターは、引数の並びを合わせた`GetRequiredArenaBytes`と`Bind`を生成します。型がすでに宣言しているほうは、生成しません。
 - Native AOT: ライブラリは`IsAotCompatible`を指定しており、トリム、単一ファイル、AOTの各アナライザーが有効になります。`publish-aot.bat`は、実行例を`win-x64`向けに発行します。ネイティブのリンクには、MSVCのツールセットが必要です。
-- 参照データの再生成: `reference/build.bat`がWORLDを`reference/world-src`へ取得してビルドし、出力を書き出します。どちらのディレクトリもバージョン管理の対象外です。
+- 参照データの再生成: Windowsでは`reference/build.bat`が、Linuxでは`reference/build.sh`が、WORLDを`reference/world-src`へ取得してビルドし、出力を書き出します。どちらのディレクトリもバージョン管理の対象外です。
 - ネットワーク通信: 本ライブラリはネットワークへ接続せず、データを送信しません。
 
 ---
