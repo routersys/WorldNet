@@ -130,7 +130,7 @@ public static unsafe class Synthesis
     {
         GetNoiseSpectrum(noiseSize, fftSize, scratch.ForwardRealFft, ref randnState);
 
-        MinimumPhaseAnalysis minimumPhase = scratch.MinimumPhase;
+        ref readonly MinimumPhaseAnalysis minimumPhase = ref scratch.MinimumPhase;
         if (currentVuv != 0.0)
         {
             for (int i = 0; i <= minimumPhase.FftSize / 2; ++i)
@@ -147,8 +147,8 @@ public static unsafe class Synthesis
         }
         minimumPhase.GetMinimumPhaseSpectrum();
 
-        InverseRealFft inverseRealFft = scratch.InverseRealFft;
-        ForwardRealFft forwardRealFft = scratch.ForwardRealFft;
+        ref readonly InverseRealFft inverseRealFft = ref scratch.InverseRealFft;
+        ref readonly ForwardRealFft forwardRealFft = ref scratch.ForwardRealFft;
         SpectrumMath.MultiplySpectra(minimumPhase.MinimumPhaseSpectrum, forwardRealFft.Spectrum,
             inverseRealFft.Spectrum, (fftSize / 2) + 1);
         inverseRealFft.InverseFft.Execute();
@@ -204,7 +204,7 @@ public static unsafe class Synthesis
             return;
         }
 
-        MinimumPhaseAnalysis minimumPhase = scratch.MinimumPhase;
+        ref readonly MinimumPhaseAnalysis minimumPhase = ref scratch.MinimumPhase;
         for (int i = 0; i <= minimumPhase.FftSize / 2; ++i)
         {
             minimumPhase.LogSpectrum[i] =
@@ -213,7 +213,7 @@ public static unsafe class Synthesis
         }
         minimumPhase.GetMinimumPhaseSpectrum();
 
-        InverseRealFft inverseRealFft = scratch.InverseRealFft;
+        ref readonly InverseRealFft inverseRealFft = ref scratch.InverseRealFft;
         for (int i = 0; i <= fftSize / 2; ++i)
         {
             inverseRealFft.Spectrum[i].Real = minimumPhase.MinimumPhaseSpectrum[i].Real;
