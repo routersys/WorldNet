@@ -1,0 +1,66 @@
+name: ARM64 計測の一時確認 三回目
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["develop"]
+    paths:
+      - ".github/workflows/arm-bench.yml"
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
+  DOTNET_NOLOGO: "1"
+
+jobs:
+  bench:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 41
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.x"
+      - name: 原典をビルド
+        run: reference/build.sh
+      - name: JIT 用にビルド
+        run: dotnet build WorldNet.Examples/WorldNet.Examples.csproj -c Release
+      - name: NativeAOT 用に発行
+        continue-on-error: true
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang zlib1g-dev
+          dotnet publish WorldNet.Examples/WorldNet.Examples.csproj -r linux-arm64 -c Release -o aot-out
+      - name: 計測
+        run: |
+          lscpu | grep -E "Model name|Flags|Features" | head -3
+          python3 - <<'PY'
+          import os, subprocess
+          wav = "reference/world-src/test/vaiueo2d.wav"
+          cfg = {
+            "cpp": (["reference/worldref", wav, "reference/data"], {"WORLD_BENCH_ONLY": "1"}),
+            "jit": (["dotnet", "WorldNet.Examples/bin/Release/net10.0/WorldNet.Examples.dll", "bench", wav], {}),
+          }
+          if os.path.exists("aot-out/WorldNet.Examples"):
+              cfg["aot"] = (["aot-out/WorldNet.Examples", "bench", wav], {})
+          stages = ["Dio", "StoneMask", "CheapTrick", "D4C", "Synthesis", "Harvest"]
+          best = {k: {} for k in cfg}
+          for i in range(15):
+              for k, (cmd, extra) in cfg.items():
+                  env = dict(os.environ)
+                  env.pop("WORLD_BENCH_ONLY", None)
+                  env.update(extra)
+                  out = subprocess.run(cmd, capture_output=True, text=True, env=env).stdout
+                  for line in out.splitlines():
+                      p = line.split()
+                      if len(p) == 3 and p[0] == "BENCH":
+                          v = float(p[2])
+                          if p[1] not in best[k] or v < best[k][p[1]]:
+                              best[k][p[1]] = v
+          print("stage        " + "".join(f"{k:>10}" for k in cfg) + "".join(f"{k + '-x':>10}" for k in cfg if k != "cpp"))
+          for s in stages:
+              c = best["cpp"][s]
+              print(f"{s:<12}" + "".join(f"{best[k][s]:>10.2f}" for k in cfg) + "".join(f"{c / best[k][s]:>10.2f}" for k in cfg if k != "cpp"))
+          PY
