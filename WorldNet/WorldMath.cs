@@ -33,4 +33,14 @@ internal static class WorldMath
     {
         return MaxDouble(0.001, MinDouble(0.999999999999, x));
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static (double Sine, double Cosine) SinCos(double x)
+    {
+#if NET10_0_OR_GREATER
+        return Math.SinCos(x);
+#else
+        return (Math.Sin(x), Math.Cos(x));
+#endif
+    }
 }
