@@ -4,22 +4,15 @@ namespace WorldNet;
 
 public static class WaveFile
 {
+    private const int ExtensibleFormatTag = 0xFFFE;
+
     public static int GetLength(string path)
     {
         ArgumentNullException.ThrowIfNull(path);
 
         using FileStream stream = File.OpenRead(path);
-        CheckHeader(stream);
-
-        stream.Seek(10, SeekOrigin.Current);
-        Span<byte> field = stackalloc byte[4];
-        ReadExactly(stream, field[..2]);
-        int bitDepth = field[0];
-
-        SeekToData(stream);
-        ReadExactly(stream, field);
-        int dataBytes = BinaryPrimitives.ReadInt32LittleEndian(field);
-        return dataBytes / (bitDepth / 8);
+        ReadHeader(stream, out _, out int bitDepth, out long dataBytes);
+        return checked((int)(dataBytes / (bitDepth / 8)));
     }
 
     public static int Read(string path, Span<double> destination, out int sampleRate,
@@ -28,22 +21,10 @@ public static class WaveFile
         ArgumentNullException.ThrowIfNull(path);
 
         using FileStream stream = File.OpenRead(path);
-        CheckHeader(stream);
-
-        Span<byte> field = stackalloc byte[4];
-        ReadExactly(stream, field);
-        sampleRate = BinaryPrimitives.ReadInt32LittleEndian(field);
-
-        stream.Seek(6, SeekOrigin.Current);
-        ReadExactly(stream, field[..2]);
-        bitDepth = field[0];
-
-        SeekToData(stream);
-        ReadExactly(stream, field);
-        int dataBytes = BinaryPrimitives.ReadInt32LittleEndian(field);
+        ReadHeader(stream, out sampleRate, out bitDepth, out long dataBytes);
 
         int quantizationByte = bitDepth / 8;
-        int length = dataBytes / quantizationByte;
+        int length = checked((int)(dataBytes / quantizationByte));
 
         if (destination.Length < length)
         {
@@ -132,53 +113,89 @@ public static class WaveFile
         }
     }
 
-    private static void CheckHeader(FileStream stream)
+    private static void ReadHeader(FileStream stream, out int sampleRate, out int bitDepth,
+        out long dataBytes)
     {
-        Span<byte> field = stackalloc byte[4];
+        Span<byte> header = stackalloc byte[8];
 
-        ReadExactly(stream, field);
-        Expect(field.SequenceEqual("RIFF"u8), "RIFF");
+        ReadExactly(stream, header[..4]);
+        Expect(header[..4].SequenceEqual("RIFF"u8), "RIFF");
 
         stream.Seek(4, SeekOrigin.Current);
-        ReadExactly(stream, field);
-        Expect(field.SequenceEqual("WAVE"u8), "WAVE");
+        ReadExactly(stream, header[..4]);
+        Expect(header[..4].SequenceEqual("WAVE"u8), "WAVE");
 
-        ReadExactly(stream, field);
-        Expect(field.SequenceEqual("fmt "u8), "fmt ");
-
-        ReadExactly(stream, field);
-        Expect(field[0] == 16 && field[1] == 0 && field[2] == 0 && field[3] == 0, "fmt size");
-
-        ReadExactly(stream, field[..2]);
-        Expect(field[0] == 1 && field[1] == 0, "format identifier");
-
-        ReadExactly(stream, field[..2]);
-        Expect(field[0] == 1 && field[1] == 0, "monaural channel count");
-    }
-
-    private static void SeekToData(FileStream stream)
-    {
-        Span<byte> check = stackalloc byte[4];
-        while (true)
+        sampleRate = 0;
+        bitDepth = 0;
+        bool formatFound = false;
+        while (TryReadChunkHeader(stream, header))
         {
-            int first = stream.ReadByte();
-            if (first < 0)
+            uint size = BinaryPrimitives.ReadUInt32LittleEndian(header[4..]);
+            if (header[..4].SequenceEqual("fmt "u8))
             {
-                throw new InvalidDataException("The data chunk was not found.");
+                Expect(size >= 16, "fmt size");
+                ReadFormat(stream, size, out sampleRate, out bitDepth);
+                formatFound = true;
             }
-            if (first != 'd')
+            else if (header[..4].SequenceEqual("data"u8))
             {
-                continue;
-            }
-
-            check[0] = (byte)first;
-            ReadExactly(stream, check[1..]);
-            if (check.SequenceEqual("data"u8))
-            {
+                Expect(formatFound, "fmt chunk before the data chunk");
+                long remaining = stream.Length - stream.Position;
+                dataBytes = size == uint.MaxValue || size > remaining ? remaining : size;
                 return;
             }
-            stream.Seek(-3, SeekOrigin.Current);
+            else
+            {
+                SkipChunk(stream, size, 0);
+            }
         }
+
+        throw new InvalidDataException("The data chunk was not found.");
+    }
+
+    private static void ReadFormat(FileStream stream, uint size, out int sampleRate,
+        out int bitDepth)
+    {
+        Span<byte> field = stackalloc byte[24];
+        ReadExactly(stream, field[..16]);
+        int formatTag = BinaryPrimitives.ReadUInt16LittleEndian(field);
+        int channels = BinaryPrimitives.ReadUInt16LittleEndian(field[2..]);
+        sampleRate = BinaryPrimitives.ReadInt32LittleEndian(field[4..]);
+        bitDepth = BinaryPrimitives.ReadUInt16LittleEndian(field[14..]);
+        uint consumed = 16;
+
+        if (formatTag == ExtensibleFormatTag)
+        {
+            Expect(size >= 40, "fmt size");
+            ReadExactly(stream, field);
+            formatTag = BinaryPrimitives.ReadUInt16LittleEndian(field[8..]);
+            consumed = 40;
+        }
+
+        Expect(formatTag == 1, "format identifier");
+        Expect(channels == 1, "monaural channel count");
+        Expect(bitDepth is 8 or 16 or 24 or 32, "bit depth");
+        SkipChunk(stream, size, consumed);
+    }
+
+    private static bool TryReadChunkHeader(FileStream stream, Span<byte> header)
+    {
+        int total = 0;
+        while (total < header.Length)
+        {
+            int read = stream.Read(header[total..]);
+            if (read == 0)
+            {
+                return false;
+            }
+            total += read;
+        }
+        return true;
+    }
+
+    private static void SkipChunk(FileStream stream, uint size, uint consumed)
+    {
+        stream.Seek((long)(size - consumed) + (size & 1), SeekOrigin.Current);
     }
 
     private static void ReadExactly(FileStream stream, Span<byte> destination)
