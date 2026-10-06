@@ -39,6 +39,12 @@ export default {
 
     const upstream = await fetch(new Request(url, request), { redirect: "manual" });
     const headers = new Headers(upstream.headers);
+    const directives = (headers.get("cache-control") ?? "max-age=600")
+      .split(",")
+      .map((directive) => directive.trim())
+      .filter((directive) => directive && directive !== "public" && directive !== "no-transform");
+    headers.set("cache-control", ["public", ...directives, "no-transform"].join(", "));
+
     const location = headers.get("location");
     if (location) {
       const target = new URL(location, url);
