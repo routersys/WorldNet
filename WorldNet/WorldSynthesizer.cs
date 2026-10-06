@@ -7,6 +7,7 @@ public sealed unsafe class WorldSynthesizer
     private readonly WorldArena _arena;
     private readonly int _fs;
     private readonly double _framePeriod;
+    private readonly double _lowestF0;
     private readonly int _bufferSize;
     private readonly int _numberOfPointers;
     private readonly int _fftSize;
@@ -72,6 +73,7 @@ public sealed unsafe class WorldSynthesizer
         _arena = arena;
         _fs = fs;
         _framePeriod = framePeriod / 1000.0;
+        _lowestF0 = (fs / fftSize) + 1.0;
         _bufferSize = bufferSize;
         _numberOfPointers = numberOfPointers;
         _fftSize = fftSize;
@@ -584,14 +586,16 @@ public sealed unsafe class WorldSynthesizer
     private void GetTemporalParametersForTimeBase(double* f0, int f0Length)
     {
         int cumulativeFrame = WorldMath.MaxInt(0, _cumulativeFrame - f0Length);
-        _coarseF0[0] = _handoffF0;
+        double handoffF0 = _handoffF0 < _lowestF0 ? 0.0 : _handoffF0;
+        _coarseF0[0] = handoffF0;
         _coarseTimeAxis[0] = cumulativeFrame * _framePeriod;
-        _coarseVuv[0] = _handoffF0 == 0 ? 0.0 : 1.0;
+        _coarseVuv[0] = handoffF0 == 0.0 ? 0.0 : 1.0;
         for (int i = 0; i < f0Length; ++i)
         {
+            double currentF0 = f0[i] < _lowestF0 ? 0.0 : f0[i];
             _coarseTimeAxis[i + _handoff] = (i + cumulativeFrame + _handoff) * _framePeriod;
-            _coarseF0[i + _handoff] = f0[i];
-            _coarseVuv[i + _handoff] = f0[i] == 0.0 ? 0.0 : 1.0;
+            _coarseF0[i + _handoff] = currentF0;
+            _coarseVuv[i + _handoff] = currentF0 == 0.0 ? 0.0 : 1.0;
         }
     }
 
