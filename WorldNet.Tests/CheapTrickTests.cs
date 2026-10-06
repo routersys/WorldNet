@@ -113,4 +113,52 @@ public class CheapTrickTests
         Assert.Throws<ArgumentException>(
             () => CheapTrick.Estimate(x, 44100, option, positions, f0, spectrogram, arena));
     }
+
+    [Theory]
+    [InlineData(3)]
+    [InlineData(1000)]
+    [InlineData(1536)]
+    public void EstimateRejectsFftSizeThatIsNotAPowerOfTwo(int fftSize)
+    {
+        Assert.Throws<ArgumentException>(() => EstimateWith(44100, fftSize));
+    }
+
+    [Theory]
+    [InlineData(44100, 128)]
+    [InlineData(44100, 256)]
+    [InlineData(22050, 64)]
+    [InlineData(96000, 512)]
+    public void EstimateRejectsFftSizeSmallerThanTheAnalysisWindow(int fs, int fftSize)
+    {
+        Assert.Throws<ArgumentException>(() => EstimateWith(fs, fftSize));
+    }
+
+    [Theory]
+    [InlineData(1000, 64)]
+    [InlineData(300, 64)]
+    public void EstimateRejectsSamplingRateTooLowForTheFftSize(int fs, int fftSize)
+    {
+        Assert.Throws<ArgumentException>(() => EstimateWith(fs, fftSize));
+    }
+
+    [Theory]
+    [InlineData(44100, 512)]
+    [InlineData(22050, 256)]
+    [InlineData(8000, 64)]
+    public void EstimateAcceptsTheSmallestFftSizeForTheSamplingRate(int fs, int fftSize)
+    {
+        EstimateWith(fs, fftSize);
+    }
+
+    private static void EstimateWith(int fs, int fftSize)
+    {
+        using WorldArena arena = new();
+        double[] x = new double[fs / 4];
+        double[] positions = new double[5];
+        double[] f0 = new double[5];
+        double[] spectrogram = new double[5 * ((fftSize / 2) + 1)];
+        CheapTrickOption option = CheapTrickOption.Create(fs) with { FftSize = fftSize };
+
+        CheapTrick.Estimate(x, fs, option, positions, f0, spectrogram, arena);
+    }
 }
