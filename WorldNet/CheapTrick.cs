@@ -38,6 +38,20 @@ public static unsafe class CheapTrick
         }
 
         int fftSize = option.FftSize;
+
+        if (fftSize < GetWindowLength(fs, WorldConstants.DefaultF0))
+        {
+            throw new ArgumentException(
+                "The FFT size is smaller than the analysis window of the sampling rate.",
+                nameof(option));
+        }
+
+        if (Common.IsAboveDcCorrectionRange(WorldConstants.DefaultF0, fs, fftSize))
+        {
+            throw new ArgumentException("The sampling rate is too low for the FFT size.",
+                nameof(fs));
+        }
+
         int spectrumLength = (fftSize / 2) + 1;
         int f0Length = f0.Length;
 
@@ -93,6 +107,11 @@ public static unsafe class CheapTrick
                 }
             }
         }
+    }
+
+    private static int GetWindowLength(int fs, double f0)
+    {
+        return (MatlabFunctions.MatlabRound(1.5 * fs / f0) * 2) + 1;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
