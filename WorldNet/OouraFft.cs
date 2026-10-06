@@ -1,7 +1,10 @@
+using System.Runtime.CompilerServices;
+
 namespace WorldNet;
 
 internal static unsafe partial class OouraFft
 {
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void Cdft(int n, int isgn, double* a, int* ip, double* w)
     {
         int nw = ip[0];
@@ -15,6 +18,7 @@ internal static unsafe partial class OouraFft
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void Rdft(int n, int isgn, double* a, int* ip, double* w)
     {
         int nw = ip[0];
@@ -51,6 +55,7 @@ internal static unsafe partial class OouraFft
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void MakeWt(int nw, int* ip, double* w)
     {
         ip[0] = nw;
@@ -117,6 +122,7 @@ internal static unsafe partial class OouraFft
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void MakeIpt(int nw, int* ip)
     {
         ip[2] = 0;
@@ -136,6 +142,7 @@ internal static unsafe partial class OouraFft
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void MakeCt(int nc, int* ip, double* c)
     {
         ip[1] = nc;
@@ -153,6 +160,7 @@ internal static unsafe partial class OouraFft
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CftFSub(int n, double* a, int* ip, int nw, double* w)
     {
         if (n > 8)
@@ -195,6 +203,7 @@ internal static unsafe partial class OouraFft
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CftBSub(int n, double* a, int* ip, int nw, double* w)
     {
         if (n > 8)
