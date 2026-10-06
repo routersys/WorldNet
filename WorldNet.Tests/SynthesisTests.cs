@@ -97,4 +97,42 @@ public class SynthesisTests
             () => Synthesis.Synthesize(f0, spectrogram, aperiodicity, 1024, 5.0, 44100, [],
                 arena));
     }
+
+    [Theory]
+    [InlineData(44100, 6)]
+    [InlineData(44100, 100)]
+    [InlineData(44100, 1000)]
+    [InlineData(44100, 8)]
+    [InlineData(44100, 64)]
+    [InlineData(22050, 32)]
+    [InlineData(96000, 128)]
+    public void SynthesizeRejectsFftSizeThatCannotHoldThePulses(int fs, int fftSize)
+    {
+        Assert.Throws<ArgumentException>(() => SynthesizeWith(fs, fftSize));
+    }
+
+    [Theory]
+    [InlineData(44100, 128)]
+    [InlineData(22050, 64)]
+    [InlineData(8000, 32)]
+    [InlineData(96000, 256)]
+    public void SynthesizeAcceptsTheSmallestFftSizeForTheSamplingRate(int fs, int fftSize)
+    {
+        SynthesizeWith(fs, fftSize);
+    }
+
+    private static void SynthesizeWith(int fs, int fftSize)
+    {
+        using WorldArena arena = new();
+        int spectrumLength = (fftSize / 2) + 1;
+        double[] f0 = new double[10];
+        Array.Fill(f0, 150.0);
+        double[] spectrogram = new double[10 * spectrumLength];
+        Array.Fill(spectrogram, 1.0);
+        double[] aperiodicity = new double[10 * spectrumLength];
+        Array.Fill(aperiodicity, 0.4);
+        double[] y = new double[Synthesis.GetSamplesForSynthesis(fs, 10, 5.0)];
+
+        Synthesis.Synthesize(f0, spectrogram, aperiodicity, fftSize, 5.0, fs, y, arena);
+    }
 }
