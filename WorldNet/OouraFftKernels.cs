@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 
 namespace WorldNet;
 
@@ -519,7 +520,7 @@ internal static unsafe partial class OouraFft
         int ks = 2 * nc / m;
         int kk = 0;
         int j = 2;
-        if (Vector256.IsHardwareAccelerated)
+        if (Avx2.IsSupported)
         {
             for (; j + 2 < m; j += 4)
             {
@@ -563,7 +564,7 @@ internal static unsafe partial class OouraFft
         int ks = 2 * nc / m;
         int kk = 0;
         int j = 2;
-        if (Vector256.IsHardwareAccelerated)
+        if (Avx2.IsSupported)
         {
             for (; j + 2 < m; j += 4)
             {
