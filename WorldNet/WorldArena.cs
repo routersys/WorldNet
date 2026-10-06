@@ -190,6 +190,11 @@ public sealed unsafe class WorldArena : IDisposable
 
     internal void RestoreTo(void* markChunk, nuint used)
     {
+        if (_disposed)
+        {
+            return;
+        }
+
         Chunk* chunk = (Chunk*)markChunk;
         if (chunk is null)
         {
