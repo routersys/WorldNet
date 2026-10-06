@@ -216,14 +216,14 @@ The following table was measured on Linux x64 against the original C++ built wit
 
 | Stage | C++ with GCC | This port with Native AOT | Ratio | This port with JIT | Ratio |
 |---|---:|---:|---:|---:|---:|
-| Dio | 5.66 | 4.66 | 1.21x | 5.92 | 0.96x |
-| StoneMask | 3.55 | 3.59 | 0.99x | 4.34 | 0.82x |
-| CheapTrick | 9.05 | 9.12 | 0.99x | 11.09 | 0.82x |
-| D4C | 33.55 | 29.79 | 1.13x | 33.84 | 0.99x |
-| Synthesis | 8.25 | 9.40 | 0.88x | 13.03 | 0.63x |
-| Harvest | 121.54 | 122.66 | 0.99x | 137.65 | 0.88x |
+| Dio | 5.79 | 4.79 | 1.21x | 4.61 | 1.26x |
+| StoneMask | 3.52 | 3.56 | 0.99x | 3.42 | 1.03x |
+| CheapTrick | 9.00 | 8.91 | 1.01x | 8.82 | 1.02x |
+| D4C | 33.36 | 29.49 | 1.13x | 29.70 | 1.12x |
+| Synthesis | 8.43 | 9.51 | 0.89x | 9.10 | 0.93x |
+| Harvest | 125.04 | 122.40 | 1.02x | 123.50 | 1.01x |
 
-The loop-heavy routines of the library are marked with `MethodImplOptions.AggressiveOptimization`, so that they are optimized at the first call instead of starting in the unoptimized tier. Before they were marked, the same measurement took 131.14 ms from Dio to Synthesis, against 68.22 ms now. Once a process has warmed up, the speed does not depend on the mark: the best of 400 repeats within one process took 55.63 ms from Dio to Synthesis before the routines were marked and 54.30 ms after.
+The routines that contain loops, together with the routines of the Ooura FFT, are marked with `MethodImplOptions.AggressiveOptimization`, so that they are optimized at the first call instead of starting in the unoptimized tier. Before they were marked, the same measurement took 126.67 ms from Dio to Synthesis and 141.68 ms for Harvest, against 55.65 ms and 123.50 ms now. Once a process has warmed up, the speed does not depend on the mark: the best of 100 repeats within one process took 54.35 ms from Dio to Synthesis before the routines were marked and 54.20 ms after.
 
 ---
 
@@ -346,7 +346,7 @@ To use the checkout instead of the package, add `WorldNet/WorldNet.csproj` as a 
 - Determinism: the pipeline produces identical output across repeated runs. The pseudo-random generator used by D4C and by the synthesizer is the xorshift generator of the original, reseeded to the same state, and it reproduces the original sequence and its final state exactly.
 - Scratch layout: a type marked with `[ScratchLayout]` must expose a `Layout` method generic over `IScratchAllocator`. The generator emits `GetRequiredArenaBytes` and `Bind` with a matching parameter list, and skips whichever of the two the type already declares.
 - Native AOT: the library sets `IsAotCompatible`, which enables the trim, single-file and AOT analyzers. `publish-aot.bat` publishes the sample application for `win-x64` and requires the MSVC toolset for the native linker.
-- Just-in-time compilation: the loop-heavy routines carry `MethodImplOptions.AggressiveOptimization`, which skips the unoptimized first tier and compiles them with full optimization at the first call. The first call in a process therefore pays the compilation time. Once the process has warmed up, the speed is the same with and without the mark.
+- Just-in-time compilation: the routines that contain loops and the routines of the Ooura FFT carry `MethodImplOptions.AggressiveOptimization`, which skips the unoptimized first tier and compiles them with full optimization at the first call. The first call in a process therefore pays the compilation time. Once the process has warmed up, the speed is the same with and without the mark.
 - Sine and cosine: the `net10.0` build computes the minimum phase spectrum with `Math.SinCos`, and the `net8.0` build calls `Math.Sin` and `Math.Cos` separately. On .NET 8 under Windows, `Math.SinCos` differs from the separate calls by one unit in the last place, which would break the agreement with the original.
 - Regenerating reference data: `reference/build.bat` on Windows and `reference/build.sh` on Linux clone WORLD into `reference/world-src`, build it, and write the dumps. Both directories are excluded from version control.
 - Network access: the library opens no network connection and sends no data.
