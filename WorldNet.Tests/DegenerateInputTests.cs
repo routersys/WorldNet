@@ -97,7 +97,7 @@ public class DegenerateInputTests
 
         if (f0Length >= 2)
         {
-            int yLength = (int)((f0Length - 1) * dioOption.FramePeriod / 1000.0 * fs) + 1;
+            int yLength = Synthesis.GetSamplesForSynthesis(fs, f0Length, dioOption.FramePeriod);
             double[] y = new double[yLength];
             Synthesis.Synthesize(refined, spectrogram, aperiodicity, ctOption.FftSize,
                 dioOption.FramePeriod, fs, y, arena);

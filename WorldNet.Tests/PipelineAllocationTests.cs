@@ -27,7 +27,7 @@ public class PipelineAllocationTests
         int f0Length = Dio.GetSamplesForDio(fs, SampleCount, dioOption.FramePeriod);
         CheapTrickOption cheapTrickOption = CheapTrickOption.Create(fs);
         int spectrumLength = (cheapTrickOption.FftSize / 2) + 1;
-        int yLength = (int)((f0Length - 1) * dioOption.FramePeriod / 1000.0 * fs) + 1;
+        int yLength = Synthesis.GetSamplesForSynthesis(fs, f0Length, dioOption.FramePeriod);
 
         Workspace workspace = new()
         {
