@@ -55,32 +55,22 @@ public static unsafe partial class Harvest
         {
             forwardRealFft.Waveform[i] = x[safeIndex[i]] * mainWindow[i];
         }
-        for (int i = baseTimeLength; i < fftSize; ++i)
-        {
-            forwardRealFft.Waveform[i] = 0.0;
-        }
+        new Span<double>(forwardRealFft.Waveform + baseTimeLength, fftSize - baseTimeLength).Clear();
 
         forwardRealFft.ForwardFft.Execute();
-        for (int i = 0; i <= fftSize / 2; ++i)
-        {
-            mainSpectrum[i].Real = forwardRealFft.Spectrum[i].Real;
-            mainSpectrum[i].Imaginary = forwardRealFft.Spectrum[i].Imaginary;
-        }
+        Buffer.MemoryCopy(forwardRealFft.Spectrum, mainSpectrum,
+            ((long)(fftSize / 2) + 1) * sizeof(FftComplex),
+            ((long)(fftSize / 2) + 1) * sizeof(FftComplex));
 
         for (int i = 0; i < baseTimeLength; ++i)
         {
             forwardRealFft.Waveform[i] = x[safeIndex[i]] * diffWindow[i];
         }
-        for (int i = baseTimeLength; i < fftSize; ++i)
-        {
-            forwardRealFft.Waveform[i] = 0.0;
-        }
+        new Span<double>(forwardRealFft.Waveform + baseTimeLength, fftSize - baseTimeLength).Clear();
         forwardRealFft.ForwardFft.Execute();
-        for (int i = 0; i <= fftSize / 2; ++i)
-        {
-            diffSpectrum[i].Real = forwardRealFft.Spectrum[i].Real;
-            diffSpectrum[i].Imaginary = forwardRealFft.Spectrum[i].Imaginary;
-        }
+        Buffer.MemoryCopy(forwardRealFft.Spectrum, diffSpectrum,
+            ((long)(fftSize / 2) + 1) * sizeof(FftComplex),
+            ((long)(fftSize / 2) + 1) * sizeof(FftComplex));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
