@@ -172,6 +172,8 @@ public sealed unsafe class WorldArena : IDisposable
         GC.SuppressFinalize(this);
     }
 
+    internal bool IsDisposed => _disposed;
+
     internal void* AllocateRaw(int count, nuint elementSize)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
