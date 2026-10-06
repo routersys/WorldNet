@@ -49,12 +49,26 @@ public class WorldSynthesizerTests
             }
         }
 
-        for (int i = 0; i < yLength; ++i)
+        if (ReferenceData.SquaresExactly)
         {
-            if (BitConverter.DoubleToInt64Bits(expected[i])
-                != BitConverter.DoubleToInt64Bits(y[i]))
+            for (int i = 0; i < yLength; ++i)
             {
-                Assert.Fail($"sample {i}: expected {expected[i]:E17} but was {y[i]:E17}");
+                if (BitConverter.DoubleToInt64Bits(expected[i])
+                    != BitConverter.DoubleToInt64Bits(y[i]))
+                {
+                    Assert.Fail($"sample {i}: expected {expected[i]:E17} but was {y[i]:E17}");
+                }
+            }
+        }
+        else
+        {
+            double error = WaveformComparison.MaxErrorInPeakUlps(expected, y.AsSpan(0, yLength));
+            if (error > WaveformComparison.PeakUlpTolerance)
+            {
+                Assert.Fail(
+                    $"the maximum error of {error} ULP of the peak exceeds " +
+                    $"{WaveformComparison.PeakUlpTolerance}, the tolerance inherited from the " +
+                    "reference's pow.");
             }
         }
     }
