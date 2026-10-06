@@ -322,6 +322,7 @@ public static unsafe class D4C
 
         using WorldArenaScope scope = arena.BeginScope();
         double* powerSpectrum = (double*)arena.AllocateRaw((fftSize / 2) + 1, sizeof(double));
+        double* sortScratch = (double*)arena.AllocateRaw((fftSize / 2) + 1, sizeof(double));
         for (int i = 0; i < numberOfAperiodicities; ++i)
         {
             int center = (int)(WorldConstants.FrequencyInterval * (i + 1) * fftSize / fs);
@@ -333,7 +334,7 @@ public static unsafe class D4C
             forwardRealFft.ForwardFft.Execute();
             SpectrumMath.PowerSpectrum(
                 forwardRealFft.Spectrum, powerSpectrum, (fftSize / 2) + 1);
-            new Span<double>(powerSpectrum, (fftSize / 2) + 1).Sort();
+            SpectrumMath.SortNonNegative(powerSpectrum, sortScratch, (fftSize / 2) + 1);
             for (int j = 1; j <= fftSize / 2; ++j)
             {
                 powerSpectrum[j] += powerSpectrum[j - 1];
