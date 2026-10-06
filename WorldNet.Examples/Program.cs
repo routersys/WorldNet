@@ -166,7 +166,7 @@ static int SynthesizeFromFiles(string[] args)
     double[] aperiodicity =
         ReadAperiodicity(args[3], f0Length, fftSize, spectrumLength, fs, arena);
 
-    int yLength = (int)(f0Length * framePeriod / 1000.0 * fs);
+    int yLength = Synthesis.GetSamplesForSynthesis(fs, f0Length, framePeriod);
     double[] y = new double[yLength];
     Synthesis.Synthesize(f0, spectrogram, aperiodicity, fftSize, framePeriod, fs, y, arena);
 
@@ -254,7 +254,7 @@ static int Benchmark(string[] args)
     Console.WriteLine($"BENCH CheapTrick {Measure(repeats, () => CheapTrick.Estimate(x, fs, ctOption, positions, refined, spectrogram, arena)):F2}");
     Console.WriteLine($"BENCH D4C {Measure(repeats, () => D4C.Estimate(x, fs, D4COption.Default, positions, refined, fftSize, aperiodicity, arena)):F2}");
 
-    int yLength = (int)((f0Length - 1) * framePeriod / 1000.0 * fs) + 1;
+    int yLength = Synthesis.GetSamplesForSynthesis(fs, f0Length, framePeriod);
     double[] y = new double[yLength];
     Console.WriteLine($"BENCH Synthesis {Measure(repeats, () => Synthesis.Synthesize(refined, spectrogram, aperiodicity, fftSize, framePeriod, fs, y, arena)):F2}");
 
@@ -307,7 +307,7 @@ static int RunPipeline(string[] args)
     Console.WriteLine($"D4C: {stopwatch.ElapsedMilliseconds} ms");
 
     stopwatch.Restart();
-    int yLength = (int)((f0Length - 1) * dioOption.FramePeriod / 1000.0 * fs) + 1;
+    int yLength = Synthesis.GetSamplesForSynthesis(fs, f0Length, dioOption.FramePeriod);
     double[] y = new double[yLength];
     Synthesis.Synthesize(refinedF0, spectrogram, aperiodicity, fftSize, dioOption.FramePeriod,
         fs, y, arena);
