@@ -60,6 +60,16 @@ public static class WaveFile
             int count = Math.Min(samplesPerChunk, length - written);
             Span<byte> block = chunk[..(count * quantizationByte)];
             ReadExactly(stream, block);
+            if (quantizationByte == 1)
+            {
+                for (int i = 0; i < count; ++i)
+                {
+                    destination[written + i] = (block[i] - zeroLine) / zeroLine;
+                }
+                written += count;
+                continue;
+            }
+
             for (int i = 0; i < count; ++i)
             {
                 Span<byte> sample = block.Slice(i * quantizationByte, quantizationByte);
