@@ -110,14 +110,14 @@ CheapTrick.Estimate(x, fs, cheapTrickOption, temporalPositions, f0, spectrogram,
 double[] aperiodicity = new double[f0Length * spectrumLength];
 D4C.Estimate(x, fs, D4COption.Default, temporalPositions, f0, fftSize, aperiodicity, arena);
 
-int yLength = (int)((f0Length - 1) * harvestOption.FramePeriod / 1000.0 * fs) + 1;
+int yLength = Synthesis.GetSamplesForSynthesis(fs, f0Length, harvestOption.FramePeriod);
 double[] y = new double[yLength];
 Synthesis.Synthesize(f0, spectrogram, aperiodicity, fftSize, harvestOption.FramePeriod, fs, y, arena);
 
 WaveFile.Write("output.wav", y, fs);
 ```
 
-The caller sizes every destination array. `Harvest.GetSamplesForHarvest` returns the number of frames. The spectrogram and the aperiodicity are flat arrays that hold one row of `fftSize / 2 + 1` values per frame. `Synthesis.Synthesize` takes the length of `y` as the length of the output. `WaveFile.Read` accepts only monaural PCM files whose format chunk is 16 bytes long and throws `InvalidDataException` for any other header.
+The caller sizes every destination array. `Harvest.GetSamplesForHarvest` returns the number of frames, and `Synthesis.GetSamplesForSynthesis` returns the number of samples of the synthesized waveform. The spectrogram and the aperiodicity are flat arrays that hold one row of `fftSize / 2 + 1` values per frame. `Synthesis.Synthesize` takes the length of `y` as the length of the output. `WaveFile.Read` accepts only monaural PCM files whose format chunk is 16 bytes long and throws `InvalidDataException` for any other header.
 
 ---
 
@@ -234,6 +234,7 @@ Figures obtained through the just-in-time compiler are deliberately absent. The 
 
 | Member | Description |
 |---|---|
+| `Synthesis.GetSamplesForSynthesis(fs, f0Length, framePeriod)` | Returns the number of samples the waveform will contain. |
 | `Synthesis.Synthesize(f0, spectrogram, aperiodicity, fftSize, framePeriod, fs, y, arena)` | Generates the whole waveform in one call. |
 | `new WorldSynthesizer(arena, fs, framePeriod, fftSize, bufferSize, numberOfPointers, maxFramesPerAdd)` | Creates the sequential real-time synthesizer. |
 | `WorldSynthesizer.AddParameters(f0, spectrogram, aperiodicity)` | Queues one chunk of parameters and reports whether it was accepted. |
