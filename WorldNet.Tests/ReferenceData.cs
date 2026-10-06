@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace WorldNet.Tests;
 
 internal sealed class ReferenceArray
@@ -25,6 +27,9 @@ internal static class ReferenceData
     private static readonly Lazy<string?> DirectoryPath = new(FindDirectory);
 
     public static bool IsAvailable => DirectoryPath.Value is not null;
+
+    public static bool SquaresExactly =>
+        !(OperatingSystem.IsWindows() && RuntimeInformation.ProcessArchitecture == Architecture.Arm64);
 
     public static string DataDirectory => DirectoryPath.Value
         ?? throw new InvalidOperationException(MissingMessage);
