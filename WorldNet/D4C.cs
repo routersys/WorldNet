@@ -392,9 +392,9 @@ public static unsafe class D4C
         using WorldArenaScope scope = arena.BeginScope();
         ForwardRealFft forwardRealFft = ForwardRealFft.Bind(arena, fftSize);
 
-        int boundary0 = (int)Math.Ceiling(100.0 * fftSize / fs);
-        int boundary1 = (int)Math.Ceiling(4000.0 * fftSize / fs);
-        int boundary2 = (int)Math.Ceiling(7900.0 * fftSize / fs);
+        int boundary0 = WorldMath.MinInt((int)Math.Ceiling(100.0 * fftSize / fs), fftSize / 2);
+        int boundary1 = WorldMath.MinInt((int)Math.Ceiling(4000.0 * fftSize / fs), fftSize / 2);
+        int boundary2 = WorldMath.MinInt((int)Math.Ceiling(7900.0 * fftSize / fs), fftSize / 2);
         for (int i = 0; i < f0Length; ++i)
         {
             if (f0[i] == 0.0)
