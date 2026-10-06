@@ -11,6 +11,7 @@ English | [日本語](https://github.com/routersys/WorldNet/blob/main/README.ja.
 WorldNet is a complete C# port of [WORLD](https://github.com/mmorise/World), the vocoder-based speech analysis, manipulation and synthesis system by M. Morise.
 Every stage runs faster than the original C++ in the [measurements below](#7-performance), and the output matches the original: bit-exact in most stages and within a few units in the last place in the rest.
 It installs from NuGet, takes spans, and ships no native library.
+Try the [demo](https://lib.routersys.com/WorldNet/demo/) in your browser. Nothing is installed and nothing is uploaded.
 Every stage runs without a single managed allocation, so the garbage collector never observes the analysis or the synthesis path.
 All scratch memory comes from a native arena, every hot routine is written with `unsafe` pointers, and the whole library is annotated for Native AOT.
 Correctness is not asserted from reading the source: each stage is compared against golden data produced by the original C++ compiled with MSVC on Windows and with GCC on Linux.
