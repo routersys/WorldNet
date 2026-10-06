@@ -1,7 +1,10 @@
+using System.Runtime.CompilerServices;
+
 namespace WorldNet;
 
 public static unsafe class StoneMask
 {
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void Refine(ReadOnlySpan<double> x, int fs,
         ReadOnlySpan<double> temporalPositions, ReadOnlySpan<double> f0,
         Span<double> refinedF0, WorldArena arena)
@@ -99,6 +102,7 @@ public static unsafe class StoneMask
             2.0, 2.0 + (int)(Math.Log((halfWindowLength * 2.0) + 1.0) / WorldConstants.Log2));
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static double GetRefinedF0(double* x, int xLength, int fs, double currentPosition,
         double initialF0, StoneMaskScratch* scratches, int* sizes, int distinct)
     {
@@ -135,6 +139,7 @@ public static unsafe class StoneMask
         return meanF0;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static double GetMeanF0(double* x, int xLength, int fs, double currentPosition,
         double initialF0, int fftSize, double windowLengthInTime, int baseTimeLength,
         in StoneMaskScratch scratch)
@@ -159,6 +164,7 @@ public static unsafe class StoneMask
             scratch);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetBaseIndex(double currentPosition, double* baseTime,
         int baseTimeLength, int fs, int* indexRaw)
     {
@@ -168,6 +174,7 @@ public static unsafe class StoneMask
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetMainWindow(double currentPosition, int* indexRaw, int baseTimeLength,
         int fs, double windowLengthInTime, double* mainWindow)
     {
@@ -180,6 +187,7 @@ public static unsafe class StoneMask
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetDiffWindow(double* mainWindow, int baseTimeLength, double* diffWindow)
     {
         diffWindow[0] = -mainWindow[1] / 2.0;
@@ -190,6 +198,7 @@ public static unsafe class StoneMask
         diffWindow[baseTimeLength - 1] = mainWindow[baseTimeLength - 2] / 2.0;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetSpectra(double* x, int xLength, int fftSize, int baseTimeLength,
         in StoneMaskScratch scratch)
     {
@@ -242,6 +251,7 @@ public static unsafe class StoneMask
         return FixF0(powerSpectrum, numeratorI, fftSize, fs, tentativeF0, 6, scratch);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static double FixF0(double* powerSpectrum, double* numeratorI, int fftSize, int fs,
         double initialF0, int numberOfHarmonics, in StoneMaskScratch scratch)
     {
