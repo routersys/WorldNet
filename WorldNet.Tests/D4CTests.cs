@@ -1,6 +1,8 @@
+using System.Runtime.InteropServices;
+
 namespace WorldNet.Tests;
 
-public class D4CTests
+public unsafe class D4CTests
 {
     [ReferenceFact]
     public void EstimateMatchesReferenceWithinOneUlp()
@@ -91,5 +93,53 @@ public class D4CTests
         Assert.Throws<ArgumentException>(
             () => D4C.Estimate(x, 44100, D4COption.Default, positions, f0, 1024, aperiodicity,
                 arena));
+    }
+
+    [Theory]
+    [InlineData(4000)]
+    [InlineData(5000)]
+    [InlineData(8000)]
+    [InlineData(11025)]
+    [InlineData(14000)]
+    public void EstimateAtLowSamplingRatesDoesNotDependOnArenaContents(int fs)
+    {
+        double[] x = new double[fs];
+        for (int i = 0; i < x.Length; ++i)
+        {
+            x[i] = (0.3 * Math.Sin(2.0 * Math.PI * 150.0 * i / fs))
+                + (0.1 * Math.Sin(2.0 * Math.PI * 300.0 * i / fs));
+        }
+        double[] positions = new double[60];
+        double[] f0 = new double[60];
+        for (int i = 0; i < positions.Length; ++i)
+        {
+            positions[i] = 0.1 + (i * 0.005);
+            f0[i] = 150.0;
+        }
+        int fftSize = CheapTrick.GetFftSize(fs, WorldConstants.FloorF0);
+
+        double[] zeroed = EstimateWithFilledArena(x, fs, positions, f0, fftSize, 0x00);
+        double[] filled = EstimateWithFilledArena(x, fs, positions, f0, fftSize, 0x41);
+
+        Assert.Equal(zeroed, filled);
+    }
+
+    private static double[] EstimateWithFilledArena(double[] x, int fs, double[] positions,
+        double[] f0, int fftSize, byte fill)
+    {
+        const int Capacity = 1 << 25;
+        void* buffer = NativeMemory.AlignedAlloc(Capacity, 64);
+        try
+        {
+            new Span<byte>(buffer, Capacity).Fill(fill);
+            using WorldArena arena = WorldArena.FromNativeMemory(buffer, Capacity);
+            double[] aperiodicity = new double[f0.Length * ((fftSize / 2) + 1)];
+            D4C.Estimate(x, fs, D4COption.Default, positions, f0, fftSize, aperiodicity, arena);
+            return aperiodicity;
+        }
+        finally
+        {
+            NativeMemory.AlignedFree(buffer);
+        }
     }
 }
