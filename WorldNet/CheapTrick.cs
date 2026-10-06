@@ -62,6 +62,8 @@ public static unsafe class CheapTrick
                 nameof(spectrogram));
         }
 
+        ThrowIfF0IsUnsupported(f0, fs, fftSize);
+
         if (f0Length == 0)
         {
             return;
@@ -105,6 +107,21 @@ public static unsafe class CheapTrick
                 {
                     row[j] = scratch.SpectralEnvelope[j];
                 }
+            }
+        }
+    }
+
+    private static void ThrowIfF0IsUnsupported(ReadOnlySpan<double> f0, int fs, int fftSize)
+    {
+        Validation.ThrowIfContainsNaN(f0, nameof(f0));
+
+        double f0Floor = GetF0Floor(fs, fftSize);
+        foreach (double value in f0)
+        {
+            if (value > f0Floor && Common.IsAboveDcCorrectionRange(value, fs, fftSize))
+            {
+                throw new ArgumentOutOfRangeException(nameof(f0), value,
+                    "The F0 is too high for the sampling rate and the FFT size.");
             }
         }
     }
