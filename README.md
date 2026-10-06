@@ -406,6 +406,8 @@ Please include the following in the report.
 | Result | The expected result and the actual result. For a numerical difference, the stage, the index and both values |
 | Exception | The type, the message and the stack trace, unmodified |
 
+Report a vulnerability privately as the [security policy](https://github.com/routersys/WorldNet/blob/main/SECURITY.md) describes, not in an issue.
+
 ---
 
 ## Disclaimer
