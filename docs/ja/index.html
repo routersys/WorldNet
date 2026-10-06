@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>WorldNet: .NET向けWORLDボコーダー、原典のC++より高速</title>
+<meta name="description" content="WORLDボコーダーをC#へ移植した、.NET 8以降向けのライブラリです。基本周波数、スペクトル包絡、非周期性指標の推定と合成を、原典のC++より高速に、マネージドヒープを確保せずに行います。">
+<link rel="canonical" href="https://routersys.github.io/WorldNet/ja/">
+<link rel="alternate" hreflang="en" href="https://routersys.github.io/WorldNet/">
+<link rel="alternate" hreflang="ja" href="https://routersys.github.io/WorldNet/ja/">
+<link rel="alternate" hreflang="x-default" href="https://routersys.github.io/WorldNet/">
+<link rel="icon" href="../icon.png" type="image/png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WorldNet">
+<meta property="og:title" content="WorldNet: .NET向けWORLDボコーダー、原典のC++より高速">
+<meta property="og:description" content="WORLDボコーダーをC#へ移植した、.NET 8以降向けのライブラリです。基本周波数、スペクトル包絡、非周期性指標の推定と合成を、原典のC++より高速に、マネージドヒープを確保せずに行います。">
+<meta property="og:url" content="https://routersys.github.io/WorldNet/ja/">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:locale:alternate" content="en_US">
+<style>body{max-width:44em;margin:1em auto;padding:0 1em;line-height:1.5}pre{overflow-x:auto}</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareSourceCode","name":"WorldNet","description":"WORLDボコーダーをC#へ移植した、.NET 8以降向けのライブラリです。基本周波数、スペクトル包絡、非周期性指標の推定と合成を、原典のC++より高速に、マネージドヒープを確保せずに行います。","programmingLanguage":"C#","runtimePlatform":".NET 8 and later","license":"https://opensource.org/license/mit","codeRepository":"https://github.com/routersys/WorldNet","url":"https://routersys.github.io/WorldNet/ja/","inLanguage":"ja"}</script>
+</head>
+<body>
+<header>
+<h1>WorldNet</h1>
+<p>WorldNetは、WORLDボコーダーを.NETで使えるようにしたライブラリです。原典のC++より高速に動きます。<br>原典との照合を済ませており、マネージドヒープも確保しません。</p>
+<nav>
+<a href="https://github.com/routersys/WorldNet">GitHub</a> |
+<a href="https://www.nuget.org/packages/WorldNet">NuGet</a> |
+<a href="https://github.com/routersys/WorldNet/releases">リリース</a> |
+<a href="../" hreflang="en" lang="en">English</a>
+</nav>
+</header>
+<hr>
+<main>
+<h2>導入</h2>
+<pre>dotnet add package WorldNet</pre>
+<h2>使い方</h2>
+<p>次のプログラムは、モノラルのWAVファイルを読み込み、解析してから波形を合成します。F0の系列はHarvest、スペクトル包絡はCheapTrick、非周期性指標はD4Cで推定します。</p>
+<pre><code>using WorldNet;
+
+int length = WaveFile.GetLength(&quot;input.wav&quot;);
+double[] x = new double[length];
+WaveFile.Read(&quot;input.wav&quot;, x, out int fs, out _);
+
+using WorldArena arena = new();
+
+HarvestOption harvestOption = HarvestOption.Default;
+int f0Length = Harvest.GetSamplesForHarvest(fs, x.Length, harvestOption.FramePeriod);
+double[] temporalPositions = new double[f0Length];
+double[] f0 = new double[f0Length];
+Harvest.Estimate(x, fs, harvestOption, temporalPositions, f0, arena);
+
+CheapTrickOption cheapTrickOption = CheapTrickOption.Create(fs);
+int fftSize = cheapTrickOption.FftSize;
+int spectrumLength = (fftSize / 2) + 1;
+double[] spectrogram = new double[f0Length * spectrumLength];
+CheapTrick.Estimate(x, fs, cheapTrickOption, temporalPositions, f0, spectrogram, arena);
+
+double[] aperiodicity = new double[f0Length * spectrumLength];
+D4C.Estimate(x, fs, D4COption.Default, temporalPositions, f0, fftSize, aperiodicity, arena);
+
+int yLength = Synthesis.GetSamplesForSynthesis(fs, f0Length, harvestOption.FramePeriod);
+double[] y = new double[yLength];
+Synthesis.Synthesize(f0, spectrogram, aperiodicity, fftSize, harvestOption.FramePeriod, fs, y, arena);
+
+WaveFile.Write(&quot;output.wav&quot;, y, fs);</code></pre>
+<h2>できること</h2>
+<ul>
+<li>基本周波数の推定: Dio、Harvest、StoneMask。</li>
+<li>スペクトル包絡の推定: CheapTrick。</li>
+<li>非周期性指標の推定: D4C。</li>
+<li>波形の合成: 一括合成と、実時間合成。</li>
+<li>スペクトル包絡と非周期性指標の符号化。</li>
+<li>WAVの入出力と、解析パラメーターのファイル形式。</li>
+</ul>
+<h2>特長</h2>
+<ul>
+<li>計測したどの処理も、原典のC++より高速です。表は、説明書の<a href="https://github.com/routersys/WorldNet/blob/main/README.ja.md#7-%E6%80%A7%E8%83%BD">性能の節</a>にあります。</li>
+<li>マネージドヒープを確保しません。ガベージコレクションが、解析と合成の経路を目にすることはありません。</li>
+<li>MSVCとGCCでビルドした原典と照合しています。出力は、ほとんどの処理でビット単位で一致し、残りでも最小単位の数個以内の差です。</li>
+<li>.NET 8以降で、WindowsとLinuxのx64とARM64に対応します。Native AOTにも対応し、同梱するネイティブライブラリはありません。</li>
+</ul>
+<h2>リンク</h2>
+<ul>
+<li><a href="https://github.com/routersys/WorldNet/blob/main/README.ja.md">説明書</a>: 動作要件、APIリファレンス、制限事項。</li>
+<li><a href="https://www.nuget.org/packages/WorldNet">NuGetのパッケージ</a></li>
+<li><a href="https://github.com/routersys/WorldNet/releases">リリース</a></li>
+<li><a href="https://github.com/mmorise/World">WORLD</a>: M. Morise氏による原典です。</li>
+</ul>
+</main>
+<hr>
+<footer>
+<p>WorldNetは、<a href="https://github.com/routersys/WorldNet/blob/main/LICENSE.txt">MITライセンス</a>で公開しています。WORLDとOoura FFTについては、<a href="https://github.com/routersys/WorldNet/blob/main/README.ja.md#%E3%82%B5%E3%83%BC%E3%83%89%E3%83%91%E3%83%BC%E3%83%86%E3%82%A3%E3%83%A9%E3%82%A4%E3%82%BB%E3%83%B3%E3%82%B9">サードパーティライセンス</a>を参照してください。</p>
+</footer>
+</body>
+</html>
