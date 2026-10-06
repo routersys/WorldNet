@@ -4,6 +4,7 @@
 * text=auto
 *.bat text eol=crlf
 *.cmd text eol=crlf
+*.sh text eol=lf
 
 ###############################################################################
 # Set default behavior for command prompt diff.
