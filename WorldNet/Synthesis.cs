@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace WorldNet;
 
 public static unsafe class Synthesis
@@ -7,6 +9,7 @@ public static unsafe class Synthesis
         return (int)((f0Length - 1) * framePeriod / 1000.0 * fs) + 1;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void Synthesize(ReadOnlySpan<double> f0, ReadOnlySpan<double> spectrogram,
         ReadOnlySpan<double> aperiodicity, int fftSize, double framePeriod, int fs,
         Span<double> y, WorldArena arena)
@@ -91,6 +94,7 @@ public static unsafe class Synthesis
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetNoiseSpectrum(int noiseSize, int fftSize,
         in ForwardRealFft forwardRealFft, ref RandnState randnState)
     {
@@ -113,6 +117,7 @@ public static unsafe class Synthesis
         forwardRealFft.ForwardFft.Execute();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetAperiodicResponse(int noiseSize, int fftSize, double* spectrum,
         double* aperiodicRatio, double currentVuv, in SynthesisScratch scratch,
         double* aperiodicResponse, ref RandnState randnState)
@@ -154,6 +159,7 @@ public static unsafe class Synthesis
         MatlabFunctions.FftShift(inverseRealFft.Waveform, fftSize, aperiodicResponse);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void RemoveDCComponent(double* periodicResponse, int fftSize,
         double* dcRemover, double* newPeriodicResponse)
     {
@@ -172,6 +178,7 @@ public static unsafe class Synthesis
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetSpectrumWithFractionalTimeShift(int fftSize, double coefficient,
         in InverseRealFft inverseRealFft)
     {
@@ -187,6 +194,7 @@ public static unsafe class Synthesis
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetPeriodicResponse(int fftSize, double* spectrum,
         double* aperiodicRatio, double currentVuv, in SynthesisScratch scratch,
         double fractionalTimeShift, int fs, double* periodicResponse)
@@ -224,6 +232,7 @@ public static unsafe class Synthesis
         RemoveDCComponent(periodicResponse, fftSize, scratch.DcRemover, periodicResponse);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetSpectralEnvelope(double currentTime, double framePeriod, int f0Length,
         double* spectrogram, int spectrumLength, int fftSize, double* spectralEnvelope)
     {
@@ -253,6 +262,7 @@ public static unsafe class Synthesis
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetAperiodicRatio(double currentTime, double framePeriod, int f0Length,
         double* aperiodicity, int spectrumLength, int fftSize, double* aperiodicSpectrum)
     {
@@ -285,6 +295,7 @@ public static unsafe class Synthesis
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetOneFrameSegment(double currentVuv, int noiseSize, double* spectrogram,
         int fftSize, double* aperiodicity, int spectrumLength, int f0Length, double framePeriod,
         double currentTime, double fractionalTimeShift, int fs, in SynthesisScratch scratch,
@@ -315,6 +326,7 @@ public static unsafe class Synthesis
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetTemporalParametersForTimeBase(double* f0, int f0Length, int fs,
         int yLength, double framePeriod, double lowestF0, in SynthesisScratch scratch)
     {
@@ -338,6 +350,7 @@ public static unsafe class Synthesis
         coarseVuv[f0Length] = (coarseVuv[f0Length - 1] * 2) - coarseVuv[f0Length - 2];
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static int GetPulseLocationsForTimeBase(double* interpolatedF0, int yLength, int fs,
         in SynthesisScratch scratch)
     {
@@ -376,6 +389,7 @@ public static unsafe class Synthesis
         return numberOfPulses;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static int GetTimeBase(double* f0, int f0Length, int fs, double framePeriod,
         int yLength, double lowestF0, in SynthesisScratch scratch)
     {
@@ -399,6 +413,7 @@ public static unsafe class Synthesis
         return GetPulseLocationsForTimeBase(interpolatedF0, yLength, fs, scratch);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetDCRemover(int fftSize, double* dcRemover)
     {
         double dcComponent = 0.0;
