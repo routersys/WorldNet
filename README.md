@@ -119,7 +119,7 @@ Synthesis.Synthesize(f0, spectrogram, aperiodicity, fftSize, harvestOption.Frame
 WaveFile.Write("output.wav", y, fs);
 ```
 
-The caller sizes every destination array. `Harvest.GetSamplesForHarvest` returns the number of frames, and `Synthesis.GetSamplesForSynthesis` returns the number of samples of the synthesized waveform. The spectrogram and the aperiodicity are flat arrays that hold one row of `fftSize / 2 + 1` values per frame. `Synthesis.Synthesize` takes the length of `y` as the length of the output. `WaveFile.Read` accepts only monaural PCM files whose format chunk is 16 bytes long and throws `InvalidDataException` for any other header.
+The caller sizes every destination array. `Harvest.GetSamplesForHarvest` returns the number of frames, and `Synthesis.GetSamplesForSynthesis` returns the number of samples of the synthesized waveform. The spectrogram and the aperiodicity are flat arrays that hold one row of `fftSize / 2 + 1` values per frame. `Synthesis.Synthesize` takes the length of `y` as the length of the output. `WaveFile.Read` accepts only monaural integer PCM files and throws `InvalidDataException` for any other format.
 
 ---
 
