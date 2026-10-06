@@ -1,6 +1,6 @@
 namespace WorldNet.Tests;
 
-public class SizingHelperTests
+public class ArgumentValidationTests
 {
     [Theory]
     [InlineData(0, 100, 5.0)]
