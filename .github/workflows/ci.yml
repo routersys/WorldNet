@@ -103,7 +103,7 @@ jobs:
       - name: 発行された実行ファイルを確認
         run: find WorldNet.Examples/bin -name WorldNet.Examples.exe -path "*publish*" -exec ls -la {} +
 
-  build-linux:
+  build-unix:
     name: ${{ matrix.name }} でのビルドと参照一致検証
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
