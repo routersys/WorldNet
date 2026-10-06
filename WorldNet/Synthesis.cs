@@ -247,18 +247,12 @@ public static unsafe class Synthesis
 
         if (currentFrameFloor == currentFrameCeil)
         {
-            for (int i = 0; i <= fftSize / 2; ++i)
-            {
-                spectralEnvelope[i] = Math.Abs(floorRow[i]);
-            }
+            VectorOperations.Absolute(floorRow, spectralEnvelope, (fftSize / 2) + 1);
         }
         else
         {
-            for (int i = 0; i <= fftSize / 2; ++i)
-            {
-                spectralEnvelope[i] = ((1.0 - interpolation) * Math.Abs(floorRow[i])) +
-                    (interpolation * Math.Abs(ceilRow[i]));
-            }
+            VectorOperations.BlendAbsolute(floorRow, ceilRow, spectralEnvelope,
+                (fftSize / 2) + 1, 1.0 - interpolation, interpolation);
         }
     }
 
@@ -277,21 +271,12 @@ public static unsafe class Synthesis
 
         if (currentFrameFloor == currentFrameCeil)
         {
-            for (int i = 0; i <= fftSize / 2; ++i)
-            {
-                double safe = WorldMath.GetSafeAperiodicity(floorRow[i]);
-                aperiodicSpectrum[i] = safe * safe;
-            }
+            VectorOperations.SquareAperiodicity(floorRow, aperiodicSpectrum, (fftSize / 2) + 1);
         }
         else
         {
-            for (int i = 0; i <= fftSize / 2; ++i)
-            {
-                double blended =
-                    ((1.0 - interpolation) * WorldMath.GetSafeAperiodicity(floorRow[i])) +
-                    (interpolation * WorldMath.GetSafeAperiodicity(ceilRow[i]));
-                aperiodicSpectrum[i] = blended * blended;
-            }
+            VectorOperations.BlendSquareAperiodicity(floorRow, ceilRow, aperiodicSpectrum,
+                (fftSize / 2) + 1, 1.0 - interpolation, interpolation);
         }
     }
 

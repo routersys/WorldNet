@@ -108,4 +108,101 @@ internal static unsafe class VectorOperations
             values[i] -= values[i + 1];
         }
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Absolute(double* source, double* destination, int count)
+    {
+        int i = 0;
+        if (Vector.IsHardwareAccelerated && count >= Vector<double>.Count)
+        {
+            int limit = count - Vector<double>.Count;
+            for (; i <= limit; i += Vector<double>.Count)
+            {
+                Unsafe.WriteUnaligned(destination + i,
+                    Vector.Abs(Unsafe.ReadUnaligned<Vector<double>>(source + i)));
+            }
+        }
+        for (; i < count; ++i)
+        {
+            destination[i] = Math.Abs(source[i]);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void BlendAbsolute(double* first, double* second, double* destination,
+        int count, double firstWeight, double secondWeight)
+    {
+        int i = 0;
+        if (Vector.IsHardwareAccelerated && count >= Vector<double>.Count)
+        {
+            Vector<double> firstScale = new(firstWeight);
+            Vector<double> secondScale = new(secondWeight);
+            int limit = count - Vector<double>.Count;
+            for (; i <= limit; i += Vector<double>.Count)
+            {
+                Unsafe.WriteUnaligned(destination + i,
+                    (firstScale * Vector.Abs(Unsafe.ReadUnaligned<Vector<double>>(first + i)))
+                    + (secondScale * Vector.Abs(Unsafe.ReadUnaligned<Vector<double>>(second + i))));
+            }
+        }
+        for (; i < count; ++i)
+        {
+            destination[i] = (firstWeight * Math.Abs(first[i])) + (secondWeight * Math.Abs(second[i]));
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Vector<double> ClampAperiodicity(Vector<double> value)
+    {
+        Vector<double> upper = new(0.999999999999);
+        Vector<double> lower = new(0.001);
+        Vector<double> limited = Vector.ConditionalSelect(Vector.LessThan(upper, value), upper, value);
+        return Vector.ConditionalSelect(Vector.GreaterThan(lower, limited), lower, limited);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void SquareAperiodicity(double* source, double* destination, int count)
+    {
+        int i = 0;
+        if (Vector.IsHardwareAccelerated && count >= Vector<double>.Count)
+        {
+            int limit = count - Vector<double>.Count;
+            for (; i <= limit; i += Vector<double>.Count)
+            {
+                Vector<double> safe = ClampAperiodicity(Unsafe.ReadUnaligned<Vector<double>>(source + i));
+                Unsafe.WriteUnaligned(destination + i, safe * safe);
+            }
+        }
+        for (; i < count; ++i)
+        {
+            double safe = WorldMath.GetSafeAperiodicity(source[i]);
+            destination[i] = safe * safe;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void BlendSquareAperiodicity(double* first, double* second, double* destination,
+        int count, double firstWeight, double secondWeight)
+    {
+        int i = 0;
+        if (Vector.IsHardwareAccelerated && count >= Vector<double>.Count)
+        {
+            Vector<double> firstScale = new(firstWeight);
+            Vector<double> secondScale = new(secondWeight);
+            int limit = count - Vector<double>.Count;
+            for (; i <= limit; i += Vector<double>.Count)
+            {
+                Vector<double> blended =
+                    (firstScale * ClampAperiodicity(Unsafe.ReadUnaligned<Vector<double>>(first + i)))
+                    + (secondScale * ClampAperiodicity(Unsafe.ReadUnaligned<Vector<double>>(second + i)));
+                Unsafe.WriteUnaligned(destination + i, blended * blended);
+            }
+        }
+        for (; i < count; ++i)
+        {
+            double blended = (firstWeight * WorldMath.GetSafeAperiodicity(first[i]))
+                + (secondWeight * WorldMath.GetSafeAperiodicity(second[i]));
+            destination[i] = blended * blended;
+        }
+    }
 }
