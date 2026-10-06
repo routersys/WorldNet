@@ -315,6 +315,6 @@ static int RunPipeline(string[] args)
 
     WaveFile.Write(args[2], y, fs);
     Console.WriteLine($"wrote {yLength} samples to {args[2]}");
-    Console.WriteLine($"arena: {arena.Used} of {arena.Capacity} bytes");
+    Console.WriteLine($"arena: {arena.Capacity} bytes");
     return 0;
 }
