@@ -345,22 +345,7 @@ public static unsafe class Dio
         FftComplex* lowPassFilterSpectrum = scratch.LowPassFilterSpectrum;
         scratch.FilterForwardPlan.Execute();
 
-        FftComplex* ySpectrum = scratch.YSpectrum;
-        double tmp = (ySpectrum[0].Real * lowPassFilterSpectrum[0].Real)
-            - (ySpectrum[0].Imaginary * lowPassFilterSpectrum[0].Imaginary);
-        lowPassFilterSpectrum[0].Imaginary = (ySpectrum[0].Real * lowPassFilterSpectrum[0].Imaginary)
-            + (ySpectrum[0].Imaginary * lowPassFilterSpectrum[0].Real);
-        lowPassFilterSpectrum[0].Real = tmp;
-        for (int i = 1; i <= fftSize / 2; ++i)
-        {
-            tmp = (ySpectrum[i].Real * lowPassFilterSpectrum[i].Real)
-                - (ySpectrum[i].Imaginary * lowPassFilterSpectrum[i].Imaginary);
-            lowPassFilterSpectrum[i].Imaginary = (ySpectrum[i].Real * lowPassFilterSpectrum[i].Imaginary)
-                + (ySpectrum[i].Imaginary * lowPassFilterSpectrum[i].Real);
-            lowPassFilterSpectrum[i].Real = tmp;
-            lowPassFilterSpectrum[fftSize - i - 1].Real = lowPassFilterSpectrum[i].Real;
-            lowPassFilterSpectrum[fftSize - i - 1].Imaginary = lowPassFilterSpectrum[i].Imaginary;
-        }
+        SpectrumMath.MultiplyFilterSpectrum(scratch.YSpectrum, lowPassFilterSpectrum, fftSize);
 
         scratch.FilterInversePlan.Execute();
 
