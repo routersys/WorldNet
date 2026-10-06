@@ -14,4 +14,18 @@
 <xhtml:link rel="alternate" hreflang="ja" href="https://routersys.github.io/WorldNet/ja/"/>
 <xhtml:link rel="alternate" hreflang="x-default" href="https://routersys.github.io/WorldNet/"/>
 </url>
+<url>
+<loc>https://routersys.github.io/WorldNet/demo/</loc>
+<lastmod>2026-10-06</lastmod>
+<xhtml:link rel="alternate" hreflang="en" href="https://routersys.github.io/WorldNet/demo/"/>
+<xhtml:link rel="alternate" hreflang="ja" href="https://routersys.github.io/WorldNet/ja/demo/"/>
+<xhtml:link rel="alternate" hreflang="x-default" href="https://routersys.github.io/WorldNet/demo/"/>
+</url>
+<url>
+<loc>https://routersys.github.io/WorldNet/ja/demo/</loc>
+<lastmod>2026-10-06</lastmod>
+<xhtml:link rel="alternate" hreflang="en" href="https://routersys.github.io/WorldNet/demo/"/>
+<xhtml:link rel="alternate" hreflang="ja" href="https://routersys.github.io/WorldNet/ja/demo/"/>
+<xhtml:link rel="alternate" hreflang="x-default" href="https://routersys.github.io/WorldNet/demo/"/>
+</url>
 </urlset>
