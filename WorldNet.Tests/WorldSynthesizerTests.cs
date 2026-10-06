@@ -141,6 +141,56 @@ public class WorldSynthesizerTests
         });
     }
 
+    [Fact]
+    public void ContourBelowTheLowestSupportedF0IsSynthesizedAsUnvoiced()
+    {
+        double[] low = SynthesizeInChunks(20.0);
+        double[] unvoiced = SynthesizeInChunks(0.0);
+
+        Assert.NotEmpty(low);
+        Assert.Equal(unvoiced, low);
+    }
+
+    [Theory]
+    [InlineData(44100, 6)]
+    [InlineData(44100, 1000)]
+    [InlineData(44100, 64)]
+    [InlineData(22050, 32)]
+    public void ConstructorRejectsFftSizeThatCannotHoldThePulses(int fs, int fftSize)
+    {
+        using WorldArena arena = new();
+
+        Assert.Throws<ArgumentException>(
+            () => new WorldSynthesizer(arena, fs, 5.0, fftSize, 64, 1, 4));
+    }
+
+    private static double[] SynthesizeInChunks(double f0Value)
+    {
+        const int FftSize = 256;
+        const int Frames = 16;
+        const int SpectrumLength = (FftSize / 2) + 1;
+        using WorldArena arena = new();
+        WorldSynthesizer synthesizer = new(arena, 22050, 5.0, FftSize, 64, 2, Frames);
+        double[] f0 = new double[Frames];
+        Array.Fill(f0, f0Value);
+        double[] spectrogram = new double[Frames * SpectrumLength];
+        Array.Fill(spectrogram, 1.0);
+        double[] aperiodicity = new double[Frames * SpectrumLength];
+        Array.Fill(aperiodicity, 0.4);
+        List<double> output = [];
+
+        for (int chunk = 0; chunk < 6; ++chunk)
+        {
+            Assert.True(synthesizer.AddParameters(f0, spectrogram, aperiodicity));
+            while (synthesizer.Synthesize())
+            {
+                output.AddRange(synthesizer.Buffer.ToArray());
+            }
+        }
+
+        return output.ToArray();
+    }
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static WorldSynthesizer CreateWithUnreferencedArena(
         out WeakReference<WorldArena> arena)
