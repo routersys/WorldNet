@@ -35,6 +35,10 @@ public static unsafe class D4C
                 nameof(aperiodicity));
         }
 
+        int fftSizeD4C = (int)Math.Pow(2.0, 1.0 +
+            (int)(Math.Log((4.0 * fs / WorldConstants.FloorF0D4C) + 1) / WorldConstants.Log2));
+        ThrowIfF0IsUnsupported(f0, fs, fftSizeD4C);
+
         if (f0Length == 0)
         {
             return;
@@ -51,9 +55,6 @@ public static unsafe class D4C
         fixed (double* aperiodicityPointer = aperiodicity)
         {
             InitializeAperiodicity(f0Length, fftSize, spectrumLength, aperiodicityPointer);
-
-            int fftSizeD4C = (int)Math.Pow(2.0, 1.0 +
-                (int)(Math.Log((4.0 * fs / WorldConstants.FloorF0D4C) + 1) / WorldConstants.Log2));
 
             ForwardRealFft forwardRealFft = ForwardRealFft.Bind(arena, fftSizeD4C);
 
@@ -101,6 +102,21 @@ public static unsafe class D4C
                 GetAperiodicity(coarseFrequencyAxis, coarseAperiodicity, numberOfAperiodicities,
                     frequencyAxis, fftSize, aperiodicityPointer + ((long)i * spectrumLength),
                     arena);
+            }
+        }
+    }
+
+    private static void ThrowIfF0IsUnsupported(ReadOnlySpan<double> f0, int fs, int fftSize)
+    {
+        Validation.ThrowIfContainsNaN(f0, nameof(f0));
+
+        foreach (double value in f0)
+        {
+            if (value != 0.0 && Common.IsAboveDcCorrectionRange(
+                WorldMath.MaxDouble(WorldConstants.FloorF0D4C, value), fs, fftSize))
+            {
+                throw new ArgumentOutOfRangeException(nameof(f0), value,
+                    "The F0 is too high for the sampling rate.");
             }
         }
     }
