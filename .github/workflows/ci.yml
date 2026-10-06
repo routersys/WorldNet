@@ -36,7 +36,9 @@ jobs:
       - name: .NET SDK をセットアップ
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "10.x"
+          dotnet-version: |
+            8.x
+            10.x
 
       - name: 原典 WORLD をビルドして参照データを生成
         shell: cmd
@@ -106,7 +108,9 @@ jobs:
       - name: .NET SDK をセットアップ
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "10.x"
+          dotnet-version: |
+            8.x
+            10.x
 
       - name: 原典 WORLD をビルドして参照データを生成
         run: reference/build.sh
