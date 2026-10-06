@@ -23,26 +23,13 @@ public class SynthesisTests
         Synthesis.Synthesize(f0, spectrogram.Values, aperiodicity.Values, fftSize, framePeriod,
             fs, y, arena);
 
-        long mismatches = 0;
-        long maxUlp = 0;
-        for (int i = 0; i < yLength; ++i)
+        double error = WaveformComparison.MaxErrorInPeakUlps(expected, y);
+        if (error > WaveformComparison.PeakUlpTolerance)
         {
-            long a = BitConverter.DoubleToInt64Bits(expected[i]);
-            long b = BitConverter.DoubleToInt64Bits(y[i]);
-            if (a != b)
-            {
-                ++mismatches;
-                maxUlp = Math.Max(maxUlp, Math.Abs(a - b));
-            }
-        }
-        if (maxUlp > 64)
-        {
-            Assert.Fail($"maxUlp={maxUlp} exceeds the tolerance inherited from MSVC pow.");
-        }
-
-        if (mismatches * 20 >= yLength)
-        {
-            Assert.Fail($"mismatches={mismatches} of {yLength} exceeds 5 percent.");
+            Assert.Fail(
+                $"the maximum error of {error} ULP of the peak exceeds " +
+                $"{WaveformComparison.PeakUlpTolerance}, the tolerance inherited from the " +
+                "reference's pow.");
         }
     }
 
