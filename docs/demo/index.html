@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>WorldNet demo: run the WORLD vocoder in your browser</title>
+<meta name="description" content="Run WorldNet in your browser as WebAssembly: analyze a public domain voice, change its pitch and resynthesize it. Nothing is uploaded.">
+<link rel="canonical" href="https://routersys.github.io/WorldNet/demo/">
+<link rel="alternate" hreflang="en" href="https://routersys.github.io/WorldNet/demo/">
+<link rel="alternate" hreflang="ja" href="https://routersys.github.io/WorldNet/ja/demo/">
+<link rel="alternate" hreflang="x-default" href="https://routersys.github.io/WorldNet/demo/">
+<link rel="icon" href="../icon.png" type="image/png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WorldNet">
+<meta property="og:title" content="WorldNet demo: run the WORLD vocoder in your browser">
+<meta property="og:description" content="Run WorldNet in your browser as WebAssembly: analyze a public domain voice, change its pitch and resynthesize it. Nothing is uploaded.">
+<meta property="og:url" content="https://routersys.github.io/WorldNet/demo/">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ja_JP">
+<style>body{max-width:44em;margin:1em auto;padding:0 1em;line-height:1.5}audio,svg{max-width:100%}</style>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "WorldNet demo: run the WORLD vocoder in your browser", "description": "Run WorldNet in your browser as WebAssembly: analyze a public domain voice, change its pitch and resynthesize it. Nothing is uploaded.", "url": "https://routersys.github.io/WorldNet/demo/", "inLanguage": "en", "isPartOf": {"@type": "WebSite", "name": "WorldNet", "url": "https://routersys.github.io/WorldNet/"}}</script>
+</head>
+<body>
+<header>
+<h1>WorldNet demo</h1>
+<nav><a href="../">Home</a> | <a href="https://github.com/routersys/WorldNet">GitHub</a> | <a href="../ja/demo/" hreflang="ja" lang="ja">日本語</a></nav>
+</header>
+<hr>
+<main>
+<p>This page runs WorldNet in your browser as WebAssembly. Nothing is uploaded. Harvest, CheapTrick and D4C estimate the F0 contour, the spectral envelope and the aperiodicity of the voice below, and Synthesis rebuilds the waveform from them. The pitch shift multiplies the F0 before the synthesis.</p>
+<h2>Original</h2>
+<p>“His nature must have been kindly.”</p>
+<audio controls src="LJ016-0230.wav"></audio>
+<p>Voice: Linda Johnson, recorded for LibriVox, from the <a href="https://keithito.com/LJ-Speech-Dataset/">LJ Speech Dataset</a> by Keith Ito. The dataset is in the public domain.</p>
+<h2>Analyze and resynthesize</h2>
+<p><label>Pitch shift in semitones: <select id="shift"><option value="-12">-12</option><option value="-7">-7</option><option value="-5">-5</option><option value="0">0</option><option value="5" selected>+5</option><option value="7">+7</option><option value="12">+12</option></select></label> <button id="run" type="button">Run</button></p>
+<p id="status" role="status"></p>
+<h2>Result</h2>
+<audio id="result" controls hidden></audio>
+<pre id="timings"></pre>
+<p>F0 contour estimated by Harvest, before the pitch shift:</p>
+<div id="plot"></div>
+<ul>
+<li>The first run downloads about 2.8 MB, mostly the .NET runtime. The code is compiled ahead of time, so nothing is compiled while you wait.</li>
+<li>In our check, the 16-bit result matched a native build sample for sample at every pitch shift offered here. Inside, the double-precision values can differ from a native build in the last digits, because WebAssembly carries its own math library. The native builds are the ones verified against the original.</li>
+</ul>
+</main>
+<script type="module">
+const M = {"loading": "Loading the .NET runtime...", "running": "Running...", "done": "Done in {t} ms.", "fail": "Failed: ", "unsupported": "This browser does not support the streams this demo needs.", "secs": "s", "hz": "Hz"};
+const $ = (id) => document.getElementById(id);
+const say = (text) => { $("status").textContent = text; };
+let exportsPromise;
+async function load() {
+  const { dotnet } = await import("./_framework/dotnet.js");
+  const gz = async (uri) => {
+    const r = await fetch(uri + ".gz");
+    if (!r.ok) throw new Error(uri + " " + r.status);
+    return new Response(r.body.pipeThrough(new DecompressionStream("gzip")), { headers: { "Content-Type": "application/wasm" } });
+  };
+  const runtime = await dotnet
+    .withResourceLoader((type, name, uri) => (type === "assembly" || type === "dotnetwasm") ? gz(uri) : null)
+    .create();
+  return (await runtime.getAssemblyExports(runtime.getConfig().mainAssemblyName)).Demo;
+}
+function plot(f0) {
+  const w = 600, h = 160, pad = 14, n = f0.length;
+  const voiced = Array.from(f0).filter((x) => x > 0);
+  const lo = Math.min(...voiced), hi = Math.max(...voiced);
+  const X = (i) => pad + (i / (n - 1)) * (w - 2 * pad);
+  const Y = (x) => h - pad - ((x - lo) / ((hi - lo) || 1)) * (h - 2 * pad);
+  let d = "", pen = false;
+  f0.forEach((x, i) => {
+    if (x > 0) { d += (pen ? "L" : "M") + X(i).toFixed(1) + " " + Y(x).toFixed(1); pen = true; } else { pen = false; }
+  });
+  const secs = (n * 5 / 1000).toFixed(1);
+  $("plot").innerHTML = '<svg viewBox="0 0 ' + w + " " + h + '" role="img" aria-label="F0 contour" font-size="11" fill="currentColor">'
+    + '<rect x="0.5" y="0.5" width="' + (w - 1) + '" height="' + (h - 1) + '" fill="none" stroke="currentColor" opacity="0.4"/>'
+    + '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>'
+    + '<text x="4" y="11">' + hi.toFixed(0) + " " + M.hz + '</text><text x="4" y="' + (h - 4) + '">' + lo.toFixed(0) + " " + M.hz + '</text>'
+    + '<text x="' + (w - 4) + '" y="' + (h - 4) + '" text-anchor="end">' + secs + " " + M.secs + "</text></svg>";
+}
+$("run").addEventListener("click", async () => {
+  const button = $("run");
+  if (!("DecompressionStream" in window)) { say(M.unsupported); return; }
+  button.disabled = true;
+  try {
+    say(M.loading);
+    exportsPromise ??= load();
+    const demo = await exportsPromise;
+    say(M.running);
+    const wave = new Uint8Array(await (await fetch("LJ016-0230.wav")).arrayBuffer());
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const start = performance.now();
+    const output = demo.Process(wave, Number($("shift").value));
+    const total = Math.round(performance.now() - start);
+    $("timings").textContent = demo.GetTimings();
+    plot(demo.GetF0());
+    const audio = $("result");
+    if (audio.src) URL.revokeObjectURL(audio.src);
+    audio.src = URL.createObjectURL(new Blob([output], { type: "audio/wav" }));
+    audio.hidden = false;
+    say(M.done.replace("{t}", total));
+  } catch (error) {
+    exportsPromise = undefined;
+    say(M.fail + error.message);
+  } finally {
+    button.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
