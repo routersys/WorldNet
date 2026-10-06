@@ -4,6 +4,7 @@ namespace WorldNet;
 
 internal static unsafe partial class OouraFft
 {
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CftF161(double* a, double* w)
     {
         double wn4r = w[1];
@@ -155,6 +156,7 @@ internal static unsafe partial class OouraFft
         a[7] = x1i - x3r;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CftF162(double* a, double* w)
     {
         double wn4r = w[1];
@@ -330,6 +332,7 @@ internal static unsafe partial class OouraFft
         a[31] = x1i - x2r;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CftF081(double* a, double* w)
     {
         double wn4r = w[1];
@@ -387,6 +390,7 @@ internal static unsafe partial class OouraFft
         a[7] = y2i - y6r;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CftF082(double* a, double* w)
     {
         double wn4r = w[1];
@@ -454,6 +458,7 @@ internal static unsafe partial class OouraFft
         a[15] = x0i - x1r;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CftF040(double* a)
     {
         double x0r = a[0] + a[4];
@@ -474,6 +479,7 @@ internal static unsafe partial class OouraFft
         a[7] = x1i - x3r;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CftB040(double* a)
     {
         double x0r = a[0] + a[4];
@@ -494,6 +500,7 @@ internal static unsafe partial class OouraFft
         a[7] = x1i + x3r;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CftX020(double* a)
     {
         double x0r = a[0] - a[2];
