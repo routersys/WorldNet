@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace WorldNet;
 
 internal static unsafe class Common
@@ -12,6 +14,7 @@ internal static unsafe class Common
         return 2 + (int)(f0 * fftSize / fs);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void DcCorrection(double* input, double f0, int fs, int fftSize, double* output,
         in DcCorrectionScratch scratch)
     {
@@ -41,6 +44,7 @@ internal static unsafe class Common
         return (int)(width * fftSize / fs) + 1;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void LinearSmoothing(double* input, double width, int fs, int fftSize,
         double* output, in LinearSmoothingScratch scratch)
     {
@@ -71,6 +75,7 @@ internal static unsafe class Common
             highLevels, lowLevels, output, (fftSize / 2) + 1, width);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void NuttallWindow(int yLength, double* y)
     {
         for (int i = 0; i < yLength; ++i)
@@ -82,6 +87,7 @@ internal static unsafe class Common
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void SetParametersForLinearSmoothing(int boundary, int fftSize, int fs,
         double width, double* powerSpectrum, double* mirroringSpectrum,
         double* mirroringSegment, double* frequencyAxis)
