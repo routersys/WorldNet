@@ -122,6 +122,7 @@ public static unsafe class Codec
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fftSize);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(numberOfDimensions);
         ArgumentOutOfRangeException.ThrowIfNegative(f0Length);
+        ThrowIfSpectralEnvelopeShapeIsInvalid(fftSize, numberOfDimensions);
 
         int spectrumLength = (fftSize / 2) + 1;
         int maxDimension = fftSize / 2;
@@ -171,6 +172,7 @@ public static unsafe class Codec
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fftSize);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(numberOfDimensions);
         ArgumentOutOfRangeException.ThrowIfNegative(f0Length);
+        ThrowIfSpectralEnvelopeShapeIsInvalid(fftSize, numberOfDimensions);
 
         int spectrumLength = (fftSize / 2) + 1;
         int maxDimension = fftSize / 2;
@@ -203,6 +205,14 @@ public static unsafe class Codec
                     spectrogramPointer + ((long)i * spectrumLength), melSpectrum, interpolation);
             }
         }
+    }
+
+    private static void ThrowIfSpectralEnvelopeShapeIsInvalid(int fftSize, int numberOfDimensions)
+    {
+        Validation.ThrowIfNotPowerOfTwo(fftSize, nameof(fftSize));
+        ArgumentOutOfRangeException.ThrowIfLessThan(fftSize, 4, nameof(fftSize));
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(
+            numberOfDimensions, fftSize / 2, nameof(numberOfDimensions));
     }
 
     private static void ThrowIfSmaller(long actual, long required, string name)
