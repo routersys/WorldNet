@@ -6,6 +6,10 @@ public static unsafe class Synthesis
 {
     public static int GetSamplesForSynthesis(int fs, int f0Length, double framePeriod)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fs);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(f0Length);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(framePeriod);
+
         return (int)((f0Length - 1) * framePeriod / 1000.0 * fs) + 1;
     }
 
