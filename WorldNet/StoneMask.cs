@@ -150,15 +150,8 @@ public static unsafe class StoneMask
         GetDiffWindow(scratch.MainWindow, baseTimeLength, scratch.DiffWindow);
         GetSpectra(x, xLength, fftSize, baseTimeLength, scratch);
 
-        for (int j = 0; j <= fftSize / 2; ++j)
-        {
-            scratch.NumeratorI[j] =
-                (scratch.MainSpectrum[j].Real * scratch.DiffSpectrum[j].Imaginary)
-                - (scratch.MainSpectrum[j].Imaginary * scratch.DiffSpectrum[j].Real);
-            scratch.PowerSpectrum[j] =
-                (scratch.MainSpectrum[j].Real * scratch.MainSpectrum[j].Real)
-                + (scratch.MainSpectrum[j].Imaginary * scratch.MainSpectrum[j].Imaginary);
-        }
+        SpectrumMath.PowerSpectrumAndCrossProduct(scratch.MainSpectrum, scratch.DiffSpectrum,
+            scratch.PowerSpectrum, scratch.NumeratorI, (fftSize / 2) + 1);
 
         return GetTentativeF0(scratch.PowerSpectrum, scratch.NumeratorI, fftSize, fs, initialF0,
             scratch);
