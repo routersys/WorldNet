@@ -119,7 +119,7 @@ Synthesis.Synthesize(f0, spectrogram, aperiodicity, fftSize, harvestOption.Frame
 WaveFile.Write("output.wav", y, fs);
 ```
 
-出力先の配列の大きさは、呼び出し側が決めます。`Harvest.GetSamplesForHarvest`はフレームの個数を、`Synthesis.GetSamplesForSynthesis`は合成する波形のサンプルの個数を返します。スペクトログラムと非周期性指標は、1フレームにつき`fftSize / 2 + 1`個の値を並べた1次元の配列です。`Synthesis.Synthesize`は、`y`の長さを出力の長さとして扱います。`WaveFile.Read`が受け付けるのは、フォーマットチャンクが16バイトのモノラルPCMファイルだけで、それ以外のヘッダーでは`InvalidDataException`を投げます。
+出力先の配列の大きさは、呼び出し側が決めます。`Harvest.GetSamplesForHarvest`はフレームの個数を、`Synthesis.GetSamplesForSynthesis`は合成する波形のサンプルの個数を返します。スペクトログラムと非周期性指標は、1フレームにつき`fftSize / 2 + 1`個の値を並べた1次元の配列です。`Synthesis.Synthesize`は、`y`の長さを出力の長さとして扱います。`WaveFile.Read`が受け付けるのは、モノラルの整数PCMファイルだけで、それ以外の形式では`InvalidDataException`を投げます。
 
 ---
 
