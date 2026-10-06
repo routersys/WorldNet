@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
 namespace WorldNet;
@@ -41,7 +42,11 @@ internal unsafe partial struct RandnState
 
     private static RandnPath SelectPath()
     {
-        return Avx2.IsSupported ? RandnPath.Wide : RandnPath.Sequential;
+        if (Avx2.IsSupported)
+        {
+            return RandnPath.Wide;
+        }
+        return Vector128.IsHardwareAccelerated ? RandnPath.Narrow : RandnPath.Sequential;
     }
 
     public void Reseed(RandnPath path)
@@ -72,11 +77,24 @@ internal unsafe partial struct RandnState
         {
             if (_index == RandnConstants.BufferLength)
             {
-                RefillWide();
+                Refill();
             }
             return (_buffer[_index++] / 268435456.0) - 6.0;
         }
         return NextSequential();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void Refill()
+    {
+        if (_path == RandnPath.Wide)
+        {
+            RefillWide();
+        }
+        else
+        {
+            RefillNarrow();
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
