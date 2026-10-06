@@ -114,4 +114,52 @@ internal static unsafe partial class OouraFft
         }
         return current;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Vector256<double> LoadPair(double* low, double* high)
+    {
+        return Vector256.Create(Vector128.Load(low), Vector128.Load(high));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void StorePair(Vector256<double> value, double* low, double* high)
+    {
+        value.GetLower().Store(low);
+        value.GetUpper().Store(high);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void Radix4Pair(double* low, double* high, int m, Vector256<double> real1,
+        Vector256<double> imaginary1, Vector256<double> real3, Vector256<double> imaginary3)
+    {
+        Vector256<double> v0 = LoadPair(low, high);
+        Vector256<double> v2 = LoadPair(low + (2 * m), high + (2 * m));
+        Vector256<double> x0 = v0 + v2;
+        Vector256<double> x1 = v0 - v2;
+        Vector256<double> v1 = LoadPair(low + m, high + m);
+        Vector256<double> v3 = LoadPair(low + (3 * m), high + (3 * m));
+        Vector256<double> x2 = v1 + v3;
+        Vector256<double> x3 = v1 - v3;
+        StorePair(x0 + x2, low, high);
+        StorePair(x0 - x2, low + m, high + m);
+        Vector256<double> flipped = NegateReal(SwapRealImaginary(x3));
+        Vector256<double> y2 = x1 + flipped;
+        Vector256<double> y3 = x1 - flipped;
+        StorePair(Rotate(y2, real1, imaginary1), low + (2 * m), high + (2 * m));
+        StorePair(RotateConjugate(y3, real3, imaginary3), low + (3 * m), high + (3 * m));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    private static void CftMiddleLoop1(int mh, int m, double* a, double* w)
+    {
+        int k = 0;
+        for (int j = 2; j < mh; j += 2)
+        {
+            k += 4;
+            Vector256<double> table = Vector256.Load(w + k);
+            Radix4Pair(a + j, a + m - j, m, Avx2.Permute4x64(table, 0x50),
+                Avx2.Permute4x64(table, 0x05), Avx2.Permute4x64(table, 0xFA),
+                Avx2.Permute4x64(table, 0xAF));
+        }
+    }
 }
