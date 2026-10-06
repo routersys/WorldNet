@@ -1,7 +1,10 @@
+using System.Runtime.CompilerServices;
+
 namespace WorldNet;
 
 public static unsafe partial class Harvest
 {
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetWaveformAndSpectrumSub(double* x, int xLength, int yLength,
         int decimationRatio, in HarvestScratch scratch)
     {
@@ -43,6 +46,7 @@ public static unsafe partial class Harvest
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetWaveformAndSpectrum(double* x, int xLength, int yLength, int fftSize,
         int decimationRatio, in HarvestScratch scratch)
     {
@@ -72,6 +76,7 @@ public static unsafe partial class Harvest
         scratch.WaveformPlan.Execute();
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetFilteredSignal(double boundaryF0, int fftSize, double fs, int yLength,
         in HarvestScratch scratch)
     {
@@ -123,6 +128,7 @@ public static unsafe partial class Harvest
         return x > 0 ? 1 : 0;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static int ZeroCrossingEngine(double* filteredSignal, int yLength, double fs,
         double* intervalLocations, double* intervals, int* negativeGoingPoints, int* edges,
         double* fineEdges)
@@ -167,6 +173,7 @@ public static unsafe partial class Harvest
         return count - 1;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetFourZeroCrossingIntervals(double* filteredSignal, int yLength,
         double actualFs, ref ZeroCrossings zeroCrossings)
     {
@@ -199,6 +206,7 @@ public static unsafe partial class Harvest
             zeroCrossings.NegativeGoingPoints, zeroCrossings.Edges, zeroCrossings.FineEdges);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetF0CandidateContourSub(double** interpolatedF0Set, int f0Length,
         double f0Floor, double f0Ceil, double boundaryF0, double* f0Candidate)
     {
@@ -217,6 +225,7 @@ public static unsafe partial class Harvest
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetF0CandidateContour(in ZeroCrossings zeroCrossings, double boundaryF0,
         double f0Floor, double f0Ceil, double* temporalPositions, int f0Length,
         double* f0Candidate, in HarvestScratch scratch)
@@ -266,6 +275,7 @@ public static unsafe partial class Harvest
             f0Length, f0Candidate, scratch);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetRawF0Candidates(double* boundaryF0List, int numberOfBands,
         double actualFs, int yLength, double* temporalPositions, int f0Length, int fftSize,
         double f0Floor, double f0Ceil, double** rawF0Candidates, in HarvestScratch scratch)
@@ -277,6 +287,7 @@ public static unsafe partial class Harvest
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static int DetectOfficialF0CandidatesSub1(int* vuv, int numberOfChannels, int* st,
         int* ed)
     {
@@ -296,6 +307,7 @@ public static unsafe partial class Harvest
         return numberOfVoicedSections;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static int DetectOfficialF0CandidatesSub2(double** rawF0Candidates, int index,
         int numberOfVoicedSections, int* st, int* ed, int maxCandidates, double* f0List)
     {
@@ -323,6 +335,7 @@ public static unsafe partial class Harvest
         return numberOfCandidates;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static int DetectOfficialF0Candidates(double** rawF0Candidates, int numberOfChannels,
         int f0Length, int maxCandidates, double** f0Candidates, in HarvestScratch scratch)
     {
@@ -348,6 +361,7 @@ public static unsafe partial class Harvest
         return numberOfCandidates;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void OverlapF0Candidates(int f0Length, int numberOfCandidates,
         double** f0Candidates)
     {
