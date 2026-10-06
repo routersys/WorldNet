@@ -14,8 +14,15 @@ if not exist "%VSWHERE%" (
   exit /b 1
 )
 
+set "VC_COMPONENT=Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
+set "VC_TARGET=amd64"
+if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" (
+  set "VC_COMPONENT=Microsoft.VisualStudio.Component.VC.Tools.ARM64"
+  set "VC_TARGET=arm64"
+)
+
 set "VSPATH_FILE=%TEMP%\worldnet_vspath.txt"
-"%VSWHERE%" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > "%VSPATH_FILE%"
+"%VSWHERE%" -latest -products * -requires %VC_COMPONENT% -property installationPath > "%VSPATH_FILE%"
 set "VSPATH="
 set /p VSPATH=<"%VSPATH_FILE%"
 del "%VSPATH_FILE%"
@@ -24,7 +31,7 @@ if not defined VSPATH (
   exit /b 1
 )
 
-call "%VSPATH%\VC\Auxiliary\Build\vcvars64.bat" >nul || exit /b 1
+call "%VSPATH%\VC\Auxiliary\Build\vcvarsall.bat" %VC_TARGET% >nul || exit /b 1
 
 set "INPUT_WAV=%~1"
 if "%INPUT_WAV%"=="" set "INPUT_WAV=world-src\test\vaiueo2d.wav"
