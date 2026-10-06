@@ -330,7 +330,7 @@ To use the checkout instead of the package, add `WorldNet/WorldNet.csproj` as a 
 ## Limitations
 
 - Against the MSVC reference, the batch synthesizer agrees with the original to within 64 units in the last place rather than exactly, and D4C and the decoding of aperiodicity agree to within one unit in the last place. Both follow from `Math.Pow`, which neither the .NET runtime nor the MSVC runtime is required to round correctly.
-- Bit-exactness has been verified against WORLD compiled with MSVC on Windows x64 and against WORLD compiled with GCC 13.3 on Linux x64 with glibc 2.39. Other compilers, other runtimes and other architectures may round the transcendental functions differently, and the agreement above is not claimed for them.
+- Bit-exactness has been verified against WORLD compiled with MSVC on Windows x64 and against WORLD compiled with GCC 13.3 on Linux x64 with glibc 2.39. In both cases the tests pass on .NET 8 and on .NET 10. Other compilers, other runtimes and other architectures may round the transcendental functions differently, and the agreement above is not claimed for them.
 - `WorldArena` is not thread-safe. Concurrent analysis requires one arena per thread, which the test suite exercises.
 - An arena created by `FromNativeMemory` cannot grow. Run the same calls once with a growing arena, read `Capacity`, and pass a buffer of at least that many bytes plus 64 bytes for the arena header. `Used` cannot serve this purpose, because each call releases its scratch memory and `Used` is zero once the calls return. The size depends on the length and the sampling rate of the input and on the options.
 - Running the comparison tests requires the reference data. Without `reference/data` those tests are skipped, and the remaining tests do not depend on it.
@@ -346,6 +346,7 @@ To use the checkout instead of the package, add `WorldNet/WorldNet.csproj` as a 
 - Scratch layout: a type marked with `[ScratchLayout]` must expose a `Layout` method generic over `IScratchAllocator`. The generator emits `GetRequiredArenaBytes` and `Bind` with a matching parameter list, and skips whichever of the two the type already declares.
 - Native AOT: the library sets `IsAotCompatible`, which enables the trim, single-file and AOT analyzers. `publish-aot.bat` publishes the sample application for `win-x64` and requires the MSVC toolset for the native linker.
 - Just-in-time compilation: the loop-heavy routines carry `MethodImplOptions.AggressiveOptimization`, which skips the unoptimized first tier and compiles them with full optimization at the first call. The first call in a process therefore pays the compilation time. Once the process has warmed up, the speed is the same with and without the mark.
+- Sine and cosine: the `net10.0` build computes the minimum phase spectrum with `Math.SinCos`, and the `net8.0` build calls `Math.Sin` and `Math.Cos` separately. On .NET 8 under Windows, `Math.SinCos` differs from the separate calls by one unit in the last place, which would break the agreement with the original.
 - Regenerating reference data: `reference/build.bat` on Windows and `reference/build.sh` on Linux clone WORLD into `reference/world-src`, build it, and write the dumps. Both directories are excluded from version control.
 - Network access: the library opens no network connection and sends no data.
 
