@@ -1,7 +1,10 @@
+using System.Runtime.CompilerServices;
+
 namespace WorldNet;
 
 public static unsafe partial class Harvest
 {
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static double SelectBestF0(double referenceF0, double* f0Candidates,
         int numberOfCandidates, double allowedRange, double* bestError)
     {
@@ -44,6 +47,7 @@ public static unsafe partial class Harvest
         f0Scores[i][j] = 0;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void RemoveUnreliableCandidates(int f0Length, int numberOfCandidates,
         double** f0Candidates, double** f0Scores, WorldArena arena)
     {
@@ -72,6 +76,7 @@ public static unsafe partial class Harvest
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void SearchF0Base(double** f0Candidates, double** f0Scores, int f0Length,
         int numberOfCandidates, double* baseF0Contour)
     {
@@ -90,6 +95,7 @@ public static unsafe partial class Harvest
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void FixStep1(double* f0Base, int f0Length, double allowedRange,
         double* f0Step1)
     {
@@ -111,6 +117,7 @@ public static unsafe partial class Harvest
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static int GetBoundaryList(double* f0, int f0Length, int* boundaryList,
         WorldArena arena)
     {
@@ -135,6 +142,7 @@ public static unsafe partial class Harvest
         return numberOfBoundaries;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void FixStep2(double* f0Step1, int f0Length, int voiceRangeMinimum,
         double* f0Step2, WorldArena arena)
     {
@@ -159,6 +167,7 @@ public static unsafe partial class Harvest
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetMultiChannelF0(double* f0, int f0Length, int* boundaryList,
         int numberOfBoundaries, double** multiChannelF0)
     {
@@ -184,6 +193,7 @@ public static unsafe partial class Harvest
         return x > 0 ? x : -x;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static int ExtendF0(int origin, int lastPoint, int shift, double** f0Candidates,
         int numberOfCandidates, double allowedRange, double* extendedF0, WorldArena arena)
     {
@@ -238,6 +248,7 @@ public static unsafe partial class Harvest
         boundary[(index2 * 2) + 1] = tmpIndex;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static int ExtendSub(double** extendedF0, int* boundaryList, int numberOfSections,
         double** selectedExtendedF0, int* selectedBoundaryList)
     {
@@ -261,6 +272,7 @@ public static unsafe partial class Harvest
         return count;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static int Extend(double** multiChannelF0, int numberOfSections, int f0Length,
         int* boundaryList, double** f0Candidates, int numberOfCandidates, double allowedRange,
         double** extendedF0, int* shiftedBoundaryList, WorldArena arena)
@@ -280,6 +292,7 @@ public static unsafe partial class Harvest
             shiftedBoundaryList);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void MakeSortedOrder(int* boundaryList, int numberOfSections, int* order)
     {
         for (int i = 0; i < numberOfSections; ++i)
@@ -304,6 +317,7 @@ public static unsafe partial class Harvest
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static double SearchScore(double f0, double* f0Candidates, double* f0Scores,
         int numberOfCandidates)
     {
@@ -318,6 +332,7 @@ public static unsafe partial class Harvest
         return score;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static int MergeF0Sub(double* f0_1, int f0Length, int st1, int ed1, double* f0_2,
         int st2, int ed2, double** f0Candidates, double** f0Scores, int numberOfCandidates,
         double* mergedF0)
@@ -352,6 +367,7 @@ public static unsafe partial class Harvest
         return ed2;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void MergeF0(double** multiChannelF0, int* boundaryList, int numberOfChannels,
         int f0Length, double** f0Candidates, double** f0Scores, int numberOfCandidates,
         double* mergedF0, WorldArena arena)
@@ -387,6 +403,7 @@ public static unsafe partial class Harvest
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void FixStep3(double* f0Step2, int f0Length, int numberOfCandidates,
         double** f0Candidates, double allowedRange, double** f0Scores, double* f0Step3,
         WorldArena arena)
@@ -419,6 +436,7 @@ public static unsafe partial class Harvest
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void FixStep4(double* f0Step3, int f0Length, int threshold, double* f0Step4,
         WorldArena arena)
     {
@@ -463,6 +481,7 @@ public static unsafe partial class Harvest
         FixStep4(tmpF0Contour2, f0Length, 9, bestF0Contour, arena);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void FilteringF0(double* a, double* b, double* x, int xLength, int st, int ed,
         double* y, WorldArena arena)
     {
@@ -498,6 +517,7 @@ public static unsafe partial class Harvest
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void SmoothF0Contour(double* f0, int f0Length, double* smoothedF0,
         WorldArena arena)
     {
