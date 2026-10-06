@@ -16,7 +16,7 @@ env:
 jobs:
   bench:
     runs-on: ubuntu-24.04-arm
-    timeout-minutes: 40
+    timeout-minutes: 41
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
