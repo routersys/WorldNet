@@ -332,11 +332,25 @@ GitHub Actionsの`windows-latest`ランナー上で、CIが計測した値です
 | `HarvestOption` | `F0Ceil` | 800.0 | 探索範囲の上限です。単位はヘルツです。 |
 | `HarvestOption` | `FramePeriod` | 5.0 | フレーム周期です。単位はミリ秒です。 |
 | `CheapTrickOption` | `Q1` | -0.15 | スペクトルの復元に用いる係数です。 |
-| `CheapTrickOption` | `F0Floor` | 71.0 | FFTサイズを決めるF0の下限です。 |
+| `CheapTrickOption` | `F0Floor` | 71.0 | FFTサイズを決めるF0の下限です。読むのは`CheapTrickOption.Create`だけです。作成済みの設定で値を変えても、`FftSize`は変わりません。`Estimate`は、`FftSize`から下限を求めます。 |
 | `CheapTrickOption` | `FftSize` | 導出値 | `CheapTrickOption.Create`がサンプリング周波数から算出します。 |
 | `D4COption` | `Threshold` | 0.85 | D4C LoveTrainの処理のしきい値です。 |
 
 `DioOption.Default`と`HarvestOption.Default`と`D4COption.Default`は、上の既定値を返します。`CheapTrickOption`はFFTサイズがサンプリング周波数に依存するため、代わりに`CheapTrickOption.Create(fs)`を使います。4つとも`init`アクセサーを持つ`readonly struct`なので、一部を変えた複製は`with`式で作れます。
+
+### 引数の要件
+
+次の範囲を外れる入力は、処理を始める前に、`ArgumentException`または`ArgumentOutOfRangeException`で拒否します。
+
+- FFTサイズは、2の累乗である必要があります。`CheapTrickOption.FftSize`と、`Synthesis.Synthesize`と`WorldSynthesizer`とスペクトル包絡の符号化の`fftSize`が対象です。`D4C.Estimate`と非周期性指標の符号化は、そのFFTサイズのFFTを使わないので、2の累乗を要求しません。
+- `CheapTrickOption.FftSize`は、既定のF0である500Hzの解析窓を収める必要があります。窓の長さは、`2 * round(1.5 * fs / 500) + 1`サンプルです。サンプリング周波数も、直流補正に必要な余裕を残して、そのF0がナイキスト周波数を下回る高さが必要です。`CheapTrickOption.Create`の値は、常にどちらも満たします。
+- `Synthesis.Synthesize`と`WorldSynthesizer`のFFTサイズは、`ceil(fs / 500) + 2`以上にします。最も長い無声のパルスの雑音区間を収めるためです。
+- スペクトル包絡の符号化では、FFTサイズを4以上にし、`numberOfDimensions`をその半分以下にします。
+- F0にNaNを含めることはできません。`CheapTrick.Estimate`と`D4C.Estimate`は、直流補正がスペクトルの外を読むほどナイキスト周波数に近いか、それを超えたF0も拒否します。0のF0と、下限以下のF0は、これまでどおり、無声のフレームを表します。
+- `DioOption`と`HarvestOption`は、`F0Floor <= F0Ceil`と、有限の`F0Ceil`が必要です。
+- `Dio.GetSamplesForDio`と`Harvest.GetSamplesForHarvest`と`Synthesis.GetSamplesForSynthesis`と`CheapTrick.GetFftSize`と`CheapTrick.GetF0Floor`と`Codec.GetNumberOfAperiodicities`は、正でないサンプリング周波数、フレーム周期、長さを渡すと、意味のない値を返さず、例外を投げます。
+- `WorldSynthesizer.AddParameters`は、空の輪郭を拒否します。`fs / fftSize + 1`を下回るF0は、`Synthesis.Synthesize`がすでにそうしていたとおり、無声として合成します。FFTサイズより長いパルス間隔は、雑音区間に収まらないためです。
+- `WaveFile`は、8、16、24、32ビットの、モノラルの整数PCMを読みます。18バイトと拡張形式のフォーマットチャンクも読めます。8ビットの値は、形式の定めどおり、符号なしです。`fmt `と`data`以外のチャンクは、大きさに従って読み飛ばします。データの大きさがファイルを超える場合と、ストリーミングを表す0xFFFFFFFFの場合は、データをファイルの末尾までに制限します。それ以外の形式は、`InvalidDataException`になります。
 
 ---
 
