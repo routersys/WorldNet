@@ -1,4 +1,4 @@
-name: ARM64 計測の一時確認
+name: ARM64 計測の一時確認 二回目
 
 on:
   push:
