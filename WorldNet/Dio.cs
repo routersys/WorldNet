@@ -22,6 +22,8 @@ public static unsafe class Dio
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(option.F0Floor);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(option.F0Ceil);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(option.ChannelsInOctave);
+        ArgumentOutOfRangeException.ThrowIfLessThan(option.F0Ceil, option.F0Floor);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(option.F0Ceil, double.MaxValue);
 
         if (x.IsEmpty)
         {
