@@ -19,21 +19,22 @@ internal sealed class ReferenceArray
 
 internal static class ReferenceData
 {
+    public const string MissingMessage =
+        "Reference data was not found. Run reference/build.bat to generate it.";
+
     private static readonly Lazy<string?> DirectoryPath = new(FindDirectory);
 
     public static bool IsAvailable => DirectoryPath.Value is not null;
 
     public static string DataDirectory => DirectoryPath.Value
-        ?? throw new InvalidOperationException(
-            "Reference data was not found. Run reference/build.bat to generate it.");
+        ?? throw new InvalidOperationException(MissingMessage);
 
     public static ReferenceArray Load(string name)
     {
         string? root = DirectoryPath.Value;
         if (root is null)
         {
-            throw new InvalidOperationException(
-                "Reference data was not found. Run reference/build.bat to generate it.");
+            throw new InvalidOperationException(MissingMessage);
         }
 
         string path = Path.Combine(root, name + ".bin");
