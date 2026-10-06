@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace WorldNet;
 
 [ScratchLayout]
@@ -40,6 +42,7 @@ internal unsafe partial struct MinimumPhaseAnalysis
             fftSize, Cepstrum, MinimumPhaseSpectrum, FftDirection.Forward);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public readonly void GetMinimumPhaseSpectrum()
     {
         for (int i = (FftSize / 2) + 1; i < FftSize; ++i)
