@@ -18,6 +18,8 @@ public static unsafe class Synthesis
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fs);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fftSize);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(framePeriod);
+        Validation.ThrowIfNotPowerOfTwo(fftSize, nameof(fftSize));
+        Validation.ThrowIfFftSizeTooSmallForPulses(fftSize, fs, nameof(fftSize));
 
         if (f0.Length < 2)
         {
