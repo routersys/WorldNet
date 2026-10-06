@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace WorldNet;
 
 public static unsafe class Dio
@@ -47,6 +49,7 @@ public static unsafe class Dio
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void DesignLowCutFilter(int n, int fftSize, double* lowCutFilter)
     {
         for (int i = 1; i <= n; ++i)
@@ -77,6 +80,7 @@ public static unsafe class Dio
         lowCutFilter[0] += 1.0;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetSpectrumForEstimation(double* x, int xLength, int yLength,
         double actualFs, int fftSize, int decimationRatio, in DioScratch scratch)
     {
@@ -135,6 +139,7 @@ public static unsafe class Dio
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetBestF0Contour(int f0Length, double** f0Candidates,
         double** f0Scores, int numberOfBands, double* bestF0Contour)
     {
@@ -153,6 +158,7 @@ public static unsafe class Dio
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void FixStep1(double* bestF0Contour, int f0Length, int voiceRangeMinimum,
         double allowedRange, double* f0Step1, in DioScratch scratch)
     {
@@ -182,6 +188,7 @@ public static unsafe class Dio
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void FixStep2(double* f0Step1, int f0Length, int voiceRangeMinimum,
         double* f0Step2)
     {
@@ -204,6 +211,7 @@ public static unsafe class Dio
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetNumberOfVoicedSections(double* f0, int f0Length, int* positiveIndex,
         int* negativeIndex, out int positiveCount, out int negativeCount)
     {
@@ -221,6 +229,7 @@ public static unsafe class Dio
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static double SelectBestF0(double currentF0, double pastF0, double** f0Candidates,
         int numberOfCandidates, int targetIndex, double allowedRange)
     {
@@ -245,6 +254,7 @@ public static unsafe class Dio
         return bestF0;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void FixStep3(double* f0Step2, int f0Length, double** f0Candidates,
         int numberOfCandidates, double allowedRange, int* negativeIndex, int negativeCount,
         double* f0Step3)
@@ -269,6 +279,7 @@ public static unsafe class Dio
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void FixStep4(double* f0Step3, int f0Length, double** f0Candidates,
         int numberOfCandidates, double allowedRange, int* positiveIndex, int positiveCount,
         double* f0Step4)
@@ -320,6 +331,7 @@ public static unsafe class Dio
             positiveIndex, positiveCount, fixedF0Contour);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetFilteredSignal(int halfAverageLength, int fftSize, int yLength,
         in DioScratch scratch)
     {
@@ -365,6 +377,7 @@ public static unsafe class Dio
         return x > 0 ? 1 : 0;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static int ZeroCrossingEngine(double* filteredSignal, int yLength, double fs,
         double* intervalLocations, double* intervals, int* negativeGoingPoints, int* edges,
         double* fineEdges)
@@ -409,6 +422,7 @@ public static unsafe class Dio
         return count - 1;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetFourZeroCrossingIntervals(double* filteredSignal, int yLength,
         double actualFs, ref ZeroCrossings zeroCrossings)
     {
@@ -441,6 +455,7 @@ public static unsafe class Dio
             zeroCrossings.NegativeGoingPoints, zeroCrossings.Edges, zeroCrossings.FineEdges);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetF0CandidateContourSub(double** interpolatedF0Set, int f0Length,
         double f0Floor, double f0Ceil, double boundaryF0, double* f0Candidate, double* f0Score)
     {
@@ -467,6 +482,7 @@ public static unsafe class Dio
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetF0CandidateContour(in ZeroCrossings zeroCrossings, double boundaryF0,
         double f0Floor, double f0Ceil, double* temporalPositions, int f0Length,
         double* f0Candidate, double* f0Score, in DioScratch scratch)
@@ -518,6 +534,7 @@ public static unsafe class Dio
             f0Length, f0Candidate, f0Score, scratch);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetF0CandidatesAndScores(double* boundaryF0List, int numberOfBands,
         double actualFs, int yLength, double* temporalPositions, int f0Length, int fftSize,
         double f0Floor, double f0Ceil, double** rawF0Candidates, double** rawF0Scores,
@@ -538,6 +555,7 @@ public static unsafe class Dio
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void DioGeneralBody(double* x, int xLength, int fs, double framePeriod,
         double f0Floor, double f0Ceil, double channelsInOctave, int speed, double allowedRange,
         double* temporalPositions, double* f0, WorldArena arena)
