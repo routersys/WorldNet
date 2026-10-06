@@ -11,6 +11,11 @@ export default {
 
     const url = new URL(request.url);
 
+    if (url.protocol === "http:") {
+      url.protocol = "https:";
+      return Response.redirect(url.toString(), 301);
+    }
+
     if (url.pathname === "/robots.txt") {
       return new Response(ROBOTS, { headers: { "content-type": "text/plain; charset=utf-8" } });
     }
