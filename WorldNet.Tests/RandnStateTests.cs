@@ -15,9 +15,9 @@ public class RandnStateTests
         }
 
         RandnState sequential = default;
-        sequential.Reseed(false);
+        sequential.Reseed(RandnPath.Sequential);
         RandnState wide = default;
-        wide.Reseed(true);
+        wide.Reseed(RandnPath.Wide);
 
         for (int i = 0; i < RandnConstants.BufferLength * 300; ++i)
         {
@@ -36,14 +36,14 @@ public class RandnStateTests
         }
 
         RandnState wide = default;
-        wide.Reseed(true);
+        wide.Reseed(RandnPath.Wide);
         double[] first = new double[RandnConstants.BufferLength + 100];
         for (int i = 0; i < first.Length; ++i)
         {
             first[i] = wide.Next();
         }
 
-        wide.Reseed(true);
+        wide.Reseed(RandnPath.Wide);
         for (int i = 0; i < first.Length; ++i)
         {
             Assert.Equal(BitConverter.DoubleToInt64Bits(first[i]),

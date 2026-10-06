@@ -160,7 +160,7 @@ public unsafe class MatlabFunctionsTests
         double[] expectedState = ReferenceData.Load("mf_randn_state").Values;
 
         RandnState state = default;
-        state.Reseed(false);
+        state.Reseed(RandnPath.Sequential);
 
         for (int i = 0; i < expected.Length; ++i)
         {
@@ -184,7 +184,7 @@ public unsafe class MatlabFunctionsTests
         double[] expected = ReferenceData.Load("mf_randn_values").Values;
 
         RandnState state = default;
-        state.Reseed(true);
+        state.Reseed(RandnPath.Wide);
 
         for (int i = 0; i < expected.Length; ++i)
         {
