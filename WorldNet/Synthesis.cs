@@ -143,18 +143,8 @@ public static unsafe class Synthesis
 
         InverseRealFft inverseRealFft = scratch.InverseRealFft;
         ForwardRealFft forwardRealFft = scratch.ForwardRealFft;
-        for (int i = 0; i <= fftSize / 2; ++i)
-        {
-            inverseRealFft.Spectrum[i].Real =
-                (minimumPhase.MinimumPhaseSpectrum[i].Real * forwardRealFft.Spectrum[i].Real) -
-                (minimumPhase.MinimumPhaseSpectrum[i].Imaginary *
-                    forwardRealFft.Spectrum[i].Imaginary);
-            inverseRealFft.Spectrum[i].Imaginary =
-                (minimumPhase.MinimumPhaseSpectrum[i].Real *
-                    forwardRealFft.Spectrum[i].Imaginary) +
-                (minimumPhase.MinimumPhaseSpectrum[i].Imaginary *
-                    forwardRealFft.Spectrum[i].Real);
-        }
+        SpectrumMath.MultiplySpectra(minimumPhase.MinimumPhaseSpectrum, forwardRealFft.Spectrum,
+            inverseRealFft.Spectrum, (fftSize / 2) + 1);
         inverseRealFft.InverseFft.Execute();
         MatlabFunctions.FftShift(inverseRealFft.Waveform, fftSize, aperiodicResponse);
     }
