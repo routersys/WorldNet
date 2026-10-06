@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
@@ -7,6 +8,7 @@ internal static unsafe class SpectrumMath
 {
     private const byte InterleavedPairOrder = 0xD8;
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void PowerSpectrum(FftComplex* spectrum, double* destination, int count)
     {
         int i = 0;
@@ -41,6 +43,7 @@ internal static unsafe class SpectrumMath
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void SortNonNegative(double* values, double* temporary, int count)
     {
         if (count < 2)
@@ -103,6 +106,7 @@ internal static unsafe class SpectrumMath
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void PowerSpectrumAndCrossProduct(FftComplex* main, FftComplex* diff,
         double* power, double* cross, int count)
     {
