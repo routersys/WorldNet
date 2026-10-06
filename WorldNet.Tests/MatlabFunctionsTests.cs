@@ -1,3 +1,4 @@
+using System.Runtime.Intrinsics.X86;
 namespace WorldNet.Tests;
 
 public unsafe class MatlabFunctionsTests
@@ -159,7 +160,7 @@ public unsafe class MatlabFunctionsTests
         double[] expectedState = ReferenceData.Load("mf_randn_state").Values;
 
         RandnState state = default;
-        state.Reseed();
+        state.Reseed(false);
 
         for (int i = 0; i < expected.Length; ++i)
         {
@@ -170,6 +171,25 @@ public unsafe class MatlabFunctionsTests
         Assert.Equal((uint)expectedState[1], state.Y);
         Assert.Equal((uint)expectedState[2], state.Z);
         Assert.Equal((uint)expectedState[3], state.W);
+    }
+
+    [ReferenceFact]
+    public void WideRandnMatchesReference()
+    {
+        if (!Avx2.IsSupported)
+        {
+            return;
+        }
+
+        double[] expected = ReferenceData.Load("mf_randn_values").Values;
+
+        RandnState state = default;
+        state.Reseed(true);
+
+        for (int i = 0; i < expected.Length; ++i)
+        {
+            Assert.Equal(expected[i], state.Next());
+        }
     }
 
     private static double* Copy(WorldArena arena, double[] source)
