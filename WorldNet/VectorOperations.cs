@@ -205,4 +205,47 @@ internal static unsafe class VectorOperations
             destination[i] = blended * blended;
         }
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ScaleSumAndDivide(double* scaled, double factor, double* added,
+        double* destination, int count, double divisor)
+    {
+        int i = 0;
+        if (Vector.IsHardwareAccelerated && count >= Vector<double>.Count)
+        {
+            Vector<double> scale = new(factor);
+            Vector<double> denominator = new(divisor);
+            int limit = count - Vector<double>.Count;
+            for (; i <= limit; i += Vector<double>.Count)
+            {
+                Unsafe.WriteUnaligned(destination + i,
+                    ((Unsafe.ReadUnaligned<Vector<double>>(scaled + i) * scale)
+                    + Unsafe.ReadUnaligned<Vector<double>>(added + i)) / denominator);
+            }
+        }
+        for (; i < count; ++i)
+        {
+            destination[i] = ((scaled[i] * factor) + added[i]) / divisor;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Add(double* target, double* source, int count)
+    {
+        int i = 0;
+        if (Vector.IsHardwareAccelerated && count >= Vector<double>.Count)
+        {
+            int limit = count - Vector<double>.Count;
+            for (; i <= limit; i += Vector<double>.Count)
+            {
+                Unsafe.WriteUnaligned(target + i,
+                    Unsafe.ReadUnaligned<Vector<double>>(target + i)
+                    + Unsafe.ReadUnaligned<Vector<double>>(source + i));
+            }
+        }
+        for (; i < count; ++i)
+        {
+            target[i] += source[i];
+        }
+    }
 }

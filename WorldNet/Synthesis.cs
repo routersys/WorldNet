@@ -85,10 +85,10 @@ public static unsafe class Synthesis
                 int offset = scratch.PulseLocationsIndex[i] - (fftSize / 2) + 1;
                 int lowerLimit = WorldMath.MaxInt(0, -offset);
                 int upperLimit = WorldMath.MinInt(fftSize, yLength - offset);
-                for (int j = lowerLimit; j < upperLimit; ++j)
+                if (upperLimit > lowerLimit)
                 {
-                    int index = j + offset;
-                    yPointer[index] += scratch.ImpulseResponse[j];
+                    VectorOperations.Add(yPointer + lowerLimit + offset,
+                        scratch.ImpulseResponse + lowerLimit, upperLimit - lowerLimit);
                 }
             }
         }
@@ -304,11 +304,8 @@ public static unsafe class Synthesis
 
         double sqrtNoiseSize = Math.Sqrt(noiseSize);
         double* response = scratch.ImpulseResponse;
-        for (int i = 0; i < fftSize; ++i)
-        {
-            response[i] =
-                ((periodicResponse[i] * sqrtNoiseSize) + aperiodicResponse[i]) / fftSize;
-        }
+        VectorOperations.ScaleSumAndDivide(periodicResponse, sqrtNoiseSize, aperiodicResponse,
+            response, fftSize, fftSize);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
