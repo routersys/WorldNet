@@ -323,11 +323,25 @@ The following table was measured once on Linux ARM64, on a GitHub Actions `ubunt
 | `HarvestOption` | `F0Ceil` | 800.0 | Upper bound of the search range in hertz. |
 | `HarvestOption` | `FramePeriod` | 5.0 | Frame shift in milliseconds. |
 | `CheapTrickOption` | `Q1` | -0.15 | Parameter of the spectral recovery. |
-| `CheapTrickOption` | `F0Floor` | 71.0 | F0 floor that determines the FFT size. |
+| `CheapTrickOption` | `F0Floor` | 71.0 | F0 floor that determines the FFT size. Only `CheapTrickOption.Create` reads it. Changing it on an existing option does not change `FftSize`, and `Estimate` derives the floor from `FftSize`. |
 | `CheapTrickOption` | `FftSize` | derived | Computed from the sampling rate by `CheapTrickOption.Create`. |
 | `D4COption` | `Threshold` | 0.85 | Threshold of the D4C LoveTrain stage. |
 
 `DioOption.Default`, `HarvestOption.Default` and `D4COption.Default` return the values above. `CheapTrickOption.Create(fs)` is used instead because the FFT size depends on the sampling rate. All four are `readonly struct` types with `init` accessors, so a modified copy is produced with a `with` expression.
+
+### Argument requirements
+
+Inputs outside the ranges below are rejected with an `ArgumentException` or an `ArgumentOutOfRangeException` before any processing starts.
+
+- FFT sizes must be powers of two. This applies to `CheapTrickOption.FftSize` and to the `fftSize` of `Synthesis.Synthesize`, `WorldSynthesizer` and the spectral envelope codec. `D4C.Estimate` and the aperiodicity codec do not use an FFT of that size and require no power of two.
+- `CheapTrickOption.FftSize` must hold the analysis window of the default F0 of 500 Hz, which is `2 * round(1.5 * fs / 500) + 1` samples. The sampling rate must also keep that F0 below the Nyquist frequency with the margin of the DC correction. `CheapTrickOption.Create` always satisfies both.
+- The FFT size of `Synthesis.Synthesize` and `WorldSynthesizer` must be at least `ceil(fs / 500) + 2`, so that the noise segment of the longest unvoiced pulse fits.
+- In the spectral envelope codec the FFT size must be at least 4, and `numberOfDimensions` must not exceed half of it.
+- F0 values must not be NaN. `CheapTrick.Estimate` and `D4C.Estimate` also reject an F0 so close to or above the Nyquist frequency that the DC correction would read beyond the spectrum. An F0 of zero, or below the floor, remains the marker of an unvoiced frame.
+- `DioOption` and `HarvestOption` need `F0Floor <= F0Ceil` and a finite `F0Ceil`.
+- `Dio.GetSamplesForDio`, `Harvest.GetSamplesForHarvest`, `Synthesis.GetSamplesForSynthesis`, `CheapTrick.GetFftSize`, `CheapTrick.GetF0Floor` and `Codec.GetNumberOfAperiodicities` throw for non-positive sampling rates, frame periods and lengths instead of returning meaningless values.
+- `WorldSynthesizer.AddParameters` rejects an empty contour. F0 values below `fs / fftSize + 1` are synthesized as unvoiced, as `Synthesis.Synthesize` already did, because a pulse interval longer than the FFT size does not fit the noise segment.
+- `WaveFile` reads monaural integer PCM of 8, 16, 24 and 32 bits, including the 18-byte and the extensible format chunks. 8-bit samples are unsigned, as the format defines. Chunks other than `fmt ` and `data` are skipped by their size. A data size that exceeds the file, or the streaming marker 0xFFFFFFFF, limits the data to the end of the file. Other formats raise `InvalidDataException`.
 
 ---
 
