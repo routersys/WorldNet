@@ -1,4 +1,6 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 
 namespace WorldNet;
 
@@ -41,7 +43,17 @@ internal static unsafe partial class OouraFft
         double wk3r = 0;
         double wk3i = 0;
         int j0;
-        for (int j = 2; j < mh - 2; j += 4)
+        int scalarEnd = mh - 2;
+        if (Avx2.IsSupported)
+        {
+            Vector256<double> carried = CftFirstLoop(mh, m, a, w, csc1, csc3, false);
+            wd1r = carried.GetElement(0);
+            wd1i = carried.GetElement(1);
+            wd3r = carried.GetElement(2);
+            wd3i = carried.GetElement(3);
+            scalarEnd = 2;
+        }
+        for (int j = 2; j < scalarEnd; j += 4)
         {
             k += 4;
             wk1r = csc1 * (wd1r + w[k]);

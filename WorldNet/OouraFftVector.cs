@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 
 namespace WorldNet;
 
@@ -27,5 +28,90 @@ internal static unsafe partial class OouraFft
     private static Vector256<double> NegateImaginary(Vector256<double> value)
     {
         return value ^ Vector256.Create(0.0, -0.0, 0.0, -0.0);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Vector256<double> Rotate(Vector256<double> value, Vector256<double> real,
+        Vector256<double> imaginary)
+    {
+        return (value * real) + (SwapRealImaginary(value) * NegateReal(imaginary));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Vector256<double> RotateConjugate(Vector256<double> value,
+        Vector256<double> real, Vector256<double> imaginary)
+    {
+        return (value * real) + (SwapRealImaginary(value) * NegateImaginary(imaginary));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void Radix4First(double* p0, double* p1, double* p2, double* p3,
+        Vector256<double> real1, Vector256<double> imaginary1, Vector256<double> real3,
+        Vector256<double> imaginary3, bool backward)
+    {
+        Vector256<double> v0 = Vector256.Load(p0);
+        Vector256<double> v2 = Vector256.Load(p2);
+        if (backward)
+        {
+            v0 = NegateImaginary(v0);
+            v2 = NegateImaginary(v2);
+        }
+        Vector256<double> x0 = v0 + v2;
+        Vector256<double> x1 = v0 - v2;
+        Vector256<double> v1 = Vector256.Load(p1);
+        Vector256<double> v3 = Vector256.Load(p3);
+        Vector256<double> x2 = v1 + v3;
+        Vector256<double> x3 = v1 - v3;
+        Vector256<double> turned = SwapRealImaginary(x3);
+        Vector256<double> y2;
+        Vector256<double> y3;
+        if (backward)
+        {
+            Vector256<double> flipped = NegateImaginary(x2);
+            (x0 + flipped).Store(p0);
+            (x0 - flipped).Store(p1);
+            y2 = x1 + turned;
+            y3 = x1 - turned;
+        }
+        else
+        {
+            (x0 + x2).Store(p0);
+            (x0 - x2).Store(p1);
+            Vector256<double> flipped = NegateReal(turned);
+            y2 = x1 + flipped;
+            y3 = x1 - flipped;
+        }
+        Rotate(y2, real1, imaginary1).Store(p2);
+        RotateConjugate(y3, real3, imaginary3).Store(p3);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    private static Vector256<double> CftFirstLoop(int mh, int m, double* a, double* w,
+        double csc1, double csc3, bool backward)
+    {
+        Vector256<double> scale = Vector256.Create(csc1, csc1, csc3, csc3);
+        Vector256<double> previous = Vector256.Create(1.0, 0.0, 1.0, 0.0);
+        Vector256<double> current = previous;
+        int k = 0;
+        for (int j = 2; j < mh - 2; j += 4)
+        {
+            k += 4;
+            current = Vector256.Load(w + k);
+            Vector256<double> blended = scale * (previous + current);
+            previous = current;
+            Vector256<double> lower1 = Avx.Permute2x128(blended, current, 0x20);
+            Vector256<double> lower3 = Avx.Permute2x128(blended, current, 0x31);
+            Vector256<double> real1 = Avx.UnpackLow(lower1, lower1);
+            Vector256<double> imaginary1 = Avx.UnpackHigh(lower1, lower1);
+            Vector256<double> real3 = Avx.UnpackLow(lower3, lower3);
+            Vector256<double> imaginary3 = Avx.UnpackHigh(lower3, lower3);
+            Radix4First(a + j, a + j + m, a + j + (2 * m), a + j + (3 * m), real1, imaginary1,
+                real3, imaginary3, backward);
+            int j0 = m - j - 2;
+            Radix4First(a + j0, a + j0 + m, a + j0 + (2 * m), a + j0 + (3 * m),
+                SwapHalves(imaginary1), SwapHalves(real1), SwapHalves(imaginary3),
+                SwapHalves(real3), backward);
+        }
+        return current;
     }
 }
