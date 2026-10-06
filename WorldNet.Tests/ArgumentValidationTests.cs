@@ -66,4 +66,53 @@ public class ArgumentValidationTests
     {
         Assert.ThrowsAny<ArgumentException>(() => Codec.GetNumberOfAperiodicities(fs));
     }
+
+    [Theory]
+    [InlineData(900.0, 100.0)]
+    [InlineData(200.0, 199.0)]
+    [InlineData(71.0, double.PositiveInfinity)]
+    public void DioRejectsInvalidF0Range(double floor, double ceil)
+    {
+        using WorldArena arena = new();
+        double[] x = new double[4410];
+        DioOption option = DioOption.Default with { F0Floor = floor, F0Ceil = ceil };
+        double[] positions = new double[Dio.GetSamplesForDio(22050, x.Length, 5.0)];
+        double[] f0 = new double[positions.Length];
+
+        Assert.ThrowsAny<ArgumentException>(
+            () => Dio.Estimate(x, 22050, option, positions, f0, arena));
+    }
+
+    [Theory]
+    [InlineData(900.0, 100.0)]
+    [InlineData(200.0, 199.0)]
+    [InlineData(71.0, double.PositiveInfinity)]
+    public void HarvestRejectsInvalidF0Range(double floor, double ceil)
+    {
+        using WorldArena arena = new();
+        double[] x = new double[4410];
+        HarvestOption option = HarvestOption.Default with { F0Floor = floor, F0Ceil = ceil };
+        double[] positions = new double[Harvest.GetSamplesForHarvest(22050, x.Length, 5.0)];
+        double[] f0 = new double[positions.Length];
+
+        Assert.ThrowsAny<ArgumentException>(
+            () => Harvest.Estimate(x, 22050, option, positions, f0, arena));
+    }
+
+    [Fact]
+    public void DioAndHarvestAcceptEqualF0LimitsAndTheDefaultRange()
+    {
+        using WorldArena arena = new();
+        double[] x = new double[4410];
+        int length = Dio.GetSamplesForDio(22050, x.Length, 5.0);
+        double[] positions = new double[length];
+        double[] f0 = new double[length];
+
+        Dio.Estimate(x, 22050, DioOption.Default with { F0Floor = 200.0, F0Ceil = 200.0 },
+            positions, f0, arena);
+        Harvest.Estimate(x, 22050, HarvestOption.Default with { F0Floor = 200.0, F0Ceil = 200.0 },
+            positions, f0, arena);
+        Dio.Estimate(x, 22050, DioOption.Default, positions, f0, arena);
+        Harvest.Estimate(x, 22050, HarvestOption.Default, positions, f0, arena);
+    }
 }
