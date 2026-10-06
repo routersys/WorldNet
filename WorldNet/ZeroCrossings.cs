@@ -19,7 +19,6 @@ internal unsafe partial struct ZeroCrossings
     public double* DipIntervalLocations;
     public double* DipIntervals;
     public int NumberOfDips;
-    public int* NegativeGoingPoints;
     public int* Edges;
     public double* FineEdges;
 
@@ -35,7 +34,6 @@ internal unsafe partial struct ZeroCrossings
         zeroCrossings.PositiveIntervals = (double*)allocator.Allocate(yLength, sizeof(double));
         zeroCrossings.PeakIntervals = (double*)allocator.Allocate(yLength, sizeof(double));
         zeroCrossings.DipIntervals = (double*)allocator.Allocate(yLength, sizeof(double));
-        zeroCrossings.NegativeGoingPoints = (int*)allocator.Allocate(yLength, sizeof(int));
         zeroCrossings.Edges = (int*)allocator.Allocate(yLength, sizeof(int));
         zeroCrossings.FineEdges = (double*)allocator.Allocate(yLength, sizeof(double));
     }
