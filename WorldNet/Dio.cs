@@ -378,84 +378,6 @@ public static unsafe class Dio
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    private static int ZeroCrossingEngine(double* filteredSignal, int yLength, double fs,
-        double* intervalLocations, double* intervals, int* negativeGoingPoints, int* edges,
-        double* fineEdges)
-    {
-        if (yLength < 2)
-        {
-            return 0;
-        }
-
-        for (int i = 0; i < yLength - 1; ++i)
-        {
-            negativeGoingPoints[i] =
-                0.0 < filteredSignal[i] && filteredSignal[i + 1] <= 0.0 ? i + 1 : 0;
-        }
-        negativeGoingPoints[yLength - 1] = 0;
-
-        int count = 0;
-        for (int i = 0; i < yLength; ++i)
-        {
-            if (negativeGoingPoints[i] > 0)
-            {
-                edges[count++] = negativeGoingPoints[i];
-            }
-        }
-
-        if (count < 2)
-        {
-            return 0;
-        }
-
-        for (int i = 0; i < count; ++i)
-        {
-            fineEdges[i] = edges[i] - (filteredSignal[edges[i] - 1] /
-                (filteredSignal[edges[i]] - filteredSignal[edges[i] - 1]));
-        }
-
-        for (int i = 0; i < count - 1; ++i)
-        {
-            intervals[i] = fs / (fineEdges[i + 1] - fineEdges[i]);
-            intervalLocations[i] = (fineEdges[i] + fineEdges[i + 1]) / 2.0 / fs;
-        }
-        return count - 1;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    private static void GetFourZeroCrossingIntervals(double* filteredSignal, int yLength,
-        double actualFs, ref ZeroCrossings zeroCrossings)
-    {
-        zeroCrossings.NumberOfNegatives = ZeroCrossingEngine(filteredSignal, yLength, actualFs,
-            zeroCrossings.NegativeIntervalLocations, zeroCrossings.NegativeIntervals,
-            zeroCrossings.NegativeGoingPoints, zeroCrossings.Edges, zeroCrossings.FineEdges);
-
-        for (int i = 0; i < yLength; ++i)
-        {
-            filteredSignal[i] = -filteredSignal[i];
-        }
-        zeroCrossings.NumberOfPositives = ZeroCrossingEngine(filteredSignal, yLength, actualFs,
-            zeroCrossings.PositiveIntervalLocations, zeroCrossings.PositiveIntervals,
-            zeroCrossings.NegativeGoingPoints, zeroCrossings.Edges, zeroCrossings.FineEdges);
-
-        for (int i = 0; i < yLength - 1; ++i)
-        {
-            filteredSignal[i] = filteredSignal[i] - filteredSignal[i + 1];
-        }
-        zeroCrossings.NumberOfPeaks = ZeroCrossingEngine(filteredSignal, yLength - 1, actualFs,
-            zeroCrossings.PeakIntervalLocations, zeroCrossings.PeakIntervals,
-            zeroCrossings.NegativeGoingPoints, zeroCrossings.Edges, zeroCrossings.FineEdges);
-
-        for (int i = 0; i < yLength - 1; ++i)
-        {
-            filteredSignal[i] = -filteredSignal[i];
-        }
-        zeroCrossings.NumberOfDips = ZeroCrossingEngine(filteredSignal, yLength - 1, actualFs,
-            zeroCrossings.DipIntervalLocations, zeroCrossings.DipIntervals,
-            zeroCrossings.NegativeGoingPoints, zeroCrossings.Edges, zeroCrossings.FineEdges);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetF0CandidateContourSub(double** interpolatedF0Set, int f0Length,
         double f0Floor, double f0Ceil, double boundaryF0, double* f0Candidate, double* f0Score)
     {
@@ -528,7 +450,7 @@ public static unsafe class Dio
             scratch);
 
         ZeroCrossings zeroCrossings = scratch.ZeroCrossings;
-        GetFourZeroCrossingIntervals(filteredSignal, yLength, fs, ref zeroCrossings);
+        ZeroCrossings.Find(filteredSignal, yLength, fs, ref zeroCrossings);
 
         GetF0CandidateContour(zeroCrossings, boundaryF0, f0Floor, f0Ceil, temporalPositions,
             f0Length, f0Candidate, f0Score, scratch);
