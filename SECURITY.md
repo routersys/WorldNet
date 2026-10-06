@@ -29,7 +29,7 @@ A numerical difference from the original WORLD is not a vulnerability. Open a bu
 
 Do not write a vulnerability in a public issue. It could be exploited before a fix is published.
 
-1. Open `https://github.com/routersys/WorldNet/security/advisories/new` and report it privately. Only the maintainer, the reporter and the people the maintainer invites can see the report.
+1. Open `https://github.com/routersys/WorldNet/security/advisories/new` and report it privately.
 2. If that is not possible, report it by email to github.routersys@gmail.com.
 
 Include the following in the report. Leave out what you do not know.
