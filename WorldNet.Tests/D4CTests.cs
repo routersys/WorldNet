@@ -124,6 +124,36 @@ public unsafe class D4CTests
         Assert.Equal(zeroed, filled);
     }
 
+    [Theory]
+    [InlineData(double.NaN)]
+    [InlineData(double.PositiveInfinity)]
+    [InlineData(22050.0)]
+    [InlineData(100000.0)]
+    public void EstimateRejectsF0ThatTheAnalysisCannotRepresent(double value)
+    {
+        using WorldArena arena = new();
+        double[] x = new double[22050];
+        double[] positions = new double[5];
+        double[] f0 = [150.0, 150.0, value, 150.0, 150.0];
+        double[] aperiodicity = new double[5 * ((1024 / 2) + 1)];
+
+        Assert.ThrowsAny<ArgumentException>(
+            () => D4C.Estimate(x, 22050, D4COption.Default, positions, f0, 1024, aperiodicity,
+                arena));
+    }
+
+    [Fact]
+    public void EstimateAcceptsUnvoicedAndModerateF0()
+    {
+        using WorldArena arena = new();
+        double[] x = new double[22050];
+        double[] positions = new double[4];
+        double[] f0 = [0.0, 40.0, 150.0, 5000.0];
+        double[] aperiodicity = new double[4 * ((1024 / 2) + 1)];
+
+        D4C.Estimate(x, 22050, D4COption.Default, positions, f0, 1024, aperiodicity, arena);
+    }
+
     private static double[] EstimateWithFilledArena(double[] x, int fs, double[] positions,
         double[] f0, int fftSize, byte fill)
     {
