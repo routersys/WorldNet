@@ -119,3 +119,13 @@ jobs:
 
       - name: テストを実行
         run: dotnet test WorldNet.slnx -c Release --no-build
+
+      - name: AVX2 を無効にしてテストを実行
+        run: dotnet test WorldNet.slnx -c Release --no-build
+        env:
+          DOTNET_EnableAVX2: "0"
+
+      - name: ハードウェア命令を無効にしてテストを実行
+        run: dotnet test WorldNet.slnx -c Release --no-build
+        env:
+          DOTNET_EnableHWIntrinsic: "0"
