@@ -263,6 +263,25 @@ public unsafe class WorldArenaTests
     }
 
     [Fact]
+    public void ScopeDisposedAfterTheArenaDoesNotTouchReleasedMemory()
+    {
+        WorldArena arena = new(1 << 20);
+        WorldArenaScope scope = arena.BeginScope();
+        arena.AllocateDouble(16);
+        arena.Dispose();
+
+        scope.Dispose();
+    }
+
+    [Fact]
+    public void DefaultScopeDisposesWithoutEffect()
+    {
+        WorldArenaScope scope = default;
+
+        scope.Dispose();
+    }
+
+    [Fact]
     public void ResetReleasesEveryAllocation()
     {
         using WorldArena arena = new(1 << 16);
