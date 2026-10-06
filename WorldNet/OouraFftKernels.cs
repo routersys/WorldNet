@@ -562,7 +562,28 @@ internal static unsafe partial class OouraFft
         int m = n >> 1;
         int ks = 2 * nc / m;
         int kk = 0;
-        for (int j = 2; j < m; j += 2)
+        int j = 2;
+        if (Vector256.IsHardwareAccelerated)
+        {
+            for (; j + 2 < m; j += 4)
+            {
+                int k = n - j;
+                int kk0 = kk + ks;
+                int kk1 = kk0 + ks;
+                kk = kk1;
+                Vector256<double> wkr = Vector256.Create(
+                    Vector128.Create(0.5 - c[nc - kk0]), Vector128.Create(0.5 - c[nc - kk1]));
+                Vector256<double> wki = Vector256.Create(
+                    Vector128.Create(c[kk0]), Vector128.Create(c[kk1]));
+                Vector256<double> upper = Vector256.Load(a + j);
+                Vector256<double> lower = SwapHalves(Vector256.Load(a + k - 2));
+                Vector256<double> x = upper + NegateReal(lower);
+                Vector256<double> y = (x * wkr) + (SwapRealImaginary(x) * NegateImaginary(wki));
+                (upper - y).Store(a + j);
+                SwapHalves(lower + NegateImaginary(y)).Store(a + k - 2);
+            }
+        }
+        for (; j < m; j += 2)
         {
             int k = n - j;
             kk += ks;
