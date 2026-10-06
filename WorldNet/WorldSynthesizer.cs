@@ -4,6 +4,7 @@ namespace WorldNet;
 
 public sealed unsafe class WorldSynthesizer
 {
+    private readonly WorldArena _arena;
     private readonly int _fs;
     private readonly double _framePeriod;
     private readonly int _bufferSize;
@@ -66,6 +67,7 @@ public sealed unsafe class WorldSynthesizer
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(numberOfPointers);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxFramesPerAdd);
 
+        _arena = arena;
         _fs = fs;
         _framePeriod = framePeriod / 1000.0;
         _bufferSize = bufferSize;
@@ -114,7 +116,14 @@ public sealed unsafe class WorldSynthesizer
         _forwardRealFft = ForwardRealFft.Bind(arena, fftSize);
     }
 
-    public ReadOnlySpan<double> Buffer => new(_buffer, _bufferSize);
+    public ReadOnlySpan<double> Buffer
+    {
+        get
+        {
+            ThrowIfArenaDisposed();
+            return new(_buffer, _bufferSize);
+        }
+    }
 
     public bool IsLocked
     {
@@ -136,6 +145,7 @@ public sealed unsafe class WorldSynthesizer
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public void Refresh()
     {
+        ThrowIfArenaDisposed();
         ClearRingBuffer(0, _numberOfPointers);
         _handoffPhase = 0;
         _handoffF0 = 0;
@@ -162,6 +172,8 @@ public sealed unsafe class WorldSynthesizer
     public bool AddParameters(ReadOnlySpan<double> f0, ReadOnlySpan<double> spectrogram,
         ReadOnlySpan<double> aperiodicity)
     {
+        ThrowIfArenaDisposed();
+
         if (f0.IsEmpty)
         {
             throw new ArgumentException("The F0 contour must not be empty.", nameof(f0));
@@ -236,6 +248,8 @@ public sealed unsafe class WorldSynthesizer
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public bool Synthesize()
     {
+        ThrowIfArenaDisposed();
+
         if (!CheckSynthesizer())
         {
             return false;
@@ -265,6 +279,11 @@ public sealed unsafe class WorldSynthesizer
         _synthesizedSample += _bufferSize;
         SeekSynthesizer(_synthesizedSample);
         return true;
+    }
+
+    private void ThrowIfArenaDisposed()
+    {
+        ObjectDisposedException.ThrowIf(_arena.IsDisposed, this);
     }
 
     private double* InterpolatedVuvSlot(int pointer)
