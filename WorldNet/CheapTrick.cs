@@ -57,6 +57,7 @@ public static unsafe class CheapTrick
 
         RandnState randnState = default;
         randnState.Reseed();
+        double lifterF0 = double.NaN;
 
         double f0Floor = GetF0Floor(fs, fftSize);
 
@@ -80,7 +81,8 @@ public static unsafe class CheapTrick
                         boundary);
 
                 CheapTrickGeneralBody(xPointer, x.Length, fs, currentF0, fftSize,
-                    positionPointer[i], option.Q1, scratch, frame, ref randnState);
+                    positionPointer[i], option.Q1, scratch, frame, ref randnState,
+                    ref lifterF0);
 
                 double* row = spectrogramPointer + ((long)i * spectrumLength);
                 for (int j = 0; j <= fftSize / 2; ++j)
@@ -93,22 +95,26 @@ public static unsafe class CheapTrick
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void SmoothingWithRecovery(double f0, int fs, int fftSize, double q1,
-        in CheapTrickScratch scratch)
+        in CheapTrickScratch scratch, ref double lifterF0)
     {
         double* smoothingLifter = scratch.SmoothingLifter;
         double* compensationLifter = scratch.CompensationLifter;
 
-        double doubledQ1 = 2.0 * q1;
-        double lifterBase = 1.0 - doubledQ1;
-        smoothingLifter[0] = 1.0;
-        compensationLifter[0] = lifterBase + doubledQ1;
-        for (int i = 1; i <= scratch.ForwardRealFft.FftSize / 2; ++i)
+        if (f0 != lifterF0)
         {
-            double quefrency = (double)i / fs;
-            double phase = WorldConstants.Pi * f0 * quefrency;
-            smoothingLifter[i] = Math.Sin(phase) / phase;
-            compensationLifter[i] = lifterBase +
-                (doubledQ1 * Math.Cos(2.0 * WorldConstants.Pi * quefrency * f0));
+            double doubledQ1 = 2.0 * q1;
+            double lifterBase = 1.0 - doubledQ1;
+            smoothingLifter[0] = 1.0;
+            compensationLifter[0] = lifterBase + doubledQ1;
+            for (int i = 1; i <= scratch.ForwardRealFft.FftSize / 2; ++i)
+            {
+                double quefrency = (double)i / fs;
+                double phase = WorldConstants.Pi * f0 * quefrency;
+                smoothingLifter[i] = Math.Sin(phase) / phase;
+                compensationLifter[i] = lifterBase +
+                    (doubledQ1 * Math.Cos(2.0 * WorldConstants.Pi * quefrency * f0));
+            }
+            lifterF0 = f0;
         }
 
         double* waveform = scratch.ForwardRealFft.Waveform;
@@ -239,7 +245,7 @@ public static unsafe class CheapTrick
 
     private static void CheapTrickGeneralBody(double* x, int xLength, int fs, double currentF0,
         int fftSize, double currentPosition, double q1, in CheapTrickScratch scratch,
-        in CheapTrickFrameScratch frame, ref RandnState randnState)
+        in CheapTrickFrameScratch frame, ref RandnState randnState, ref double lifterF0)
     {
         GetWindowedWaveform(x, xLength, fs, currentF0, currentPosition, scratch, frame,
             ref randnState);
@@ -252,6 +258,6 @@ public static unsafe class CheapTrick
         AddInfinitesimalNoise(scratch.ForwardRealFft.Waveform, fftSize,
             scratch.ForwardRealFft.Waveform, ref randnState);
 
-        SmoothingWithRecovery(currentF0, fs, fftSize, q1, scratch);
+        SmoothingWithRecovery(currentF0, fs, fftSize, q1, scratch, ref lifterF0);
     }
 }
