@@ -44,6 +44,69 @@ internal static unsafe class SpectrumMath
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    public static void SortNonNegative(double* values, double* temporary, int count)
+    {
+        if (count < 2)
+        {
+            return;
+        }
+
+        const int Radix = 256;
+        const int Passes = 8;
+
+        int* histogram = stackalloc int[Radix * Passes];
+        new Span<int>(histogram, Radix * Passes).Clear();
+
+        ulong* keys = (ulong*)values;
+        for (int i = 0; i < count; ++i)
+        {
+            ulong key = keys[i];
+            for (int pass = 0; pass < Passes; ++pass)
+            {
+                ++histogram[(pass * Radix) + (int)((key >> (pass * 8)) & 0xFF)];
+            }
+        }
+
+        ulong* from = (ulong*)values;
+        ulong* to = (ulong*)temporary;
+        bool relocated = false;
+
+        for (int pass = 0; pass < Passes; ++pass)
+        {
+            int* counts = histogram + (pass * Radix);
+            if (counts[(int)((from[0] >> (pass * 8)) & 0xFF)] == count)
+            {
+                continue;
+            }
+
+            int offset = 0;
+            for (int digit = 0; digit < Radix; ++digit)
+            {
+                int occurrences = counts[digit];
+                counts[digit] = offset;
+                offset += occurrences;
+            }
+
+            for (int i = 0; i < count; ++i)
+            {
+                ulong key = from[i];
+                to[counts[(int)((key >> (pass * 8)) & 0xFF)]++] = key;
+            }
+
+            ulong* previous = from;
+            from = to;
+            to = previous;
+            relocated = !relocated;
+        }
+
+        if (relocated)
+        {
+            Buffer.MemoryCopy(from, values, (long)count * sizeof(double),
+                (long)count * sizeof(double));
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void PowerSpectrumAndCrossProduct(FftComplex* main, FftComplex* diff,
         double* power, double* cross, int count)
     {
