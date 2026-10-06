@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.Arm;
 using System.Runtime.Intrinsics.X86;
 
 namespace WorldNet;
@@ -33,6 +34,16 @@ internal static unsafe class SpectrumMath
                 Vector128<double> high = Sse2.LoadVector128(source + (i * 2) + 2);
                 Sse2.Store(destination + i, Sse3.HorizontalAdd(
                     Sse2.Multiply(low, low), Sse2.Multiply(high, high)));
+            }
+        }
+        else if (AdvSimd.Arm64.IsSupported)
+        {
+            for (; i + 2 <= count; i += 2)
+            {
+                Vector128<double> low = AdvSimd.LoadVector128(source + (i * 2));
+                Vector128<double> high = AdvSimd.LoadVector128(source + (i * 2) + 2);
+                AdvSimd.Store(destination + i, AdvSimd.Arm64.AddPairwise(
+                    AdvSimd.Arm64.Multiply(low, low), AdvSimd.Arm64.Multiply(high, high)));
             }
         }
 
@@ -128,6 +139,27 @@ internal static unsafe class SpectrumMath
                 Sse2.Store(cross + i, Sse3.HorizontalSubtract(
                     Sse2.Multiply(mainLow, Sse2.Shuffle(diffLow, diffLow, 1)),
                     Sse2.Multiply(mainHigh, Sse2.Shuffle(diffHigh, diffHigh, 1))));
+            }
+        }
+        else if (AdvSimd.Arm64.IsSupported)
+        {
+            for (; i + 2 <= count; i += 2)
+            {
+                Vector128<double> mainLow = AdvSimd.LoadVector128(mainSource + (i * 2));
+                Vector128<double> mainHigh = AdvSimd.LoadVector128(mainSource + (i * 2) + 2);
+                Vector128<double> mainReal = AdvSimd.Arm64.UnzipEven(mainLow, mainHigh);
+                Vector128<double> mainImaginary = AdvSimd.Arm64.UnzipOdd(mainLow, mainHigh);
+                AdvSimd.Store(power + i, AdvSimd.Arm64.Add(
+                    AdvSimd.Arm64.Multiply(mainReal, mainReal),
+                    AdvSimd.Arm64.Multiply(mainImaginary, mainImaginary)));
+
+                Vector128<double> diffLow = AdvSimd.LoadVector128(diffSource + (i * 2));
+                Vector128<double> diffHigh = AdvSimd.LoadVector128(diffSource + (i * 2) + 2);
+                Vector128<double> diffReal = AdvSimd.Arm64.UnzipEven(diffLow, diffHigh);
+                Vector128<double> diffImaginary = AdvSimd.Arm64.UnzipOdd(diffLow, diffHigh);
+                AdvSimd.Store(cross + i, AdvSimd.Arm64.Subtract(
+                    AdvSimd.Arm64.Multiply(mainReal, diffImaginary),
+                    AdvSimd.Arm64.Multiply(mainImaginary, diffReal)));
             }
         }
 
