@@ -72,9 +72,16 @@ internal static unsafe partial class OouraFft
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CftLeaf(int n, int isplt, double* a, int nw, double* w)
     {
-        if (Avx2.IsSupported && n == 512)
+        if (Avx2.IsSupported)
         {
-            CftLeaf512Pairs(isplt, a, nw, w);
+            if (n == 512)
+            {
+                CftLeaf512Pairs(isplt, a, nw, w);
+            }
+            else
+            {
+                CftLeaf256Pairs(isplt, a, nw, w);
+            }
             return;
         }
 

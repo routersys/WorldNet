@@ -24,6 +24,88 @@ internal static unsafe partial class OouraFft
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    private static void CftF081Pair(double* a0, double* a1, double* w)
+    {
+        Vector256<double> wn4r = Vector256.Create(w[1]);
+        Vector256<double> c0 = LoadPoint(a0, a1, 0);
+        Vector256<double> c4 = LoadPoint(a0, a1, 4);
+        Vector256<double> c2 = LoadPoint(a0, a1, 2);
+        Vector256<double> c6 = LoadPoint(a0, a1, 6);
+        Vector256<double> x0 = c0 + c4;
+        Vector256<double> x1 = c0 - c4;
+        Vector256<double> x2 = c2 + c6;
+        Vector256<double> x3 = c2 - c6;
+        Vector256<double> y0 = x0 + x2;
+        Vector256<double> y2 = x0 - x2;
+        Vector256<double> y1 = x1 + Turn(x3);
+        Vector256<double> y3 = x1 - Turn(x3);
+        Vector256<double> c1 = LoadPoint(a0, a1, 1);
+        Vector256<double> c5 = LoadPoint(a0, a1, 5);
+        Vector256<double> c3 = LoadPoint(a0, a1, 3);
+        Vector256<double> c7 = LoadPoint(a0, a1, 7);
+        x0 = c1 + c5;
+        x1 = c1 - c5;
+        x2 = c3 + c7;
+        x3 = c3 - c7;
+        Vector256<double> y4 = x0 + x2;
+        Vector256<double> y6 = x0 - x2;
+        x0 = x1 + Turn(x3);
+        x2 = x1 - Turn(x3);
+        Vector256<double> y5 = wn4r * (x0 + Turn(x0));
+        Vector256<double> y7 = wn4r * (x2 + Turn(x2));
+        StorePoint(y1 + y5, a0, a1, 4);
+        StorePoint(y1 - y5, a0, a1, 5);
+        StorePoint(y3 + Turn(y7), a0, a1, 6);
+        StorePoint(y3 - Turn(y7), a0, a1, 7);
+        StorePoint(y0 + y4, a0, a1, 0);
+        StorePoint(y0 - y4, a0, a1, 1);
+        StorePoint(y2 + Turn(y6), a0, a1, 2);
+        StorePoint(y2 - Turn(y6), a0, a1, 3);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    private static void CftF082Pair(double* a0, double* a1, double* w)
+    {
+        Vector256<double> wn4r = Vector256.Create(w[1]);
+        Vector256<double> wk1r = Vector256.Create(w[2]);
+        Vector256<double> wk1i = Vector256.Create(w[3]);
+        Vector256<double> c0 = LoadPoint(a0, a1, 0);
+        Vector256<double> c4 = LoadPoint(a0, a1, 4);
+        Vector256<double> y0 = c0 + Turn(c4);
+        Vector256<double> y1 = c0 - Turn(c4);
+        Vector256<double> c2 = LoadPoint(a0, a1, 2);
+        Vector256<double> c6 = LoadPoint(a0, a1, 6);
+        Vector256<double> x0 = c2 + Turn(c6);
+        Vector256<double> y2 = wn4r * (x0 + Turn(x0));
+        x0 = c2 - Turn(c6);
+        Vector256<double> y3 = wn4r * (x0 + Turn(x0));
+        Vector256<double> c1 = LoadPoint(a0, a1, 1);
+        Vector256<double> c5 = LoadPoint(a0, a1, 5);
+        Vector256<double> y4 = Rotate(c1 + Turn(c5), wk1r, wk1i);
+        Vector256<double> y5 = Rotate(c1 - Turn(c5), wk1i, wk1r);
+        Vector256<double> c3 = LoadPoint(a0, a1, 3);
+        Vector256<double> c7 = LoadPoint(a0, a1, 7);
+        Vector256<double> y6 = Rotate(c3 + Turn(c7), wk1i, wk1r);
+        Vector256<double> y7 = Rotate(c3 - Turn(c7), wk1r, wk1i);
+        x0 = y0 + y2;
+        Vector256<double> x1 = y4 + y6;
+        StorePoint(x0 + x1, a0, a1, 0);
+        StorePoint(x0 - x1, a0, a1, 1);
+        x0 = y0 - y2;
+        x1 = y4 - y6;
+        StorePoint(x0 + Turn(x1), a0, a1, 2);
+        StorePoint(x0 - Turn(x1), a0, a1, 3);
+        x0 = y1 + Turn(y3);
+        x1 = y5 - y7;
+        StorePoint(x0 + x1, a0, a1, 4);
+        StorePoint(x0 - x1, a0, a1, 5);
+        x0 = y1 - Turn(y3);
+        x1 = y5 + y7;
+        StorePoint(x0 + Turn(x1), a0, a1, 6);
+        StorePoint(x0 - Turn(x1), a0, a1, 7);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CftF161Pair(double* a0, double* a1, double* w)
     {
         Vector256<double> wn4r = Vector256.Create(w[1]);
@@ -228,6 +310,39 @@ internal static unsafe partial class OouraFft
         else
         {
             CftF162Pair(&a[416], &a[480], w162);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    private static void CftLeaf256Pairs(int isplt, double* a, int nw, double* w)
+    {
+        CftMdl1(64, a, &w[nw - 32]);
+        CftMdl2(64, &a[64], &w[nw - 64]);
+        CftMdl1(64, &a[128], &w[nw - 32]);
+        if (isplt != 0)
+        {
+            CftMdl1(64, &a[192], &w[nw - 32]);
+        }
+        else
+        {
+            CftMdl2(64, &a[192], &w[nw - 64]);
+        }
+        double* w081 = &w[nw - 8];
+        CftF081Pair(a, &a[32], w081);
+        CftF081Pair(&a[48], &a[64], w081);
+        CftF081Pair(&a[96], &a[128], w081);
+        CftF081Pair(&a[160], &a[176], w081);
+        CftF081Pair(&a[192], &a[224], w081);
+        CftF082Pair(&a[16], &a[80], w081);
+        CftF082Pair(&a[112], &a[144], w081);
+        if (isplt != 0)
+        {
+            CftF081Pair(&a[240], &a[240], w081);
+            CftF082Pair(&a[208], &a[208], w081);
+        }
+        else
+        {
+            CftF082Pair(&a[208], &a[240], w081);
         }
     }
 }
