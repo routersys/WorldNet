@@ -66,6 +66,8 @@ public sealed unsafe class WorldSynthesizer
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(bufferSize);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(numberOfPointers);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxFramesPerAdd);
+        Validation.ThrowIfNotPowerOfTwo(fftSize, nameof(fftSize));
+        Validation.ThrowIfFftSizeTooSmallForPulses(fftSize, fs, nameof(fftSize));
 
         _arena = arena;
         _fs = fs;
