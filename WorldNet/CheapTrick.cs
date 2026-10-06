@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace WorldNet;
 
 public static unsafe class CheapTrick
@@ -13,6 +15,7 @@ public static unsafe class CheapTrick
         return 3.0 * fs / (fftSize - 3.0);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void Estimate(ReadOnlySpan<double> x, int fs, CheapTrickOption option,
         ReadOnlySpan<double> temporalPositions, ReadOnlySpan<double> f0, Span<double> spectrogram,
         WorldArena arena)
@@ -88,6 +91,7 @@ public static unsafe class CheapTrick
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void SmoothingWithRecovery(double f0, int fs, int fftSize, double q1,
         in CheapTrickScratch scratch)
     {
@@ -137,6 +141,7 @@ public static unsafe class CheapTrick
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetPowerSpectrum(int fs, double f0, int fftSize,
         in CheapTrickScratch scratch, in CheapTrickFrameScratch frame)
     {
@@ -156,6 +161,7 @@ public static unsafe class CheapTrick
         Common.DcCorrection(powerSpectrum, f0, fs, fftSize, powerSpectrum, frame.DcCorrection);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void SetParametersForGetWindowedWaveform(int halfWindowLength, int xLength,
         double currentPosition, int fs, double currentF0, int* baseIndex, int* safeIndex,
         double* window)
@@ -188,6 +194,7 @@ public static unsafe class CheapTrick
         VectorOperations.DivideByScalar(window, (halfWindowLength * 2) + 1, average);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetWindowedWaveform(double* x, int xLength, int fs, double currentF0,
         double currentPosition, in CheapTrickScratch scratch, in CheapTrickFrameScratch frame,
         ref RandnState randnState)
@@ -219,6 +226,7 @@ public static unsafe class CheapTrick
             waveform, window, (halfWindowLength * 2) + 1, weightingCoefficient);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void AddInfinitesimalNoise(double* inputSpectrum, int fftSize,
         double* outputSpectrum, ref RandnState randnState)
     {
