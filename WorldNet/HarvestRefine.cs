@@ -57,20 +57,17 @@ public static unsafe partial class Harvest
         }
         new Span<double>(forwardRealFft.Waveform + baseTimeLength, fftSize - baseTimeLength).Clear();
 
-        forwardRealFft.ForwardFft.Execute();
-        Buffer.MemoryCopy(forwardRealFft.Spectrum, mainSpectrum,
-            ((long)(fftSize / 2) + 1) * sizeof(FftComplex),
-            ((long)(fftSize / 2) + 1) * sizeof(FftComplex));
+        FftPlan forwardFft = forwardRealFft.ForwardFft;
+        forwardFft.COut = mainSpectrum;
+        forwardFft.Execute();
 
         for (int i = 0; i < baseTimeLength; ++i)
         {
             forwardRealFft.Waveform[i] = x[safeIndex[i]] * diffWindow[i];
         }
         new Span<double>(forwardRealFft.Waveform + baseTimeLength, fftSize - baseTimeLength).Clear();
-        forwardRealFft.ForwardFft.Execute();
-        Buffer.MemoryCopy(forwardRealFft.Spectrum, diffSpectrum,
-            ((long)(fftSize / 2) + 1) * sizeof(FftComplex),
-            ((long)(fftSize / 2) + 1) * sizeof(FftComplex));
+        forwardFft.COut = diffSpectrum;
+        forwardFft.Execute();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
