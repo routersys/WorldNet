@@ -141,7 +141,7 @@ Do not claim an improvement from a single measurement.
 
 ## Code Conventions
 
-Follow the implementation patterns and the style already used in the code you are changing.
+Follow the implementation patterns and the style already used in the code you are changing, and the repository's [`.editorconfig`](.editorconfig).
 
 Do not add comments or commented-out code. Keep the comments and documentation comments that already exist in the code you modify.
 
