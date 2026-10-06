@@ -164,6 +164,18 @@ public class WorldSynthesizerTests
             () => new WorldSynthesizer(arena, fs, 5.0, fftSize, 64, 1, 4));
     }
 
+    [Theory]
+    [InlineData(65536, 65536)]
+    [InlineData(4, int.MaxValue)]
+    public void ConstructorThrowsInsteadOfWrappingAroundOnOversizedParameters(int pointers,
+        int framesPerAdd)
+    {
+        using WorldArena arena = new();
+
+        Assert.Throws<OverflowException>(
+            () => new WorldSynthesizer(arena, 44100, 5.0, 1024, 64, pointers, framesPerAdd));
+    }
+
     private static double[] SynthesizeInChunks(double f0Value)
     {
         const int FftSize = 256;
