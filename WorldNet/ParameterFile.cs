@@ -75,12 +75,18 @@ public static class ParameterFile
         ArgumentNullException.ThrowIfNull(path);
         ArgumentNullException.ThrowIfNull(parameter);
 
+        if (parameter.Length != 4 || !Ascii.IsValid(parameter))
+        {
+            throw new ArgumentException(
+                "The parameter name must consist of four ASCII characters.", nameof(parameter));
+        }
+
         Span<byte> wanted = stackalloc byte[4];
         Encoding.ASCII.GetBytes(parameter.AsSpan(), wanted);
 
         using FileStream stream = File.OpenRead(path);
         Span<byte> field = stackalloc byte[8];
-        for (int i = 0; i < 13; ++i)
+        for (int i = 0; i < 13 && stream.Length - stream.Position >= 4; ++i)
         {
             ReadExactly(stream, field[..4]);
             if (!field[..4].SequenceEqual(wanted))
