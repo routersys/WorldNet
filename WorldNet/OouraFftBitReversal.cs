@@ -302,6 +302,7 @@ internal static unsafe partial class OouraFft
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void BitRv216(double* a)
     {
         double x1r = a[2];
@@ -354,6 +355,7 @@ internal static unsafe partial class OouraFft
         a[29] = x7i;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void BitRv216Neg(double* a)
     {
         double x1r = a[2];
@@ -418,6 +420,7 @@ internal static unsafe partial class OouraFft
         a[31] = x8i;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void BitRv208(double* a)
     {
         double x1r = a[2];
@@ -438,6 +441,7 @@ internal static unsafe partial class OouraFft
         a[13] = x3i;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void BitRv208Neg(double* a)
     {
         double x1r = a[2];
