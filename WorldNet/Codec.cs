@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace WorldNet;
 
 public static unsafe class Codec
@@ -8,6 +10,7 @@ public static unsafe class Codec
             (fs / 2.0) - WorldConstants.FrequencyInterval) / WorldConstants.FrequencyInterval);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void CodeAperiodicity(ReadOnlySpan<double> aperiodicity, int f0Length, int fs,
         int fftSize, Span<double> codedAperiodicity, WorldArena arena)
     {
@@ -51,6 +54,7 @@ public static unsafe class Codec
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void DecodeAperiodicity(ReadOnlySpan<double> codedAperiodicity, int f0Length,
         int fs, int fftSize, Span<double> aperiodicity, WorldArena arena)
     {
@@ -108,6 +112,7 @@ public static unsafe class Codec
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void CodeSpectralEnvelope(ReadOnlySpan<double> spectrogram, int f0Length,
         int fs, int fftSize, int numberOfDimensions, Span<double> codedSpectralEnvelope,
         WorldArena arena)
@@ -156,6 +161,7 @@ public static unsafe class Codec
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void DecodeSpectralEnvelope(ReadOnlySpan<double> codedSpectralEnvelope,
         int f0Length, int fs, int fftSize, int numberOfDimensions, Span<double> spectrogram,
         WorldArena arena)
@@ -208,6 +214,7 @@ public static unsafe class Codec
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void InitializeAperiodicity(int f0Length, int fftSize, int spectrumLength,
         double* aperiodicity)
     {
@@ -221,6 +228,7 @@ public static unsafe class Codec
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static int CheckVUV(double* coarseAperiodicity, int numberOfAperiodicities,
         double* tmpAperiodicity)
     {
@@ -235,6 +243,7 @@ public static unsafe class Codec
         return tmp > -0.5 ? 1 : 0;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetAperiodicity(double* coarseFrequencyAxis, double* coarseAperiodicity,
         int numberOfAperiodicities, double* frequencyAxis, int fftSize, double* aperiodicity,
         in Interp1Scratch interpolation)
@@ -258,6 +267,7 @@ public static unsafe class Codec
         return WorldConstants.MelF0 * (Math.Exp(mel / WorldConstants.MelM0) - 1.0);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void DCTForCodec(double* melSpectrum, int maxDimension, FftComplex* weight,
         in ForwardRealFft forwardRealFft, int numberOfDimensions, double* melCepstrum)
     {
@@ -277,6 +287,7 @@ public static unsafe class Codec
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void IDCTForCodec(double* melCepstrum, int maxDimension, FftComplex* weight,
         in InverseComplexFft inverseComplexFft, int numberOfDimensions, double* melSpectrum)
     {
@@ -314,6 +325,7 @@ public static unsafe class Codec
             codedSpectralEnvelope);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void DecodeOneFrame(double* codedSpectralEnvelope, double* frequencyAxis,
         int fftSize, double* melAxis, FftComplex* weight, int maxDimension,
         int numberOfDimensions, in InverseComplexFft inverseComplexFft, double* spectralEnvelope,
@@ -333,6 +345,7 @@ public static unsafe class Codec
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetParametersForCoding(double floorFrequency, double ceilFrequency,
         int fs, int fftSize, double* melAxis, double* frequencyAxis, FftComplex* weight)
     {
@@ -355,6 +368,7 @@ public static unsafe class Codec
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetParametersForDecoding(double floorFrequency, double ceilFrequency,
         int fs, int fftSize, int numberOfDimensions, double* melAxis, double* frequencyAxis,
         FftComplex* weight)
