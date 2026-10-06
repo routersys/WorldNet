@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>WorldNet: WORLD vocoder for .NET, faster than C++</title>
+<meta name="description" content="A C# port of the WORLD vocoder for .NET 8+. Pitch, spectral envelope, aperiodicity and synthesis, faster than the original C++, with no managed allocation.">
+<link rel="canonical" href="https://routersys.github.io/WorldNet/">
+<link rel="alternate" hreflang="en" href="https://routersys.github.io/WorldNet/">
+<link rel="alternate" hreflang="ja" href="https://routersys.github.io/WorldNet/ja/">
+<link rel="alternate" hreflang="x-default" href="https://routersys.github.io/WorldNet/">
+<link rel="icon" href="icon.png" type="image/png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WorldNet">
+<meta property="og:title" content="WorldNet: WORLD vocoder for .NET, faster than C++">
+<meta property="og:description" content="A C# port of the WORLD vocoder for .NET 8+. Pitch, spectral envelope, aperiodicity and synthesis, faster than the original C++, with no managed allocation.">
+<meta property="og:url" content="https://routersys.github.io/WorldNet/">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ja_JP">
+<style>body{max-width:44em;margin:1em auto;padding:0 1em;line-height:1.5}pre{overflow-x:auto}</style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareSourceCode","name":"WorldNet","description":"A C# port of the WORLD vocoder for .NET 8+. Pitch, spectral envelope, aperiodicity and synthesis, faster than the original C++, with no managed allocation.","programmingLanguage":"C#","runtimePlatform":".NET 8 and later","license":"https://opensource.org/license/mit","codeRepository":"https://github.com/routersys/WorldNet","url":"https://routersys.github.io/WorldNet/","inLanguage":"en"}</script>
+</head>
+<body>
+<header>
+<h1>WorldNet</h1>
+<p>WorldNet brings the WORLD vocoder to .NET, faster than the original C++.<br>It is verified against the original and performs no managed allocation.</p>
+<nav>
+<a href="https://github.com/routersys/WorldNet">GitHub</a> |
+<a href="https://www.nuget.org/packages/WorldNet">NuGet</a> |
+<a href="https://github.com/routersys/WorldNet/releases">Releases</a> |
+<a href="ja/" hreflang="ja" lang="ja">日本語</a>
+</nav>
+</header>
+<hr>
+<main>
+<h2>Install</h2>
+<pre>dotnet add package WorldNet</pre>
+<h2>Use</h2>
+<p>This program reads a monaural WAV file, estimates the F0 contour with Harvest, the spectral envelope with CheapTrick and the aperiodicity with D4C, and synthesizes a waveform from the three results.</p>
+<pre><code>using WorldNet;
+
+int length = WaveFile.GetLength(&quot;input.wav&quot;);
+double[] x = new double[length];
+WaveFile.Read(&quot;input.wav&quot;, x, out int fs, out _);
+
+using WorldArena arena = new();
+
+HarvestOption harvestOption = HarvestOption.Default;
+int f0Length = Harvest.GetSamplesForHarvest(fs, x.Length, harvestOption.FramePeriod);
+double[] temporalPositions = new double[f0Length];
+double[] f0 = new double[f0Length];
+Harvest.Estimate(x, fs, harvestOption, temporalPositions, f0, arena);
+
+CheapTrickOption cheapTrickOption = CheapTrickOption.Create(fs);
+int fftSize = cheapTrickOption.FftSize;
+int spectrumLength = (fftSize / 2) + 1;
+double[] spectrogram = new double[f0Length * spectrumLength];
+CheapTrick.Estimate(x, fs, cheapTrickOption, temporalPositions, f0, spectrogram, arena);
+
+double[] aperiodicity = new double[f0Length * spectrumLength];
+D4C.Estimate(x, fs, D4COption.Default, temporalPositions, f0, fftSize, aperiodicity, arena);
+
+int yLength = Synthesis.GetSamplesForSynthesis(fs, f0Length, harvestOption.FramePeriod);
+double[] y = new double[yLength];
+Synthesis.Synthesize(f0, spectrogram, aperiodicity, fftSize, harvestOption.FramePeriod, fs, y, arena);
+
+WaveFile.Write(&quot;output.wav&quot;, y, fs);</code></pre>
+<h2>What it does</h2>
+<ul>
+<li>Fundamental frequency estimation: Dio, Harvest and StoneMask.</li>
+<li>Spectral envelope estimation: CheapTrick.</li>
+<li>Aperiodicity estimation: D4C.</li>
+<li>Waveform synthesis: batch synthesis and a sequential real-time synthesizer.</li>
+<li>Coding of the spectral envelope and the aperiodicity.</li>
+<li>WAV input and output, and the analysis parameter file format.</li>
+</ul>
+<h2>Why WorldNet</h2>
+<ul>
+<li>Faster than the original C++ in every stage measured. The tables are in the <a href="https://github.com/routersys/WorldNet#7-performance">performance section</a> of the README.</li>
+<li>No managed allocation. The garbage collector never observes the analysis or the synthesis path.</li>
+<li>Verified against the original built with MSVC and with GCC. The output is bit-exact in most stages and within a few units in the last place in the rest.</li>
+<li>.NET 8 and later, on x64 and ARM64, Windows and Linux. Native AOT ready. No native library to ship.</li>
+</ul>
+<h2>Links</h2>
+<ul>
+<li><a href="https://github.com/routersys/WorldNet#readme">README</a>: requirements, API reference, limitations.</li>
+<li><a href="https://www.nuget.org/packages/WorldNet">NuGet package</a></li>
+<li><a href="https://github.com/routersys/WorldNet/releases">Releases</a></li>
+<li><a href="https://github.com/mmorise/World">WORLD</a>, the original by M. Morise.</li>
+</ul>
+</main>
+<hr>
+<footer>
+<p>WorldNet is released under the <a href="https://github.com/routersys/WorldNet/blob/main/LICENSE.txt">MIT License</a>. See the <a href="https://github.com/routersys/WorldNet#third-party-licenses">third-party licenses</a> for WORLD and the Ooura FFT.</p>
+</footer>
+</body>
+</html>
