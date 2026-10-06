@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace WorldNet.Tests;
 
 public class WorldSynthesizerTests
@@ -91,5 +93,60 @@ public class WorldSynthesizerTests
 
         Assert.Throws<ArgumentOutOfRangeException>(
             () => synthesizer.AddParameters(f0, spectrogram, aperiodicity));
+    }
+
+    [Fact]
+    public void AddParametersRejectsEmptyContour()
+    {
+        using WorldArena arena = new();
+        WorldSynthesizer synthesizer = new(arena, 22050, 5.0, 1024, 64, 1, 4);
+
+        Assert.Throws<ArgumentException>(() => synthesizer.AddParameters(
+            ReadOnlySpan<double>.Empty, ReadOnlySpan<double>.Empty, ReadOnlySpan<double>.Empty));
+    }
+
+    [Fact]
+    public void SynthesizerKeepsItsArenaAlive()
+    {
+        WorldSynthesizer synthesizer =
+            CreateWithUnreferencedArena(out WeakReference<WorldArena> arena);
+
+        for (int i = 0; i < 3; ++i)
+        {
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+
+        Assert.True(arena.TryGetTarget(out _));
+        GC.KeepAlive(synthesizer);
+    }
+
+    [Fact]
+    public void UseAfterTheArenaIsDisposedThrows()
+    {
+        WorldArena arena = new();
+        WorldSynthesizer synthesizer = new(arena, 22050, 5.0, 1024, 64, 1, 4);
+        double[] f0 = new double[4];
+        double[] spectrogram = new double[4 * 513];
+        double[] aperiodicity = new double[4 * 513];
+        arena.Dispose();
+
+        Assert.Throws<ObjectDisposedException>(() => synthesizer.Synthesize());
+        Assert.Throws<ObjectDisposedException>(() => synthesizer.Refresh());
+        Assert.Throws<ObjectDisposedException>(
+            () => synthesizer.AddParameters(f0, spectrogram, aperiodicity));
+        Assert.Throws<ObjectDisposedException>(() =>
+        {
+            _ = synthesizer.Buffer.Length;
+        });
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static WorldSynthesizer CreateWithUnreferencedArena(
+        out WeakReference<WorldArena> arena)
+    {
+        WorldArena created = new();
+        arena = new WeakReference<WorldArena>(created);
+        return new WorldSynthesizer(created, 22050, 5.0, 1024, 64, 1, 4);
     }
 }
