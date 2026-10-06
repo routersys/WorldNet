@@ -215,16 +215,16 @@ Measured by CI on a GitHub Actions `windows-latest` runner with AMD EPYC 7763 64
 
 A ratio above 1.00 means this port is faster than the original C++.
 
-The following table was measured on Linux x64 against the original C++ built with GCC 13.3 at `-O2`, on a virtual machine with an Intel Xeon at 2.10 GHz and four cores. Each figure is the best of 15 runs in milliseconds. Every run is a fresh process that analyses the same 22050 Hz reference waveform of 17500 samples with a 5 ms frame period, so the just-in-time column includes the cost of compiling the code and of running it before tiered compilation has optimized it. It is a fixed record and is not regenerated.
+The following table was measured on Linux x64 against the original C++ built with GCC 13.3 at `-O2`, on a virtual machine with an Intel Xeon at 2.10 GHz and four cores. Each figure is the best of 25 runs in milliseconds. Every run is a fresh process that analyses the same 22050 Hz reference waveform of 17500 samples with a 5 ms frame period, so the just-in-time column includes the cost of compiling the code and of running it before tiered compilation has optimized it. It is a fixed record and is not regenerated.
 
 | Stage | C++ with GCC | This port with Native AOT | Ratio | This port with JIT | Ratio |
 |---|---:|---:|---:|---:|---:|
-| Dio | 6.03 | 2.94 | 2.05x | 2.95 | 2.04x |
-| StoneMask | 3.52 | 2.93 | 1.20x | 3.05 | 1.15x |
-| CheapTrick | 9.17 | 6.01 | 1.53x | 5.91 | 1.55x |
-| D4C | 33.96 | 21.57 | 1.57x | 21.81 | 1.56x |
-| Synthesis | 8.37 | 7.48 | 1.12x | 6.91 | 1.21x |
-| Harvest | 126.57 | 55.85 | 2.27x | 55.72 | 2.27x |
+| Dio | 5.74 | 2.91 | 1.97x | 2.97 | 1.93x |
+| StoneMask | 3.59 | 2.92 | 1.23x | 3.16 | 1.14x |
+| CheapTrick | 9.07 | 5.52 | 1.64x | 5.60 | 1.62x |
+| D4C | 33.41 | 22.93 | 1.46x | 23.72 | 1.41x |
+| Synthesis | 8.39 | 6.74 | 1.24x | 6.97 | 1.20x |
+| Harvest | 128.46 | 56.21 | 2.29x | 55.69 | 2.31x |
 
 The routines that contain loops, together with the routines of the Ooura FFT, are marked with `MethodImplOptions.AggressiveOptimization`, so that they are optimized at the first call instead of starting in the unoptimized tier. Before they were marked, the same measurement took 126.67 ms from Dio to Synthesis and 141.68 ms for Harvest, against 55.65 ms and 123.50 ms after they were marked. Once a process has warmed up, the speed does not depend on the mark: the best of 100 repeats within one process took 54.35 ms from Dio to Synthesis before the routines were marked and 54.20 ms after.
 
