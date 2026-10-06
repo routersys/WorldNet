@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://lib.routersys.com/sitemap.xml
