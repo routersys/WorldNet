@@ -234,12 +234,12 @@ The following table was measured once on Linux ARM64, on a GitHub Actions `ubunt
 
 | Stage | C++ with GCC | This port with JIT | Ratio |
 |---|---:|---:|---:|
-| Dio | 6.61 | 4.21 | 1.57x |
-| StoneMask | 4.25 | 3.75 | 1.13x |
-| CheapTrick | 8.42 | 7.14 | 1.18x |
-| D4C | 31.41 | 26.43 | 1.19x |
-| Synthesis | 9.36 | 8.95 | 1.05x |
-| Harvest | 140.05 | 70.53 | 1.99x |
+| Dio | 6.55 | 4.18 | 1.57x |
+| StoneMask | 4.26 | 3.74 | 1.14x |
+| CheapTrick | 8.40 | 7.13 | 1.18x |
+| D4C | 31.40 | 26.41 | 1.19x |
+| Synthesis | 9.27 | 8.81 | 1.05x |
+| Harvest | 139.87 | 69.63 | 2.01x |
 
 ---
 
