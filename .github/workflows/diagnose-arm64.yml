@@ -31,57 +31,21 @@ jobs:
             8.x
             10.x
 
-      - name: 構成を表示
+      - name: 参照データを生成
+        shell: cmd
+        run: reference\build.bat
+
+      - name: 二乗を Math.Pow に置き換えた版で試験
         shell: pwsh
         run: |
-          dotnet --info
-          $env:PROCESSOR_ARCHITECTURE
-
-      - name: 参照データの派生を生成
-        shell: pwsh
-        run: |
-          $vs = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.ARM64 -property installationPath
-          git clone --depth 1 https://github.com/mmorise/World.git reference/world-src
-          Set-Location reference
-          $variants = [ordered]@{
-            default  = '/O2'
-            strict   = '/O2 /fp:strict'
-            od       = '/Od'
-            contract = '/O2 /fp:contract'
+          foreach ($f in 'WorldNet\Synthesis.cs', 'WorldNet\WorldSynthesizer.cs') {
+            $text = Get-Content $f -Raw
+            $text = $text -replace 'aperiodicSpectrum\[i\] = safe \* safe;', 'aperiodicSpectrum[i] = Math.Pow(safe, DiagExponent.Two);'
+            $text = $text -replace 'aperiodicSpectrum\[i\] = blended \* blended;', 'aperiodicSpectrum[i] = Math.Pow(blended, DiagExponent.Two);'
+            Set-Content -Path $f -Value $text -NoNewline
           }
-          foreach ($name in $variants.Keys) {
-            $flags = $variants[$name]
-            $bat = @"
-          @echo off
-          call "$vs\VC\Auxiliary\Build\vcvarsall.bat" arm64 >nul || exit /b 1
-          cl 2>&1 | findstr /i "Version"
-          if not exist obj_$name mkdir obj_$name
-          cl /nologo $flags /EHsc /I world-src\src /I world-src\tools /I . /Fo:obj_$name\ /Fe:worldref_$name.exe main.cpp world-src\src\*.cpp world-src\tools\audioio.cpp world-src\tools\parameterio.cpp >nul || exit /b 1
-          if not exist data_$name mkdir data_$name
-          worldref_$name.exe world-src\test\vaiueo2d.wav data_$name >nul || exit /b 1
-          "@
-            Set-Content -Path "build_$name.bat" -Value $bat -Encoding ascii
-            "=== build $name ($flags) ==="
-            cmd /c "build_$name.bat"
-          }
-          exit 0
-
-      - name: ソリューションをビルド
-        run: dotnet build WorldNet.slnx -c Release
-
-      - name: 派生ごとに試験を実行
-        shell: pwsh
-        run: |
-          $variants = 'default', 'strict', 'od', 'contract'
-          foreach ($name in $variants) {
-            if (Test-Path reference\data) { Remove-Item reference\data -Recurse -Force }
-            Copy-Item "reference\data_$name" reference\data -Recurse
-            "=== test $name ==="
-            dotnet test WorldNet.Tests\WorldNet.Tests.csproj -c Release --no-build -f net10.0 2>&1 | Select-String -Pattern "Failed |maxUlp|sample |expected|Passed!|Failed!"
-          }
-          "=== test default with hardware intrinsics disabled ==="
-          Remove-Item reference\data -Recurse -Force
-          Copy-Item reference\data_default reference\data -Recurse
-          $env:DOTNET_EnableHWIntrinsic = "0"
+          git diff --stat
+          Set-Content -Path WorldNet\DiagExponent.cs -Value 'namespace WorldNet; internal static class DiagExponent { public static double Two = 2.0; }'
+          dotnet build WorldNet.slnx -c Release 2>&1 | Select-String -Pattern "error|Build succeeded"
           dotnet test WorldNet.Tests\WorldNet.Tests.csproj -c Release --no-build -f net10.0 2>&1 | Select-String -Pattern "Failed |maxUlp|sample |expected|Passed!|Failed!"
           exit 0
