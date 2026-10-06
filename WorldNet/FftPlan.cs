@@ -115,6 +115,7 @@ internal unsafe struct FftPlan
         OouraFft.MakeWt(N >> 1, Ip, W);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public readonly void Execute()
     {
         if (Sign == FftDirection.Forward)
@@ -127,6 +128,7 @@ internal unsafe struct FftPlan
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private readonly void ExecuteForward()
     {
         if (CIn is null)
@@ -147,6 +149,7 @@ internal unsafe struct FftPlan
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private readonly void ExecuteBackward()
     {
         if (COut is null)
@@ -214,6 +217,7 @@ internal unsafe struct FftPlan
 
     private static readonly Vector<double> AlternatingSign = CreateAlternatingSign();
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static Vector<double> CreateAlternatingSign()
     {
         Span<double> values = stackalloc double[Vector<double>.Count];
