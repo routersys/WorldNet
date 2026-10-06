@@ -231,6 +231,50 @@ internal static unsafe class SpectrumMath
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    public static void MultiplySpectra(FftComplex* left, FftComplex* right,
+        FftComplex* destination, int count)
+    {
+        int i = 0;
+        double* leftSource = (double*)left;
+        double* rightSource = (double*)right;
+        double* target = (double*)destination;
+
+        if (Avx2.IsSupported)
+        {
+            for (; i + 2 <= count; i += 2)
+            {
+                Avx.Store(target + (i * 2), ProductAvx(Avx.LoadVector256(leftSource + (i * 2)),
+                    Avx.LoadVector256(rightSource + (i * 2))));
+            }
+        }
+        else if (Sse3.IsSupported)
+        {
+            for (; i < count; ++i)
+            {
+                Sse2.Store(target + (i * 2), ProductSse3(Sse2.LoadVector128(leftSource + (i * 2)),
+                    Sse2.LoadVector128(rightSource + (i * 2))));
+            }
+        }
+        else if (AdvSimd.Arm64.IsSupported)
+        {
+            for (; i < count; ++i)
+            {
+                AdvSimd.Store(target + (i * 2),
+                    ProductAdvSimd(AdvSimd.LoadVector128(leftSource + (i * 2)),
+                        AdvSimd.LoadVector128(rightSource + (i * 2))));
+            }
+        }
+
+        for (; i < count; ++i)
+        {
+            double real = (left[i].Real * right[i].Real) - (left[i].Imaginary * right[i].Imaginary);
+            destination[i].Imaginary =
+                (left[i].Real * right[i].Imaginary) + (left[i].Imaginary * right[i].Real);
+            destination[i].Real = real;
+        }
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Vector256<double> ProductAvx(Vector256<double> value,
         Vector256<double> coefficient)
