@@ -83,4 +83,17 @@ public class StoneMaskTests
 
         StoneMask.Refine(x, 44100, [], [], [], arena);
     }
+
+    [Fact]
+    public void RefineRejectsNaNInTheContour()
+    {
+        using WorldArena arena = new();
+        double[] x = new double[1000];
+        double[] positions = new double[3];
+        double[] f0 = [150.0, double.NaN, 150.0];
+        double[] refined = new double[3];
+
+        Assert.Throws<ArgumentException>(
+            () => StoneMask.Refine(x, 22050, positions, f0, refined, arena));
+    }
 }
