@@ -1,7 +1,7 @@
 # WorldNet
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](#)
-[![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](#)
+[![.NET](https://img.shields.io/badge/.NET-8.0%2B-purple.svg)](#)
 [![Release](https://img.shields.io/github/v/release/routersys/WorldNet.svg)](https://github.com/routersys/WorldNet/releases)
 
 [English](README.md) | 日本語
@@ -62,9 +62,10 @@ WorldNetは、WORLDの11個のソースファイルをC#へ移植したもので
 
 | 項目 | 要件 |
 |---|---|
-| OS | .NET 10が対応するWindows、Linux、macOS |
-| SDK | .NET SDK 10.0 |
-| 言語 | C# 14以降。`LangVersion`は`latest`を指定しています |
+| ランタイム | .NET 8.0以降 |
+| OS | ランタイムが対応するWindows、Linux、macOS |
+| SDK | ソースからビルドする場合だけ、.NET SDK 10.0が必要です |
+| 言語 | ソースからビルドする場合だけ、C# 14以降が必要です。`LangVersion`は`latest`を指定しています |
 | unsafeコード | `WorldArena.FromNativeMemory`を使う場合だけ、利用するプロジェクトでunsafeコードを許可する設定が必要です |
 | 参照データ | WindowsではMSVCのC++ツールセット、LinuxではGCC、およびGit。テストが使う参照データを再生成する場合だけ必要です |
 
