@@ -137,6 +137,8 @@ CheapTrick estimates the spectral envelope with an F0-adaptive window and pitch-
 
 D4C estimates band aperiodicity and includes the D4C LoveTrain stage. Against the MSVC reference its result agrees with the original to within one unit in the last place; the difference originates in `Math.Pow`, which is not required to be correctly rounded and does not always return the same value as the MSVC runtime.
 
+For sampling rates below 15800 Hz, the LoveTrain stage of the original sums power spectrum bins above the Nyquist frequency that it never initialized, so its result depends on the contents of the heap. WorldNet limits those bounds to the Nyquist frequency. The result then no longer depends on the arena contents, and the output at 15800 Hz and above is unchanged.
+
 ### 3. Waveform synthesis
 
 `Synthesis.Synthesize` generates the waveform from the F0 contour, the spectrogram and the aperiodicity in one call. `WorldSynthesizer` implements the sequential real-time synthesizer, which accepts parameter chunks through `AddParameters` and produces output through `Synthesize` while managing an internal ring buffer.
