@@ -582,7 +582,13 @@ internal static unsafe partial class OouraFft
         a[j3 + 1] = x1i - y0r;
         int k = 0;
         int kr = 2 * m;
-        for (int j = 2; j < mh; j += 2)
+        int scalarEnd = mh;
+        if (Avx2.IsSupported)
+        {
+            CftMiddleLoop2(mh, m, a, w);
+            scalarEnd = 2;
+        }
+        for (int j = 2; j < scalarEnd; j += 2)
         {
             k += 4;
             double wk1r = w[k];

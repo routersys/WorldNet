@@ -162,4 +162,41 @@ internal static unsafe partial class OouraFft
                 Avx2.Permute4x64(table, 0xAF));
         }
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    private static void CftMiddleLoop2(int mh, int m, double* a, double* w)
+    {
+        int k = 0;
+        int kr = 2 * m;
+        for (int j = 2; j < mh; j += 2)
+        {
+            k += 4;
+            kr -= 4;
+            Vector256<double> forwardTable = Vector256.Load(w + k);
+            Vector256<double> reverseTable = Vector256.Load(w + kr);
+            Vector256<double> first = Avx.Permute2x128(forwardTable, reverseTable, 0x20);
+            Vector256<double> second = Avx.Permute2x128(forwardTable, reverseTable, 0x31);
+            Vector256<double> real0 = Avx.UnpackLow(first, first);
+            Vector256<double> imaginary0 = Avx.UnpackHigh(first, first);
+            Vector256<double> real1 = Avx.UnpackLow(second, second);
+            Vector256<double> imaginary1 = Avx.UnpackHigh(second, second);
+            double* low = a + j;
+            double* high = a + m - j;
+            Vector256<double> u = LoadPair(low, high);
+            Vector256<double> v = LoadPair(low + (2 * m), high + (2 * m));
+            Vector256<double> s = LoadPair(low + m, high + m);
+            Vector256<double> t = LoadPair(low + (3 * m), high + (3 * m));
+            Vector256<double> turnedV = NegateReal(SwapRealImaginary(v));
+            Vector256<double> turnedT = NegateReal(SwapRealImaginary(t));
+            Vector256<double> y0 = Rotate(u + turnedV, real0, imaginary0);
+            Vector256<double> y2 = Rotate(s + turnedT, SwapHalves(imaginary0), SwapHalves(real0));
+            Vector256<double> z0 = RotateConjugate(u - turnedV, real1, imaginary1);
+            Vector256<double> z2 =
+                RotateConjugate(s - turnedT, SwapHalves(imaginary1), SwapHalves(real1));
+            StorePair(y0 + y2, low, high);
+            StorePair(y0 - y2, low + m, high + m);
+            StorePair(z0 + z2, low + (2 * m), high + (2 * m));
+            StorePair(z0 - z2, low + (3 * m), high + (3 * m));
+        }
+    }
 }
