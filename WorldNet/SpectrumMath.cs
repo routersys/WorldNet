@@ -169,4 +169,75 @@ internal static unsafe class SpectrumMath
             power[i] = (main[i].Real * main[i].Real) + (main[i].Imaginary * main[i].Imaginary);
         }
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    public static void MultiplyFilterSpectrum(FftComplex* signal, FftComplex* filter,
+        int fftSize)
+    {
+        double first = (signal[0].Real * filter[0].Real)
+            - (signal[0].Imaginary * filter[0].Imaginary);
+        filter[0].Imaginary = (signal[0].Real * filter[0].Imaginary)
+            + (signal[0].Imaginary * filter[0].Real);
+        filter[0].Real = first;
+
+        int half = fftSize / 2;
+        int i = 1;
+        double* source = (double*)signal;
+        double* target = (double*)filter;
+
+        if (Avx2.IsSupported)
+        {
+            for (; i + 2 <= half; i += 2)
+            {
+                Vector256<double> value = Avx.LoadVector256(source + (i * 2));
+                Vector256<double> coefficient = Avx.LoadVector256(target + (i * 2));
+                Vector256<double> product = Avx.AddSubtract(
+                    Avx.Multiply(value, Avx.Permute(coefficient, 0x0)),
+                    Avx.Multiply(Avx.Permute(value, 0x5), Avx.Permute(coefficient, 0xF)));
+                Avx.Store(target + (i * 2), product);
+                Avx.Store(target + ((fftSize - i - 2) * 2), Avx.Permute2x128(product, product, 1));
+            }
+        }
+        else if (Sse3.IsSupported)
+        {
+            for (; i < half; ++i)
+            {
+                Vector128<double> value = Sse2.LoadVector128(source + (i * 2));
+                Vector128<double> coefficient = Sse2.LoadVector128(target + (i * 2));
+                Vector128<double> product = Sse3.AddSubtract(
+                    Sse2.Multiply(value, Sse2.Shuffle(coefficient, coefficient, 0)),
+                    Sse2.Multiply(Sse2.Shuffle(value, value, 1),
+                        Sse2.Shuffle(coefficient, coefficient, 3)));
+                Sse2.Store(target + (i * 2), product);
+                Sse2.Store(target + ((fftSize - i - 1) * 2), product);
+            }
+        }
+        else if (AdvSimd.Arm64.IsSupported)
+        {
+            for (; i < half; ++i)
+            {
+                Vector128<double> value = AdvSimd.LoadVector128(source + (i * 2));
+                Vector128<double> coefficient = AdvSimd.LoadVector128(target + (i * 2));
+                Vector128<double> product = AdvSimd.Arm64.Add(
+                    AdvSimd.Arm64.Multiply(value,
+                        AdvSimd.Arm64.DuplicateSelectedScalarToVector128(coefficient, 0)),
+                    AdvSimd.Arm64.Multiply(AdvSimd.ExtractVector128(value, value, 1),
+                        AdvSimd.Arm64.DuplicateSelectedScalarToVector128(coefficient, 1))
+                    ^ Vector128.Create(-0.0, 0.0));
+                AdvSimd.Store(target + (i * 2), product);
+                AdvSimd.Store(target + ((fftSize - i - 1) * 2), product);
+            }
+        }
+
+        for (; i <= half; ++i)
+        {
+            double real = (signal[i].Real * filter[i].Real)
+                - (signal[i].Imaginary * filter[i].Imaginary);
+            filter[i].Imaginary = (signal[i].Real * filter[i].Imaginary)
+                + (signal[i].Imaginary * filter[i].Real);
+            filter[i].Real = real;
+            filter[fftSize - i - 1].Real = filter[i].Real;
+            filter[fftSize - i - 1].Imaginary = filter[i].Imaginary;
+        }
+    }
 }
