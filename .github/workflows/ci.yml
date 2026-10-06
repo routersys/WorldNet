@@ -93,7 +93,7 @@ jobs:
         run: find WorldNet.Examples/bin -name WorldNet.Examples.exe -path "*publish*" -exec ls -la {} +
 
   build-linux:
-    name: Linux でのビルド確認
+    name: Linux でのビルドと試験
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -108,5 +108,8 @@ jobs:
         with:
           dotnet-version: "10.x"
 
-      - name: ライブラリをビルド
-        run: dotnet build WorldNet/WorldNet.csproj -c Release
+      - name: ソリューションをビルド
+        run: dotnet build WorldNet.slnx -c Release
+
+      - name: 参照データを使わない試験を実行
+        run: dotnet test WorldNet.slnx -c Release --no-build
