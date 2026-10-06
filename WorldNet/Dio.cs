@@ -6,6 +6,10 @@ public static unsafe class Dio
 {
     public static int GetSamplesForDio(int fs, int xLength, double framePeriod)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fs);
+        ArgumentOutOfRangeException.ThrowIfNegative(xLength);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(framePeriod);
+
         return (int)(1000.0 * xLength / fs / framePeriod) + 1;
     }
 
