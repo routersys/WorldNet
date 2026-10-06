@@ -110,14 +110,14 @@ CheapTrick.Estimate(x, fs, cheapTrickOption, temporalPositions, f0, spectrogram,
 double[] aperiodicity = new double[f0Length * spectrumLength];
 D4C.Estimate(x, fs, D4COption.Default, temporalPositions, f0, fftSize, aperiodicity, arena);
 
-int yLength = (int)((f0Length - 1) * harvestOption.FramePeriod / 1000.0 * fs) + 1;
+int yLength = Synthesis.GetSamplesForSynthesis(fs, f0Length, harvestOption.FramePeriod);
 double[] y = new double[yLength];
 Synthesis.Synthesize(f0, spectrogram, aperiodicity, fftSize, harvestOption.FramePeriod, fs, y, arena);
 
 WaveFile.Write("output.wav", y, fs);
 ```
 
-出力先の配列の大きさは、呼び出し側が決めます。`Harvest.GetSamplesForHarvest`はフレームの個数を返します。スペクトログラムと非周期性指標は、1フレームにつき`fftSize / 2 + 1`個の値を並べた1次元の配列です。`Synthesis.Synthesize`は、`y`の長さを出力の長さとして扱います。`WaveFile.Read`が受け付けるのは、フォーマットチャンクが16バイトのモノラルPCMファイルだけで、それ以外のヘッダーでは`InvalidDataException`を投げます。
+出力先の配列の大きさは、呼び出し側が決めます。`Harvest.GetSamplesForHarvest`はフレームの個数を、`Synthesis.GetSamplesForSynthesis`は合成する波形のサンプルの個数を返します。スペクトログラムと非周期性指標は、1フレームにつき`fftSize / 2 + 1`個の値を並べた1次元の配列です。`Synthesis.Synthesize`は、`y`の長さを出力の長さとして扱います。`WaveFile.Read`が受け付けるのは、フォーマットチャンクが16バイトのモノラルPCMファイルだけで、それ以外のヘッダーでは`InvalidDataException`を投げます。
 
 ---
 
@@ -243,6 +243,7 @@ JITコンパイラーを通した数値は、意図して載せていません�
 
 | メンバー | 説明 |
 |---|---|
+| `Synthesis.GetSamplesForSynthesis(fs, f0Length, framePeriod)` | 波形に含まれるサンプルの個数を返します。 |
 | `Synthesis.Synthesize(f0, spectrogram, aperiodicity, fftSize, framePeriod, fs, y, arena)` | 波形を一括で生成します。 |
 | `new WorldSynthesizer(arena, fs, framePeriod, fftSize, bufferSize, numberOfPointers, maxFramesPerAdd)` | 実時間合成を生成します。 |
 | `WorldSynthesizer.AddParameters(f0, spectrogram, aperiodicity)` | パラメーターの塊を投入し、受理したかどうかを返します。 |
