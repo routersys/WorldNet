@@ -107,6 +107,8 @@ If a change alters what the library guarantees or documents, update [README.md](
 
 Do not include a version bump. The developer updates the version and cuts the release.
 
+The developer reviews the pull request and merges it with a merge commit, which keeps your commits in the history. The [commit conventions](#commit-conventions) apply to every commit in the pull request.
+
 Contributions are accepted under the repository's MIT [LICENSE](LICENSE.txt). By opening a pull request you agree that your contribution is licensed under those terms. If a change brings in third-party code or data, say so in the pull request and give its license.
 
 ---
