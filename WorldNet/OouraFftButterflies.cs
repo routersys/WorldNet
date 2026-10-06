@@ -53,6 +53,12 @@ internal static unsafe partial class OouraFft
             wd3i = carried.GetElement(3);
             scalarEnd = 2;
         }
+        else if (VectorPath == FftVectorPath.Narrow)
+        {
+            CftFirstLoopNarrow(mh, m, a, w, csc1, csc3, false, out wd1r, out wd1i,
+                out wd3r, out wd3i);
+            scalarEnd = 2;
+        }
         for (int j = 2; j < scalarEnd; j += 4)
         {
             k += 4;
@@ -269,6 +275,12 @@ internal static unsafe partial class OouraFft
             wd3i = carried.GetElement(3);
             scalarEnd = 2;
         }
+        else if (VectorPath == FftVectorPath.Narrow)
+        {
+            CftFirstLoopNarrow(mh, m, a, w, csc1, csc3, true, out wd1r, out wd1i,
+                out wd3r, out wd3i);
+            scalarEnd = 2;
+        }
         for (int j = 2; j < scalarEnd; j += 4)
         {
             k += 4;
@@ -470,6 +482,11 @@ internal static unsafe partial class OouraFft
             CftMiddleLoop1(mh, m, a, w);
             scalarEnd = 2;
         }
+        else if (VectorPath == FftVectorPath.Narrow)
+        {
+            CftMiddleLoop1Narrow(mh, m, a, w);
+            scalarEnd = 2;
+        }
         for (int j = 2; j < scalarEnd; j += 2)
         {
             k += 4;
@@ -586,6 +603,11 @@ internal static unsafe partial class OouraFft
         if (VectorPath == FftVectorPath.Wide)
         {
             CftMiddleLoop2(mh, m, a, w);
+            scalarEnd = 2;
+        }
+        else if (VectorPath == FftVectorPath.Narrow)
+        {
+            CftMiddleLoop2Narrow(mh, m, a, w);
             scalarEnd = 2;
         }
         for (int j = 2; j < scalarEnd; j += 2)

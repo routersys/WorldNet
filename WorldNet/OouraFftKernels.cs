@@ -540,6 +540,11 @@ internal static unsafe partial class OouraFft
                 SwapHalves(lower + NegateImaginary(y)).Store(a + k - 2);
             }
         }
+        else if (VectorPath == FftVectorPath.Narrow)
+        {
+            RftLoopNarrow(n, a, nc, c, m, ks, ref kk, false);
+            j = m;
+        }
         for (; j < m; j += 2)
         {
             int k = n - j;
@@ -583,6 +588,11 @@ internal static unsafe partial class OouraFft
                 (upper - y).Store(a + j);
                 SwapHalves(lower + NegateImaginary(y)).Store(a + k - 2);
             }
+        }
+        else if (VectorPath == FftVectorPath.Narrow)
+        {
+            RftLoopNarrow(n, a, nc, c, m, ks, ref kk, true);
+            j = m;
         }
         for (; j < m; j += 2)
         {
