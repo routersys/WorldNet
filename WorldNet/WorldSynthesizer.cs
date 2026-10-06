@@ -79,23 +79,23 @@ public sealed unsafe class WorldSynthesizer
         _fftSize = fftSize;
         _spectrumLength = (fftSize / 2) + 1;
         _maxFrames = maxFramesPerAdd;
-        _maxSamples = (int)Math.Ceiling(maxFramesPerAdd * _framePeriod * fs) + 2;
+        _maxSamples = checked((int)Math.Ceiling(maxFramesPerAdd * _framePeriod * fs) + 2);
 
         _f0Length = (int*)arena.AllocateRaw(numberOfPointers, sizeof(int));
         _f0Origin = (int*)arena.AllocateRaw(numberOfPointers, sizeof(int));
         _numberOfPulses = (int*)arena.AllocateRaw(numberOfPointers, sizeof(int));
         _spectrogramStorage = (double*)arena.AllocateRaw(
-            numberOfPointers * _maxFrames * _spectrumLength, sizeof(double));
+            checked(numberOfPointers * _maxFrames * _spectrumLength), sizeof(double));
         _aperiodicityStorage = (double*)arena.AllocateRaw(
-            numberOfPointers * _maxFrames * _spectrumLength, sizeof(double));
+            checked(numberOfPointers * _maxFrames * _spectrumLength), sizeof(double));
         _interpolatedVuv = (double*)arena.AllocateRaw(
-            numberOfPointers * (_maxSamples + 1), sizeof(double));
-        _pulseLocations =
-            (double*)arena.AllocateRaw(numberOfPointers * _maxSamples, sizeof(double));
-        _pulseLocationsIndex =
-            (int*)arena.AllocateRaw(numberOfPointers * _maxSamples, sizeof(int));
+            checked(numberOfPointers * (_maxSamples + 1)), sizeof(double));
+        _pulseLocations = (double*)arena.AllocateRaw(
+            checked(numberOfPointers * _maxSamples), sizeof(double));
+        _pulseLocationsIndex = (int*)arena.AllocateRaw(
+            checked(numberOfPointers * _maxSamples), sizeof(int));
 
-        _buffer = (double*)arena.AllocateRaw((bufferSize * 2) + fftSize, sizeof(double));
+        _buffer = (double*)arena.AllocateRaw(checked((bufferSize * 2) + fftSize), sizeof(double));
         _impulseResponse = (double*)arena.AllocateRaw(fftSize, sizeof(double));
         _dcRemover = (double*)arena.AllocateRaw(fftSize / 2, sizeof(double));
 
