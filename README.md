@@ -408,6 +408,8 @@ Please include the following in the report.
 
 Report a vulnerability privately as the [security policy](https://github.com/routersys/WorldNet/blob/main/SECURITY.md) describes, not in an issue.
 
+To contribute a change, read the [contributing guide](https://github.com/routersys/WorldNet/blob/main/CONTRIBUTING.md).
+
 ---
 
 ## Disclaimer
