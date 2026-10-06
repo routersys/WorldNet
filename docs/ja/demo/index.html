@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>WorldNetのデモ: ブラウザーでWORLDボコーダーを動かす</title>
+<meta name="description" content="WorldNetをWebAssemblyとしてブラウザーで動かし、パブリックドメインの音声を解析して、音の高さを変えて再合成します。音声は外部へ送りません。">
+<link rel="canonical" href="https://routersys.github.io/WorldNet/ja/demo/">
+<link rel="alternate" hreflang="en" href="https://routersys.github.io/WorldNet/demo/">
+<link rel="alternate" hreflang="ja" href="https://routersys.github.io/WorldNet/ja/demo/">
+<link rel="alternate" hreflang="x-default" href="https://routersys.github.io/WorldNet/demo/">
+<link rel="icon" href="../../icon.png" type="image/png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="WorldNet">
+<meta property="og:title" content="WorldNetのデモ: ブラウザーでWORLDボコーダーを動かす">
+<meta property="og:description" content="WorldNetをWebAssemblyとしてブラウザーで動かし、パブリックドメインの音声を解析して、音の高さを変えて再合成します。音声は外部へ送りません。">
+<meta property="og:url" content="https://routersys.github.io/WorldNet/ja/demo/">
+<meta property="og:locale" content="ja_JP">
+<meta property="og:locale:alternate" content="en_US">
+<style>body{max-width:44em;margin:1em auto;padding:0 1em;line-height:1.5}audio,svg{max-width:100%}</style>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "WorldNetのデモ: ブラウザーでWORLDボコーダーを動かす", "description": "WorldNetをWebAssemblyとしてブラウザーで動かし、パブリックドメインの音声を解析して、音の高さを変えて再合成します。音声は外部へ送りません。", "url": "https://routersys.github.io/WorldNet/ja/demo/", "inLanguage": "ja", "isPartOf": {"@type": "WebSite", "name": "WorldNet", "url": "https://routersys.github.io/WorldNet/"}}</script>
+</head>
+<body>
+<header>
+<h1>WorldNetのデモ</h1>
+<nav><a href="../../ja/">トップ</a> | <a href="https://github.com/routersys/WorldNet">GitHub</a> | <a href="../../demo/" hreflang="en" lang="en">English</a></nav>
+</header>
+<hr>
+<main>
+<p>このページは、WorldNetをWebAssemblyとして、ブラウザーの中で動かします。音声は外部へ送りません。下の音声から、HarvestがF0の系列を、CheapTrickがスペクトル包絡を、D4Cが非周期性指標を推定し、Synthesisがそれらから波形を作り直します。音の高さの変更は、合成の前にF0へ倍率を掛けて行います。</p>
+<h2>元の音声</h2>
+<p>“His nature must have been kindly.”</p>
+<audio controls src="../../demo/LJ016-0230.wav"></audio>
+<p>音声: Linda Johnson氏がLibriVox向けに録音したもので、Keith Ito氏の<a href="https://keithito.com/LJ-Speech-Dataset/">LJ Speech Dataset</a>から引用しています。このデータセットはパブリックドメインです。</p>
+<h2>解析して再合成する</h2>
+<p><label>音の高さの変更（半音）: <select id="shift"><option value="-12">-12</option><option value="-7">-7</option><option value="-5">-5</option><option value="0">0</option><option value="5" selected>+5</option><option value="7">+7</option><option value="12">+12</option></select></label> <button id="run" type="button">実行</button></p>
+<p id="status" role="status"></p>
+<h2>結果</h2>
+<audio id="result" controls hidden></audio>
+<pre id="timings"></pre>
+<p>Harvestが推定したF0の系列です。音の高さの変更の前の値です。</p>
+<div id="plot"></div>
+<ul>
+<li>初回は、主に.NETの実行環境で約2.8MBを読み込みます。コードは事前にコンパイルしてあるため、実行時のコンパイルはありません。</li>
+<li>確認した範囲では、16ビットの結果は、ここで選べるどの音の高さの変更でも、ネイティブのビルドとサンプルごとに一致しました。内部の倍精度の値は、WebAssemblyが独自の数学ライブラリを持つため、最後の桁でネイティブのビルドと異なることがあります。原典との照合を済ませているのは、ネイティブのビルドです。</li>
+</ul>
+</main>
+<script type="module">
+const M = {"loading": "実行環境を読み込んでいます...", "running": "実行しています...", "done": "{t}ミリ秒で完了しました。", "fail": "失敗しました: ", "unsupported": "このブラウザーは、デモに必要なストリームに対応していません。", "secs": "秒", "hz": "Hz"};
+const $ = (id) => document.getElementById(id);
+const say = (text) => { $("status").textContent = text; };
+let exportsPromise;
+async function load() {
+  const { dotnet } = await import("../../demo/_framework/dotnet.js");
+  const gz = async (uri) => {
+    const r = await fetch(uri + ".gz");
+    if (!r.ok) throw new Error(uri + " " + r.status);
+    return new Response(r.body.pipeThrough(new DecompressionStream("gzip")), { headers: { "Content-Type": "application/wasm" } });
+  };
+  const runtime = await dotnet
+    .withResourceLoader((type, name, uri) => (type === "assembly" || type === "dotnetwasm") ? gz(uri) : null)
+    .create();
+  return (await runtime.getAssemblyExports(runtime.getConfig().mainAssemblyName)).Demo;
+}
+function plot(f0) {
+  const w = 600, h = 160, pad = 14, n = f0.length;
+  const voiced = Array.from(f0).filter((x) => x > 0);
+  const lo = Math.min(...voiced), hi = Math.max(...voiced);
+  const X = (i) => pad + (i / (n - 1)) * (w - 2 * pad);
+  const Y = (x) => h - pad - ((x - lo) / ((hi - lo) || 1)) * (h - 2 * pad);
+  let d = "", pen = false;
+  f0.forEach((x, i) => {
+    if (x > 0) { d += (pen ? "L" : "M") + X(i).toFixed(1) + " " + Y(x).toFixed(1); pen = true; } else { pen = false; }
+  });
+  const secs = (n * 5 / 1000).toFixed(1);
+  $("plot").innerHTML = '<svg viewBox="0 0 ' + w + " " + h + '" role="img" aria-label="F0の系列" font-size="11" fill="currentColor">'
+    + '<rect x="0.5" y="0.5" width="' + (w - 1) + '" height="' + (h - 1) + '" fill="none" stroke="currentColor" opacity="0.4"/>'
+    + '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>'
+    + '<text x="4" y="11">' + hi.toFixed(0) + " " + M.hz + '</text><text x="4" y="' + (h - 4) + '">' + lo.toFixed(0) + " " + M.hz + '</text>'
+    + '<text x="' + (w - 4) + '" y="' + (h - 4) + '" text-anchor="end">' + secs + " " + M.secs + "</text></svg>";
+}
+$("run").addEventListener("click", async () => {
+  const button = $("run");
+  if (!("DecompressionStream" in window)) { say(M.unsupported); return; }
+  button.disabled = true;
+  try {
+    say(M.loading);
+    exportsPromise ??= load();
+    const demo = await exportsPromise;
+    say(M.running);
+    const wave = new Uint8Array(await (await fetch("../../demo/LJ016-0230.wav")).arrayBuffer());
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    const start = performance.now();
+    const output = demo.Process(wave, Number($("shift").value));
+    const total = Math.round(performance.now() - start);
+    $("timings").textContent = demo.GetTimings();
+    plot(demo.GetF0());
+    const audio = $("result");
+    if (audio.src) URL.revokeObjectURL(audio.src);
+    audio.src = URL.createObjectURL(new Blob([output], { type: "audio/wav" }));
+    audio.hidden = false;
+    say(M.done.replace("{t}", total));
+  } catch (error) {
+    exportsPromise = undefined;
+    say(M.fail + error.message);
+  } finally {
+    button.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
