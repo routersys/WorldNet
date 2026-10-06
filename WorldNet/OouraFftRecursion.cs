@@ -152,6 +152,12 @@ internal static unsafe partial class OouraFft
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void CftFx41(int n, double* a, int nw, double* w)
     {
+        if (Avx2.IsSupported)
+        {
+            CftFx41Pairs(n, a, nw, w);
+            return;
+        }
+
         if (n == 128)
         {
             CftF161(a, &w[nw - 8]);

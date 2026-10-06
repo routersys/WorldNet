@@ -345,4 +345,21 @@ internal static unsafe partial class OouraFft
             CftF082Pair(&a[208], &a[240], w081);
         }
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+    private static void CftFx41Pairs(int n, double* a, int nw, double* w)
+    {
+        if (n == 128)
+        {
+            CftF161Pair(a, &a[64], &w[nw - 8]);
+            CftF161Pair(&a[96], &a[96], &w[nw - 8]);
+            CftF162Pair(&a[32], &a[32], &w[nw - 32]);
+        }
+        else
+        {
+            CftF081Pair(a, &a[32], &w[nw - 8]);
+            CftF081Pair(&a[48], &a[48], &w[nw - 8]);
+            CftF082Pair(&a[16], &a[16], &w[nw - 8]);
+        }
+    }
 }
