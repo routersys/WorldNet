@@ -15,7 +15,7 @@ public class SynthesisTests
         double[] expected = ReferenceData.Load("synthesis_y").Values;
 
         int f0Length = f0.Length;
-        int yLength = (int)((f0Length - 1) * framePeriod / 1000.0 * fs) + 1;
+        int yLength = Synthesis.GetSamplesForSynthesis(fs, f0Length, framePeriod);
         Assert.Equal(expected.Length, yLength);
 
         double[] y = new double[yLength];
@@ -44,6 +44,17 @@ public class SynthesisTests
         {
             Assert.Fail($"mismatches={mismatches} of {yLength} exceeds 5 percent.");
         }
+    }
+
+    [Theory]
+    [InlineData(22050, 1, 5.0, 1)]
+    [InlineData(22050, 3, 5.0, 221)]
+    [InlineData(16000, 201, 5.0, 16001)]
+    [InlineData(44100, 101, 10.0, 44101)]
+    public void GetSamplesForSynthesisReturnsExpectedLength(int fs, int f0Length,
+        double framePeriod, int expected)
+    {
+        Assert.Equal(expected, Synthesis.GetSamplesForSynthesis(fs, f0Length, framePeriod));
     }
 
     [Fact]
