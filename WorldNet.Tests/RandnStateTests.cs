@@ -1,3 +1,4 @@
+using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 
 namespace WorldNet.Tests;
@@ -14,16 +15,32 @@ public class RandnStateTests
             return;
         }
 
+        AssertMatchesSequential(RandnPath.Wide);
+    }
+
+    [Fact]
+    public void NarrowStreamMatchesSequentialStream()
+    {
+        if (!Vector128.IsHardwareAccelerated)
+        {
+            return;
+        }
+
+        AssertMatchesSequential(RandnPath.Narrow);
+    }
+
+    private static void AssertMatchesSequential(RandnPath path)
+    {
         RandnState sequential = default;
         sequential.Reseed(RandnPath.Sequential);
-        RandnState wide = default;
-        wide.Reseed(RandnPath.Wide);
+        RandnState vector = default;
+        vector.Reseed(path);
 
         for (int i = 0; i < RandnConstants.BufferLength * 300; ++i)
         {
             Assert.Equal(
                 BitConverter.DoubleToInt64Bits(sequential.Next()),
-                BitConverter.DoubleToInt64Bits(wide.Next()));
+                BitConverter.DoubleToInt64Bits(vector.Next()));
         }
     }
 
