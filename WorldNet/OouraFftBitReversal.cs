@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics;
 
 namespace WorldNet;
 
@@ -7,27 +8,20 @@ internal static unsafe partial class OouraFft
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void SwapComplex(double* a, int j1, int k1)
     {
-        double xr = a[j1];
-        double xi = a[j1 + 1];
-        double yr = a[k1];
-        double yi = a[k1 + 1];
-        a[j1] = yr;
-        a[j1 + 1] = yi;
-        a[k1] = xr;
-        a[k1 + 1] = xi;
+        Vector128<double> x = Vector128.Load(a + j1);
+        Vector128<double> y = Vector128.Load(a + k1);
+        y.Store(a + j1);
+        x.Store(a + k1);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void SwapComplexConjugate(double* a, int j1, int k1)
     {
-        double xr = a[j1];
-        double xi = -a[j1 + 1];
-        double yr = a[k1];
-        double yi = -a[k1 + 1];
-        a[j1] = yr;
-        a[j1 + 1] = yi;
-        a[k1] = xr;
-        a[k1 + 1] = xi;
+        Vector128<double> conjugate = Vector128.Create(0.0, -0.0);
+        Vector128<double> x = Vector128.Load(a + j1) ^ conjugate;
+        Vector128<double> y = Vector128.Load(a + k1) ^ conjugate;
+        y.Store(a + j1);
+        x.Store(a + k1);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
