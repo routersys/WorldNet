@@ -8,6 +8,7 @@ internal unsafe partial struct CheapTrickScratch
     public double* SpectralEnvelope;
     public double* SmoothingLifter;
     public double* CompensationLifter;
+    public double* Window;
 
     public static void Layout<TAllocator>(ref TAllocator allocator, int fftSize,
         ref CheapTrickScratch scratch)
@@ -18,6 +19,7 @@ internal unsafe partial struct CheapTrickScratch
         scratch.SpectralEnvelope = (double*)allocator.Allocate(fftSize, sizeof(double));
         scratch.SmoothingLifter = (double*)allocator.Allocate(fftSize, sizeof(double));
         scratch.CompensationLifter = (double*)allocator.Allocate(fftSize, sizeof(double));
+        scratch.Window = (double*)allocator.Allocate(fftSize, sizeof(double));
     }
 
     public static CheapTrickScratch Bind(WorldArena arena, int fftSize)

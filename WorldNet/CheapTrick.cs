@@ -58,6 +58,7 @@ public static unsafe class CheapTrick
         RandnState randnState = default;
         randnState.Reseed();
         double lifterF0 = double.NaN;
+        double windowF0 = double.NaN;
 
         double f0Floor = GetF0Floor(fs, fftSize);
 
@@ -82,7 +83,7 @@ public static unsafe class CheapTrick
 
                 CheapTrickGeneralBody(xPointer, x.Length, fs, currentF0, fftSize,
                     positionPointer[i], option.Q1, scratch, frame, ref randnState,
-                    ref lifterF0);
+                    ref lifterF0, ref windowF0);
 
                 double* row = spectrogramPointer + ((long)i * spectrumLength);
                 for (int j = 0; j <= fftSize / 2; ++j)
@@ -170,7 +171,7 @@ public static unsafe class CheapTrick
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void SetParametersForGetWindowedWaveform(int halfWindowLength, int xLength,
         double currentPosition, int fs, double currentF0, int* baseIndex, int* safeIndex,
-        double* window)
+        double* window, ref double windowF0)
     {
         for (int i = -halfWindowLength; i <= halfWindowLength; ++i)
         {
@@ -181,6 +182,11 @@ public static unsafe class CheapTrick
         {
             safeIndex[i] =
                 WorldMath.MinInt(xLength - 1, WorldMath.MaxInt(0, origin + baseIndex[i]));
+        }
+
+        if (currentF0 == windowF0)
+        {
+            return;
         }
 
         for (int i = 0; i <= halfWindowLength; ++i)
@@ -198,21 +204,22 @@ public static unsafe class CheapTrick
         }
         average = Math.Sqrt(average);
         VectorOperations.DivideByScalar(window, (halfWindowLength * 2) + 1, average);
+        windowF0 = currentF0;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetWindowedWaveform(double* x, int xLength, int fs, double currentF0,
         double currentPosition, in CheapTrickScratch scratch, in CheapTrickFrameScratch frame,
-        ref RandnState randnState)
+        ref RandnState randnState, ref double windowF0)
     {
         int halfWindowLength = MatlabFunctions.MatlabRound(1.5 * fs / currentF0);
 
         int* baseIndex = frame.BaseIndex;
         int* safeIndex = frame.SafeIndex;
-        double* window = frame.Window;
+        double* window = scratch.Window;
 
         SetParametersForGetWindowedWaveform(halfWindowLength, xLength, currentPosition, fs,
-            currentF0, baseIndex, safeIndex, window);
+            currentF0, baseIndex, safeIndex, window, ref windowF0);
 
         double* waveform = scratch.ForwardRealFft.Waveform;
         for (int i = 0; i <= halfWindowLength * 2; ++i)
@@ -245,10 +252,11 @@ public static unsafe class CheapTrick
 
     private static void CheapTrickGeneralBody(double* x, int xLength, int fs, double currentF0,
         int fftSize, double currentPosition, double q1, in CheapTrickScratch scratch,
-        in CheapTrickFrameScratch frame, ref RandnState randnState, ref double lifterF0)
+        in CheapTrickFrameScratch frame, ref RandnState randnState, ref double lifterF0,
+        ref double windowF0)
     {
         GetWindowedWaveform(x, xLength, fs, currentF0, currentPosition, scratch, frame,
-            ref randnState);
+            ref randnState, ref windowF0);
 
         GetPowerSpectrum(fs, currentF0, fftSize, scratch, frame);
 
