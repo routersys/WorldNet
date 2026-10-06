@@ -170,4 +170,43 @@ public class ParameterFileTests
         Assert.Equal(meta[3], ParameterFile.GetHeaderInformation(Reference("param_spec.bin"), "FFT "));
         Assert.Equal(meta[0], ParameterFile.GetHeaderInformation(Reference("param_spec.bin"), "FS  "));
     }
+
+    [Theory]
+    [InlineData("NOF")]
+    [InlineData("NOF  ")]
+    [InlineData("")]
+    [InlineData("ＮＯＦ ")]
+    public void GetHeaderInformationRejectsInvalidParameterName(string parameter)
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"worldnet_{Guid.NewGuid():N}.f0");
+        try
+        {
+            ParameterFile.WriteF0(path, 5.0, new double[3], new double[3], false);
+
+            Assert.Throws<ArgumentException>(
+                () => ParameterFile.GetHeaderInformation(path, parameter));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void GetHeaderInformationReturnsZeroForAnAbsentParameterInAShortFile()
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"worldnet_{Guid.NewGuid():N}.f0");
+        try
+        {
+            ParameterFile.WriteF0(path, 5.0, new double[3], new double[3], false);
+
+            Assert.Equal(3.0, ParameterFile.GetHeaderInformation(path, "NOF "));
+            Assert.Equal(5.0, ParameterFile.GetHeaderInformation(path, "FP  "));
+            Assert.Equal(0.0, ParameterFile.GetHeaderInformation(path, "FFT "));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
 }
