@@ -63,6 +63,7 @@ The original C++ is not vendored into this repository. The reference harness und
 | Item | Requirement |
 |---|---|
 | Runtime | .NET 8.0 or later |
+| Processor | x64 on Windows and Linux, and ARM64 on Linux. CI verifies each of them |
 | OS | Windows, Linux or macOS supported by the runtime |
 | SDK | .NET SDK 10.0, required only to build from source |
 | Language | C# 14 or later, required only to build from source (`LangVersion` is set to `latest`) |
@@ -173,7 +174,7 @@ The test suite compares against dumps produced by the original C++ built with MS
 
 The transcendental functions are measured separately. `Math.Cos`, `Math.Sin`, `Math.Log`, `Math.Exp` and `Math.Log10` return exactly the same doubles as the MSVC runtime over the sampled ranges. `Math.Pow(10, v)` and the squaring `v * v` differ from the MSVC `pow` by at most one unit in the last place on fewer than one percent of the sampled inputs, and the remaining tolerances above follow from this. Against the GCC and glibc reference on Linux, the same measurements show no difference for any of these functions.
 
-Beyond equivalence, the suite covers degenerate input such as silence, direct current and white noise, extremely short input, determinism across repeated runs, thread safety with one arena per thread, operation on a caller-supplied arena, and full release of the arena after the pipeline. The suite contains 332 tests, and all of them pass when the reference data is available. CI also runs the suite on Linux with AVX2 disabled and with all hardware intrinsics disabled, which exercises the narrower vector paths and the scalar paths of the vectorized routines.
+Beyond equivalence, the suite covers degenerate input such as silence, direct current and white noise, extremely short input, determinism across repeated runs, thread safety with one arena per thread, operation on a caller-supplied arena, and full release of the arena after the pipeline. The suite contains 332 tests, and all of them pass when the reference data is available. CI also runs the suite on Linux with AVX2 disabled and with all hardware intrinsics disabled, which exercises the narrower vector paths and the scalar paths of the vectorized routines. CI also runs the suite on Linux ARM64 against reference data generated there with GCC, where the routines written with x86 intrinsics take their scalar paths.
 
 ### 7. Performance
 
@@ -330,7 +331,7 @@ To use the checkout instead of the package, add `WorldNet/WorldNet.csproj` as a 
 ## Limitations
 
 - Against the MSVC reference, the batch synthesizer agrees with the original to within 64 units in the last place rather than exactly, and D4C and the decoding of aperiodicity agree to within one unit in the last place. Both follow from `Math.Pow`, which neither the .NET runtime nor the MSVC runtime is required to round correctly.
-- Bit-exactness has been verified against WORLD compiled with MSVC on Windows x64 and against WORLD compiled with GCC 13.3 on Linux x64 with glibc 2.39. In both cases the tests pass on .NET 8 and on .NET 10. Other compilers, other runtimes and other architectures may round the transcendental functions differently, and the agreement above is not claimed for them.
+- Bit-exactness has been verified against WORLD compiled with MSVC on Windows x64 and against WORLD compiled with GCC 13.3 on Linux x64 with glibc 2.39. On Linux ARM64 the tests pass against WORLD compiled with GCC within the tolerances of the table above. In every case the tests pass on .NET 8 and on .NET 10. Other compilers, other runtimes and other architectures may round the transcendental functions differently, and the agreement above is not claimed for them.
 - `WorldArena` is not thread-safe. Concurrent analysis requires one arena per thread, which the test suite exercises.
 - An arena created by `FromNativeMemory` cannot grow. Run the same calls once with a growing arena, read `Capacity`, and pass a buffer of at least that many bytes plus 64 bytes for the arena header. `Used` cannot serve this purpose, because each call releases its scratch memory and `Used` is zero once the calls return. The size depends on the length and the sampling rate of the input and on the options.
 - Running the comparison tests requires the reference data. Without `reference/data` those tests are skipped, and the remaining tests do not depend on it.
