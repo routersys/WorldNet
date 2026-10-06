@@ -96,22 +96,7 @@ public static unsafe partial class Harvest
         FftComplex* bandPassFilterSpectrum = scratch.BandPassFilterSpectrum;
         scratch.FilterForwardPlan.Execute();
 
-        FftComplex* ySpectrum = scratch.YSpectrum;
-        double tmp = (ySpectrum[0].Real * bandPassFilterSpectrum[0].Real)
-            - (ySpectrum[0].Imaginary * bandPassFilterSpectrum[0].Imaginary);
-        bandPassFilterSpectrum[0].Imaginary = (ySpectrum[0].Real * bandPassFilterSpectrum[0].Imaginary)
-            + (ySpectrum[0].Imaginary * bandPassFilterSpectrum[0].Real);
-        bandPassFilterSpectrum[0].Real = tmp;
-        for (int i = 1; i <= fftSize / 2; ++i)
-        {
-            tmp = (ySpectrum[i].Real * bandPassFilterSpectrum[i].Real)
-                - (ySpectrum[i].Imaginary * bandPassFilterSpectrum[i].Imaginary);
-            bandPassFilterSpectrum[i].Imaginary = (ySpectrum[i].Real * bandPassFilterSpectrum[i].Imaginary)
-                + (ySpectrum[i].Imaginary * bandPassFilterSpectrum[i].Real);
-            bandPassFilterSpectrum[i].Real = tmp;
-            bandPassFilterSpectrum[fftSize - i - 1].Real = bandPassFilterSpectrum[i].Real;
-            bandPassFilterSpectrum[fftSize - i - 1].Imaginary = bandPassFilterSpectrum[i].Imaginary;
-        }
+        SpectrumMath.MultiplyFilterSpectrum(scratch.YSpectrum, bandPassFilterSpectrum, fftSize);
 
         scratch.FilterInversePlan.Execute();
 
