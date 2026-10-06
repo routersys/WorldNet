@@ -11,7 +11,7 @@ English | [日本語](https://github.com/routersys/WorldNet/blob/main/README.ja.
 A complete C# port of [WORLD](https://github.com/mmorise/World), the vocoder-based speech analysis, manipulation and synthesis system by M. Morise.
 Every stage runs without a single managed allocation, so the garbage collector never observes the analysis or the synthesis path.
 All scratch memory comes from a native arena, every hot routine is written with `unsafe` pointers, and the whole library is annotated for Native AOT.
-Correctness is not asserted from reading the source: each stage is compared against golden data produced by the original C++ compiled with MSVC.
+Correctness is not asserted from reading the source: each stage is compared against golden data produced by the original C++ compiled with MSVC on Windows and with GCC on Linux.
 
 ---
 
@@ -133,19 +133,19 @@ Dio, Harvest and StoneMask all reproduce the original bit for bit on the referen
 
 CheapTrick estimates the spectral envelope with an F0-adaptive window and pitch-synchronous smoothing. The FFT size is derived from the sampling rate and the F0 floor through `CheapTrick.GetFftSize`, and `CheapTrick.GetF0Floor` returns the inverse relation.
 
-D4C estimates band aperiodicity and includes the D4C LoveTrain stage. Its result agrees with the original to within one unit in the last place; the difference originates in `Math.Pow`, which is not required to be correctly rounded and does not always return the same value as the MSVC runtime.
+D4C estimates band aperiodicity and includes the D4C LoveTrain stage. Against the MSVC reference its result agrees with the original to within one unit in the last place; the difference originates in `Math.Pow`, which is not required to be correctly rounded and does not always return the same value as the MSVC runtime.
 
 ### 3. Waveform synthesis
 
 `Synthesis.Synthesize` generates the waveform from the F0 contour, the spectrogram and the aperiodicity in one call. `WorldSynthesizer` implements the sequential real-time synthesizer, which accepts parameter chunks through `AddParameters` and produces output through `Synthesize` while managing an internal ring buffer.
 
-The real-time synthesizer reproduces the original bit for bit. The batch synthesizer agrees to within 64 units in the last place, inherited from the same `Math.Pow` difference and amplified by the overlap-add accumulation.
+The real-time synthesizer reproduces the original bit for bit. Against the MSVC reference the batch synthesizer agrees to within 64 units in the last place, inherited from the same `Math.Pow` difference and amplified by the overlap-add accumulation.
 
 ### 4. Spectral envelope coding
 
 The codec converts the spectral envelope and the aperiodicity into a low-dimensional representation on the mel scale and back. `Codec.GetNumberOfAperiodicities` returns the number of coefficients for a given sampling rate.
 
-Coding the aperiodicity, coding the spectral envelope and decoding the spectral envelope reproduce the original bit for bit. Decoding the aperiodicity agrees to within one unit in the last place, again through `Math.Pow`.
+Coding the aperiodicity, coding the spectral envelope and decoding the spectral envelope reproduce the original bit for bit. Against the MSVC reference decoding the aperiodicity agrees to within one unit in the last place, again through `Math.Pow`.
 
 ### 5. Zero allocation and the arena
 
@@ -157,22 +157,22 @@ The absence of managed allocation is measured, not asserted. `GC.GetAllocatedByt
 
 ### 6. Numerical verification
 
-The test suite compares against dumps produced by the original C++ built with MSVC. The following table records the agreement that the tests enforce.
+The test suite compares against dumps produced by the original C++ built with MSVC on Windows and with GCC on Linux. The tests enforce the tolerances of the MSVC column on both platforms. The GCC column records what was measured on Linux x64 with GCC 13.3 and glibc 2.39: the maximum difference is zero in every stage, including the three stages that the tests allow to deviate from the MSVC reference.
 
-| Stage | Agreement |
-|---|---|
-| Ooura FFT, all four transforms, sizes 8 to 4096 | Bit-exact |
-| matlabfunctions, common | Bit-exact |
-| Dio, including the decimation path | Bit-exact |
-| StoneMask, Harvest, CheapTrick | Bit-exact |
-| Real-time synthesizer, WAV I/O, parameter file I/O | Bit-exact |
-| Coding of aperiodicity and spectral envelope, decoding of spectral envelope | Bit-exact |
-| D4C, decoding of aperiodicity | Within 1 ULP |
-| Batch synthesis | Within 64 ULP |
+| Stage | Agreement with MSVC on Windows x64 | Agreement with GCC on Linux x64 |
+|---|---|---|
+| Ooura FFT, all four transforms, sizes 8 to 4096 | Bit-exact | Bit-exact |
+| matlabfunctions, common | Bit-exact | Bit-exact |
+| Dio, including the decimation path | Bit-exact | Bit-exact |
+| StoneMask, Harvest, CheapTrick | Bit-exact | Bit-exact |
+| Real-time synthesizer, WAV I/O, parameter file I/O | Bit-exact | Bit-exact |
+| Coding of aperiodicity and spectral envelope, decoding of spectral envelope | Bit-exact | Bit-exact |
+| D4C, decoding of aperiodicity | Within 1 ULP | Bit-exact |
+| Batch synthesis | Within 64 ULP | Bit-exact |
 
-The transcendental functions are measured separately. `Math.Cos`, `Math.Sin`, `Math.Log`, `Math.Exp` and `Math.Log10` return exactly the same doubles as the MSVC runtime over the sampled ranges. `Math.Pow(10, v)` and the squaring `v * v` differ from the MSVC `pow` by at most one unit in the last place on fewer than one percent of the sampled inputs, and the remaining tolerances above follow from this.
+The transcendental functions are measured separately. `Math.Cos`, `Math.Sin`, `Math.Log`, `Math.Exp` and `Math.Log10` return exactly the same doubles as the MSVC runtime over the sampled ranges. `Math.Pow(10, v)` and the squaring `v * v` differ from the MSVC `pow` by at most one unit in the last place on fewer than one percent of the sampled inputs, and the remaining tolerances above follow from this. Against the GCC and glibc reference on Linux, the same measurements show no difference for any of these functions.
 
-Beyond equivalence, the suite covers degenerate input such as silence, direct current and white noise, extremely short input, determinism across repeated runs, thread safety with one arena per thread, operation on a caller-supplied arena, and full release of the arena after the pipeline. The suite contains 332 tests, and all of them pass when the reference data is available.
+Beyond equivalence, the suite covers degenerate input such as silence, direct current and white noise, extremely short input, determinism across repeated runs, thread safety with one arena per thread, operation on a caller-supplied arena, and full release of the arena after the pipeline. The suite contains 332 tests, and all of them pass when the reference data is available. CI also runs the suite on Linux with AVX2 disabled and with all hardware intrinsics disabled, which exercises the narrower vector paths and the scalar paths of the vectorized routines.
 
 ### 7. Performance
 
@@ -316,8 +316,8 @@ To use the checkout instead of the package, add `WorldNet/WorldNet.csproj` as a 
 
 ## Limitations
 
-- The batch synthesizer agrees with the original to within 64 units in the last place rather than exactly. D4C and the decoding of aperiodicity agree to within one unit in the last place. Both follow from `Math.Pow`, which neither the .NET runtime nor the MSVC runtime is required to round correctly.
-- Bit-exactness has been verified against WORLD compiled with MSVC on Windows x64. Other compilers, other runtimes and other architectures may round the transcendental functions differently, and the agreement above is not claimed for them.
+- Against the MSVC reference, the batch synthesizer agrees with the original to within 64 units in the last place rather than exactly, and D4C and the decoding of aperiodicity agree to within one unit in the last place. Both follow from `Math.Pow`, which neither the .NET runtime nor the MSVC runtime is required to round correctly.
+- Bit-exactness has been verified against WORLD compiled with MSVC on Windows x64 and against WORLD compiled with GCC 13.3 on Linux x64 with glibc 2.39. Other compilers, other runtimes and other architectures may round the transcendental functions differently, and the agreement above is not claimed for them.
 - `WorldArena` is not thread-safe. Concurrent analysis requires one arena per thread, which the test suite exercises.
 - An arena created by `FromNativeMemory` cannot grow. Run the same calls once with a growing arena, read `Capacity`, and pass a buffer of at least that many bytes plus 64 bytes for the arena header. `Used` cannot serve this purpose, because each call releases its scratch memory and `Used` is zero once the calls return. The size depends on the length and the sampling rate of the input and on the options.
 - Running the comparison tests requires the reference data. Without `reference/data` those tests are skipped, and the remaining tests do not depend on it.
