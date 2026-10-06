@@ -14,6 +14,11 @@ internal static unsafe class Common
         return 2 + (int)(f0 * fftSize / fs);
     }
 
+    public static bool IsAboveDcCorrectionRange(double f0, int fs, int fftSize)
+    {
+        return f0 * fftSize / fs >= (fftSize / 2) - 1;
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void DcCorrection(double* input, double f0, int fs, int fftSize, double* output,
         in DcCorrectionScratch scratch)
