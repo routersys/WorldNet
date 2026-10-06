@@ -1,7 +1,10 @@
+using System.Runtime.CompilerServices;
+
 namespace WorldNet;
 
 public static unsafe partial class Harvest
 {
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetBaseIndex(double currentPosition, double* baseTime, int baseTimeLength,
         double fs, int* baseIndex)
     {
@@ -14,6 +17,7 @@ public static unsafe partial class Harvest
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetMainWindow(double currentPosition, int* baseIndex, int baseTimeLength,
         double fs, double windowLengthInTime, double* mainWindow)
     {
@@ -26,6 +30,7 @@ public static unsafe partial class Harvest
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetDiffWindow(double* mainWindow, int baseTimeLength, double* diffWindow)
     {
         diffWindow[0] = -mainWindow[1] / 2.0;
@@ -36,6 +41,7 @@ public static unsafe partial class Harvest
         diffWindow[baseTimeLength - 1] = mainWindow[baseTimeLength - 2] / 2.0;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetSpectra(double* x, int xLength, int fftSize, int* baseIndex,
         double* mainWindow, double* diffWindow, int baseTimeLength,
         in ForwardRealFft forwardRealFft, FftComplex* mainSpectrum, FftComplex* diffSpectrum,
@@ -77,6 +83,7 @@ public static unsafe partial class Harvest
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void FixF0(double* powerSpectrum, double* numeratorI, int fftSize, double fs,
         double currentF0, int numberOfHarmonics, double* refinedF0, double* score,
         double* amplitudeList, double* instantaneousFrequencyList)
@@ -104,6 +111,7 @@ public static unsafe partial class Harvest
         *score = 1.0 / ((*score / numberOfHarmonics) + WorldConstants.MySafeGuardMinimum);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetMeanF0(double* x, int xLength, double fs, double currentPosition,
         double currentF0, int fftSize, double windowLengthInTime, double* baseTime,
         int baseTimeLength, double* refinedF0, double* refinedScore,
@@ -146,6 +154,7 @@ public static unsafe partial class Harvest
             2.0 + (int)(Math.Log((halfWindowLength * 2.0) + 1.0) / WorldConstants.Log2));
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetRefinedF0(double* x, int xLength, double fs, double currentPosition,
         double currentF0, double f0Floor, double f0Ceil, double* refinedF0, double* refinedScore,
         HarvestRefineScratch* scratches, int* sizes, int distinct)
@@ -185,6 +194,7 @@ public static unsafe partial class Harvest
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void RefineF0Candidates(double* x, int xLength, double fs,
         double* temporalPositions, int f0Length, int maxCandidates, double f0Floor, double f0Ceil,
         double** refinedF0Candidates, double** f0Scores, WorldArena arena)
