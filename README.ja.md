@@ -417,6 +417,8 @@ dotnet build WorldNet.slnx -c Release
 
 脆弱性はIssueに書かず、[セキュリティポリシー](https://github.com/routersys/WorldNet/blob/main/SECURITY.ja.md)に従って非公開で報告してください。
 
+変更を貢献するときは、[貢献の手引き](https://github.com/routersys/WorldNet/blob/main/CONTRIBUTING.ja.md)を読んでください。
+
 ---
 
 ## 免責事項
