@@ -183,7 +183,7 @@ Beyond equivalence, the suite covers degenerate input such as silence, direct cu
 
 The first two tables compare the original C++ compiled with MSVC at `/O2` against this port published with Native AOT. Both are compiled ahead of time, so the comparison is like for like. Each table measures every build back to back in one session, so the ratio is the meaningful quantity while the absolute values move with the machine.
 
-The first table is a fixed record taken on a dedicated workstation. It is not regenerated.
+The first table is a fixed record taken on a dedicated workstation before the vectorization described below. It is not regenerated.
 
 Intel Core i7-1360P under Windows 11, sample application published for an `x86-64-v3` baseline, best of 12 runs in milliseconds, analysing the 22050 Hz reference waveform of 17500 samples with a 5 ms frame period.
 
