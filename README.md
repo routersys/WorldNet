@@ -63,7 +63,7 @@ The original C++ is not vendored into this repository. The reference harness und
 | Item | Requirement |
 |---|---|
 | Runtime | .NET 8.0 or later |
-| Processor | x64 on Windows and Linux, and ARM64 on Linux. CI verifies each of them |
+| Processor | x64 and ARM64 on Windows and Linux. CI verifies each of them |
 | OS | Windows, Linux or macOS supported by the runtime |
 | SDK | .NET SDK 10.0, required only to build from source |
 | Language | C# 14 or later, required only to build from source (`LangVersion` is set to `latest`) |
@@ -141,7 +141,7 @@ D4C estimates band aperiodicity and includes the D4C LoveTrain stage. Against th
 
 `Synthesis.Synthesize` generates the waveform from the F0 contour, the spectrogram and the aperiodicity in one call. `WorldSynthesizer` implements the sequential real-time synthesizer, which accepts parameter chunks through `AddParameters` and produces output through `Synthesize` while managing an internal ring buffer.
 
-The real-time synthesizer reproduces the original bit for bit. Against the MSVC reference the batch synthesizer agrees to within 64 units in the last place, inherited from the same `Math.Pow` difference and amplified by the overlap-add accumulation.
+The real-time synthesizer reproduces the original bit for bit, except against the MSVC reference on Windows ARM64. Against the MSVC reference the batch synthesizer agrees to within 4 units in the last place of the peak amplitude, and so does the real-time synthesizer on Windows ARM64. The original squares the aperiodicity with `pow(x, 2.0)` and this port computes `x * x`. The MSVC runtime does not always round the two alike, and the overlap-add accumulation amplifies the difference.
 
 ### 4. Spectral envelope coding
 
@@ -159,22 +159,25 @@ The absence of managed allocation is measured, not asserted. `GC.GetAllocatedByt
 
 ### 6. Numerical verification
 
-The test suite compares against dumps produced by the original C++ built with MSVC on Windows and with GCC on Linux. The tests enforce the tolerances of the MSVC column on both platforms. The GCC column records what was measured on Linux x64 with GCC 13.3 and glibc 2.39: the maximum difference is zero in every stage, including the three stages that the tests allow to deviate from the MSVC reference.
+The test suite compares against dumps produced by the original C++ built with MSVC on Windows and with GCC on Linux. The tests enforce the tolerances of the MSVC columns on both platforms. The ARM64 column was measured on a GitHub Actions `windows-11-arm` runner with the ARM64 build of MSVC. The GCC column records what was measured on Linux x64 with GCC 13.3 and glibc 2.39: the maximum difference is zero in every stage, including the stages that the tests allow to deviate from the MSVC reference.
 
-| Stage | Agreement with MSVC on Windows x64 | Agreement with GCC on Linux x64 |
-|---|---|---|
-| Ooura FFT, all four transforms, sizes 8 to 4096 | Bit-exact | Bit-exact |
-| matlabfunctions, common | Bit-exact | Bit-exact |
-| Dio, including the decimation path | Bit-exact | Bit-exact |
-| StoneMask, Harvest, CheapTrick | Bit-exact | Bit-exact |
-| Real-time synthesizer, WAV I/O, parameter file I/O | Bit-exact | Bit-exact |
-| Coding of aperiodicity and spectral envelope, decoding of spectral envelope | Bit-exact | Bit-exact |
-| D4C, decoding of aperiodicity | Within 1 ULP | Bit-exact |
-| Batch synthesis | Within 64 ULP | Bit-exact |
+| Stage | Agreement with MSVC on Windows x64 | Agreement with MSVC on Windows ARM64 | Agreement with GCC on Linux x64 |
+|---|---|---|---|
+| Ooura FFT, all four transforms, sizes 8 to 4096 | Bit-exact | Bit-exact | Bit-exact |
+| matlabfunctions, common | Bit-exact | Bit-exact | Bit-exact |
+| Dio, including the decimation path | Bit-exact | Bit-exact | Bit-exact |
+| StoneMask, Harvest, CheapTrick | Bit-exact | Bit-exact | Bit-exact |
+| WAV I/O, parameter file I/O | Bit-exact | Bit-exact | Bit-exact |
+| Real-time synthesizer | Bit-exact | Within 4 ULP of the peak | Bit-exact |
+| Coding of aperiodicity and spectral envelope, decoding of spectral envelope | Bit-exact | Bit-exact | Bit-exact |
+| D4C, decoding of aperiodicity | Within 1 ULP | Within 1 ULP | Bit-exact |
+| Batch synthesis | Within 4 ULP of the peak | Within 4 ULP of the peak | Bit-exact |
 
-The transcendental functions are measured separately. `Math.Cos`, `Math.Sin`, `Math.Log`, `Math.Exp` and `Math.Log10` return exactly the same doubles as the MSVC runtime over the sampled ranges. `Math.Pow(10, v)` and the squaring `v * v` differ from the MSVC `pow` by at most one unit in the last place on fewer than one percent of the sampled inputs, and the remaining tolerances above follow from this. Against the GCC and glibc reference on Linux, the same measurements show no difference for any of these functions.
+One ULP of the peak is the unit in the last place of the largest absolute sample of the reference waveform. It measures the error against the scale of the whole waveform, because a count of units in the last place at each sample is not meaningful where the waveform crosses zero. For batch synthesis the largest error measured against the MSVC reference is 0.25 ULP of the peak on Windows x64 and 1 ULP of the peak on Windows ARM64.
 
-Beyond equivalence, the suite covers degenerate input such as silence, direct current and white noise, extremely short input, determinism across repeated runs, thread safety with one arena per thread, operation on a caller-supplied arena, and full release of the arena after the pipeline. The suite contains 332 tests, and all of them pass when the reference data is available. CI also runs the suite on Linux with AVX2 disabled and with all hardware intrinsics disabled, which exercises the narrower vector paths and the scalar paths of the vectorized routines. CI also runs the suite on Linux ARM64 against reference data generated there with GCC, where the routines written with x86 intrinsics take their scalar paths.
+The transcendental functions are measured separately. `Math.Cos`, `Math.Sin`, `Math.Log`, `Math.Exp` and `Math.Log10` return exactly the same doubles as the MSVC runtime over the sampled ranges. `Math.Pow(10, v)` and the squaring `v * v` differ from the MSVC `pow` by at most one unit in the last place on fewer than one percent of the sampled inputs, and the remaining tolerances above follow from this. Against the GCC and glibc reference on Linux, the same measurements show no difference for any of these functions. The tests that run these measurements pass on Windows ARM64 as well. Replacing the squaring in both synthesizers with `Math.Pow(v, 2.0)`, called with an exponent that is not a constant, makes every test pass on Windows ARM64, including the bit-exact real-time test, so the squaring is the only source of the differences there.
+
+Beyond equivalence, the suite covers degenerate input such as silence, direct current and white noise, extremely short input, determinism across repeated runs, thread safety with one arena per thread, operation on a caller-supplied arena, and full release of the arena after the pipeline. The suite contains 332 tests, and all of them pass when the reference data is available. CI also runs the suite on Linux with AVX2 disabled and with all hardware intrinsics disabled, which exercises the narrower vector paths and the scalar paths of the vectorized routines. CI also runs the suite on Linux ARM64 against reference data generated there with GCC, where the routines written with x86 intrinsics take their scalar paths, and on Windows ARM64 against reference data generated there with MSVC.
 
 ### 7. Performance
 
@@ -330,8 +333,8 @@ To use the checkout instead of the package, add `WorldNet/WorldNet.csproj` as a 
 
 ## Limitations
 
-- Against the MSVC reference, the batch synthesizer agrees with the original to within 64 units in the last place rather than exactly, and D4C and the decoding of aperiodicity agree to within one unit in the last place. Both follow from `Math.Pow`, which neither the .NET runtime nor the MSVC runtime is required to round correctly.
-- Bit-exactness has been verified against WORLD compiled with MSVC on Windows x64 and against WORLD compiled with GCC 13.3 on Linux x64 with glibc 2.39. On Linux ARM64 the tests pass against WORLD compiled with GCC within the tolerances of the table above. In every case the tests pass on .NET 8 and on .NET 10. Other compilers, other runtimes and other architectures may round the transcendental functions differently, and the agreement above is not claimed for them.
+- Against the MSVC reference, the batch synthesizer agrees with the original to within 4 units in the last place of the peak amplitude rather than exactly, and D4C and the decoding of aperiodicity agree to within one unit in the last place. On Windows ARM64 the real-time synthesizer agrees to within the same 4 units. All of these follow from `pow`, which neither the .NET runtime nor the MSVC runtime is required to round correctly.
+- Bit-exactness has been verified against WORLD compiled with MSVC on Windows x64 and against WORLD compiled with GCC 13.3 on Linux x64 with glibc 2.39. On Linux ARM64 and on Windows ARM64 the tests pass against WORLD compiled with GCC and with MSVC respectively, within the tolerances of the table above. In every case the tests pass on .NET 8 and on .NET 10. Other compilers, other runtimes and other architectures may round the transcendental functions differently, and the agreement above is not claimed for them.
 - `WorldArena` is not thread-safe. Concurrent analysis requires one arena per thread, which the test suite exercises.
 - An arena created by `FromNativeMemory` cannot grow. Run the same calls once with a growing arena, read `Capacity`, and pass a buffer of at least that many bytes plus 64 bytes for the arena header. `Used` cannot serve this purpose, because each call releases its scratch memory and `Used` is zero once the calls return. The size depends on the length and the sampling rate of the input and on the options.
 - Running the comparison tests requires the reference data. Without `reference/data` those tests are skipped, and the remaining tests do not depend on it.
