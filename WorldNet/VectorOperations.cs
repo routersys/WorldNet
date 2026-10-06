@@ -248,4 +248,31 @@ internal static unsafe class VectorOperations
             target[i] += source[i];
         }
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void ScaleComplex(double* values, int complexCount, double real,
+        double imaginary)
+    {
+        int count = complexCount * 2;
+        int i = 0;
+        if (Vector.IsHardwareAccelerated && count >= Vector<double>.Count)
+        {
+            Span<double> pattern = stackalloc double[Vector<double>.Count];
+            for (int k = 0; k < pattern.Length; ++k)
+            {
+                pattern[k] = (k & 1) == 0 ? real : imaginary;
+            }
+            Vector<double> factors = new(pattern);
+            int limit = count - Vector<double>.Count;
+            for (; i <= limit; i += Vector<double>.Count)
+            {
+                Unsafe.WriteUnaligned(values + i,
+                    Unsafe.ReadUnaligned<Vector<double>>(values + i) * factors);
+            }
+        }
+        for (; i < count; ++i)
+        {
+            values[i] *= (i & 1) == 0 ? real : imaginary;
+        }
+    }
 }

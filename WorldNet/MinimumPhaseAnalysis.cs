@@ -52,17 +52,10 @@ internal unsafe partial struct MinimumPhaseAnalysis
 
         InverseFft.Execute();
         Cepstrum[0].Imaginary *= -1.0;
-        for (int i = 1; i < FftSize / 2; ++i)
-        {
-            Cepstrum[i].Real *= 2.0;
-            Cepstrum[i].Imaginary *= -2.0;
-        }
+        VectorOperations.ScaleComplex((double*)(Cepstrum + 1), (FftSize / 2) - 1, 2.0, -2.0);
         Cepstrum[FftSize / 2].Imaginary *= -1.0;
-        for (int i = (FftSize / 2) + 1; i < FftSize; ++i)
-        {
-            Cepstrum[i].Real = 0.0;
-            Cepstrum[i].Imaginary = 0.0;
-        }
+        new Span<double>((double*)(Cepstrum + (FftSize / 2) + 1),
+            (FftSize - (FftSize / 2) - 1) * 2).Clear();
 
         ForwardFft.Execute();
 
