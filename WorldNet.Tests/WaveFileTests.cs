@@ -98,4 +98,143 @@ public class WaveFileTests
         Assert.Throws<ArgumentException>(
             () => WaveFile.Read(InputWavePath, destination, out _, out _));
     }
+
+    [Fact]
+    public void ReadDecodesEightBitSamplesAsUnsigned()
+    {
+        byte[] data = [0x80, 0x80, 0xFF, 0x00, 0xC0, 0x40];
+
+        double[] read = ReadBuilt(BuildWave(8, 1, 16, 1, data), out int bitDepth);
+
+        Assert.Equal(8, bitDepth);
+        Assert.Equal([0.0, 0.0, 127.0 / 128.0, -1.0, 0.5, -0.5], read);
+    }
+
+    [Theory]
+    [InlineData(18, 1)]
+    [InlineData(40, 0xFFFE)]
+    public void ReadAcceptsFormatChunksLongerThanSixteenBytes(int formatSize, int formatTag)
+    {
+        byte[] data = [0x00, 0x40, 0x00, 0xC0];
+
+        double[] read = ReadBuilt(BuildWave(16, 1, formatSize, formatTag, data), out _);
+
+        Assert.Equal([0.5, -0.5], read);
+    }
+
+    [Fact]
+    public void ReadSkipsOtherChunksBySizeEvenWhenTheyContainTheWordData()
+    {
+        byte[] data = new byte[2000];
+        byte[] extra = System.Text.Encoding.ASCII.GetBytes("INFOISFTmetadata_tool");
+
+        double[] read = ReadBuilt(BuildWave(16, 1, 16, 1, data, extra), out _);
+
+        Assert.Equal(1000, read.Length);
+    }
+
+    [Fact]
+    public void LengthIsLimitedToTheBytesThatTheFileContains()
+    {
+        byte[] data = new byte[100];
+
+        double[] read = ReadBuilt(BuildWave(16, 1, 16, 1, data, dataSize: 2_000_000_000), out _);
+
+        Assert.Equal(50, read.Length);
+    }
+
+    [Fact]
+    public void StreamedDataSizeReadsToTheEndOfTheFile()
+    {
+        byte[] data = new byte[2000];
+
+        double[] read =
+            ReadBuilt(BuildWave(16, 1, 16, 1, data, dataSize: uint.MaxValue), out _);
+
+        Assert.Equal(1000, read.Length);
+    }
+
+    [Theory]
+    [InlineData(0, 1, 1)]
+    [InlineData(4, 1, 1)]
+    [InlineData(12, 1, 1)]
+    [InlineData(64, 1, 1)]
+    [InlineData(16, 2, 1)]
+    [InlineData(32, 1, 3)]
+    public void ReadRejectsFormatsThatItDoesNotSupport(int bitDepth, int channels, int formatTag)
+    {
+        byte[] wave = BuildWave(bitDepth, channels, 16, formatTag, new byte[16]);
+
+        Assert.Throws<InvalidDataException>(() => ReadBuilt(wave, out _));
+    }
+
+    [Fact]
+    public void ReadRejectsFileWithoutDataChunk()
+    {
+        byte[] wave = BuildWave(16, 1, 16, 1, []);
+
+        Assert.Throws<InvalidDataException>(() => ReadBuilt(wave[..36], out _));
+    }
+
+    private static double[] ReadBuilt(byte[] wave, out int bitDepth)
+    {
+        string path = Path.Combine(Path.GetTempPath(), $"worldnet_{Guid.NewGuid():N}.wav");
+        try
+        {
+            File.WriteAllBytes(path, wave);
+            double[] samples = new double[WaveFile.GetLength(path)];
+            int length = WaveFile.Read(path, samples, out _, out bitDepth);
+            Assert.Equal(samples.Length, length);
+            return samples;
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    private static byte[] BuildWave(int bitDepth, int channels, int formatSize, int formatTag,
+        byte[] data, byte[]? extraChunk = null, uint? dataSize = null)
+    {
+        using MemoryStream stream = new();
+        using BinaryWriter writer = new(stream);
+        writer.Write("RIFF"u8.ToArray());
+        writer.Write(0);
+        writer.Write("WAVE"u8.ToArray());
+        writer.Write("fmt "u8.ToArray());
+        writer.Write(formatSize);
+        writer.Write((short)formatTag);
+        writer.Write((short)channels);
+        writer.Write(8000);
+        writer.Write(8000 * channels * bitDepth / 8);
+        writer.Write((short)(channels * bitDepth / 8));
+        writer.Write((short)bitDepth);
+        if (formatSize >= 18)
+        {
+            writer.Write((short)(formatSize - 18));
+        }
+        if (formatSize >= 40)
+        {
+            writer.Write((short)bitDepth);
+            writer.Write(4);
+            writer.Write((short)1);
+            writer.Write(new byte[14]);
+        }
+        if (extraChunk is not null)
+        {
+            writer.Write("LIST"u8.ToArray());
+            writer.Write(extraChunk.Length);
+            writer.Write(extraChunk);
+            if ((extraChunk.Length & 1) != 0)
+            {
+                writer.Write((byte)0);
+            }
+        }
+        writer.Write("data"u8.ToArray());
+        writer.Write(dataSize ?? (uint)data.Length);
+        writer.Write(data);
+        byte[] bytes = stream.ToArray();
+        BitConverter.GetBytes(bytes.Length - 8).CopyTo(bytes, 4);
+        return bytes;
+    }
 }
