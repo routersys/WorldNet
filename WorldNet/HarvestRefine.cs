@@ -120,15 +120,8 @@ public static unsafe partial class Harvest
         GetSpectra(x, xLength, fftSize, baseIndex, mainWindow, diffWindow, baseTimeLength,
             scratch.ForwardRealFft, mainSpectrum, diffSpectrum, scratch.SafeIndex);
 
-        double* powerSpectrum = scratch.PowerSpectrum;
-        double* numeratorI = scratch.NumeratorI;
-        for (int j = 0; j <= fftSize / 2; ++j)
-        {
-            numeratorI[j] = (mainSpectrum[j].Real * diffSpectrum[j].Imaginary) -
-                (mainSpectrum[j].Imaginary * diffSpectrum[j].Real);
-            powerSpectrum[j] = (mainSpectrum[j].Real * mainSpectrum[j].Real) +
-                (mainSpectrum[j].Imaginary * mainSpectrum[j].Imaginary);
-        }
+        SpectrumMath.PowerSpectrumAndCrossProduct(mainSpectrum, diffSpectrum,
+            scratch.PowerSpectrum, scratch.NumeratorI, (fftSize / 2) + 1);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
