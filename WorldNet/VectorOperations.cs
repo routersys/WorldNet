@@ -68,4 +68,44 @@ internal static unsafe class VectorOperations
             target[i] -= source[i] * factor;
         }
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Negate(double* values, int count)
+    {
+        int i = 0;
+        if (Vector.IsHardwareAccelerated && count >= Vector<double>.Count)
+        {
+            Vector<double> sign = new(-0.0);
+            int limit = count - Vector<double>.Count;
+            for (; i <= limit; i += Vector<double>.Count)
+            {
+                Unsafe.WriteUnaligned(values + i,
+                    Vector.Xor(Unsafe.ReadUnaligned<Vector<double>>(values + i), sign));
+            }
+        }
+        for (; i < count; ++i)
+        {
+            values[i] = -values[i];
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void SubtractNext(double* values, int count)
+    {
+        int i = 0;
+        if (Vector.IsHardwareAccelerated && count >= Vector<double>.Count)
+        {
+            int limit = count - Vector<double>.Count;
+            for (; i <= limit; i += Vector<double>.Count)
+            {
+                Unsafe.WriteUnaligned(values + i,
+                    Unsafe.ReadUnaligned<Vector<double>>(values + i)
+                    - Unsafe.ReadUnaligned<Vector<double>>(values + i + 1));
+            }
+        }
+        for (; i < count; ++i)
+        {
+            values[i] -= values[i + 1];
+        }
+    }
 }
