@@ -48,17 +48,16 @@ jobs:
             echo "=== symbols ${name}"
             nm "worldref_${name}" | grep -i "sincos" || echo "no sincos symbol"
           }
-          build default -O2 -ffp-contract=off
-          build nobuiltin -O2 -ffp-contract=off -fno-builtin
-          build o0 -O0 -ffp-contract=off
           build nosincos -O2 -ffp-contract=off -fno-builtin-sin -fno-builtin-cos
+          build noexp10 -O2 -ffp-contract=off -fno-builtin-sin -fno-builtin-cos -fno-builtin-exp10
+          build nopow -O2 -ffp-contract=off -fno-builtin-sin -fno-builtin-cos -fno-builtin-pow
 
       - name: ソリューションをビルド
         run: dotnet build WorldNet.slnx -c Release
 
       - name: 派生ごとに試験を実行
         run: |
-          for v in nosincos; do
+          for v in noexp10 nopow; do
             rm -rf reference/data
             cp -r "reference/data_${v}" reference/data
             for f in net8.0 net10.0; do
@@ -73,8 +72,8 @@ jobs:
           git diff --stat
           dotnet build WorldNet.slnx -c Release
           rm -rf reference/data
-          cp -r reference/data_nosincos reference/data
+          cp -r reference/data_noexp10 reference/data
           for f in net8.0 net10.0; do
-            echo "=== test nosincos separate ${f}"
+            echo "=== test noexp10 separate ${f}"
             dotnet test WorldNet.Tests/WorldNet.Tests.csproj -c Release --no-build -f "${f}" 2>&1 | grep -E "^ +Failed WorldNet|Passed!|Failed!" | sed -E 's/\[[0-9<]+ ms\]//' || true
           done
