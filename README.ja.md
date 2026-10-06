@@ -415,6 +415,8 @@ dotnet build WorldNet.slnx -c Release
 | 結果 | 期待した結果と、実際の結果。数値の差であれば、処理、添字、両方の値 |
 | 例外 | 型、メッセージ、スタックトレースを、そのまま |
 
+脆弱性はIssueに書かず、[セキュリティポリシー](https://github.com/routersys/WorldNet/blob/main/SECURITY.ja.md)に従って非公開で報告してください。
+
 ---
 
 ## 免責事項
