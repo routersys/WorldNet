@@ -13,7 +13,7 @@
     <Authors>routersys</Authors>
     <Product>WorldNet</Product>
     <Title>WorldNet</Title>
-    <Description>A complete C# port of the WORLD vocoder for .NET 8 and later. Fundamental frequency estimation with Dio, Harvest and StoneMask, spectral envelope estimation with CheapTrick, aperiodicity estimation with D4C, batch and sequential synthesis, and the spectral envelope codec. Every stage runs without a managed allocation and the library is annotated for Native AOT. Each stage is compared against the original C++ built with MSVC: most are bit-exact and the remaining differences are bounded and measured in ULP.</Description>
+    <Description>The WORLD vocoder in C# for .NET 8 and later, faster than the original C++ in every measured stage. Fundamental frequency estimation with Dio, Harvest and StoneMask, spectral envelope estimation with CheapTrick, aperiodicity estimation with D4C, batch and real-time synthesis, and the spectral envelope codec. No managed allocation, Native AOT ready, and verified against the original C++: most stages are bit-exact and the rest are bounded in ULP.</Description>
     <Copyright>Copyright (c) 2026 routersys</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/routersys/WorldNet</PackageProjectUrl>
