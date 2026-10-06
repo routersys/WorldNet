@@ -6,12 +6,18 @@ public static unsafe class CheapTrick
 {
     public static int GetFftSize(int fs, double f0Floor)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fs);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(f0Floor);
+
         return (int)Math.Pow(2.0,
             1.0 + (int)(Math.Log((3.0 * fs / f0Floor) + 1) / WorldConstants.Log2));
     }
 
     public static double GetF0Floor(int fs, int fftSize)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fs);
+        ArgumentOutOfRangeException.ThrowIfLessThanOrEqual(fftSize, 3);
+
         return 3.0 * fs / (fftSize - 3.0);
     }
 
