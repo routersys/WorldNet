@@ -1,7 +1,7 @@
 # WorldNet
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](#)
-[![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)](#)
+[![.NET](https://img.shields.io/badge/.NET-8.0%2B-purple.svg)](#)
 [![Release](https://img.shields.io/github/v/release/routersys/WorldNet.svg)](https://github.com/routersys/WorldNet/releases)
 
 English | [日本語](https://github.com/routersys/WorldNet/blob/main/README.ja.md)
@@ -62,9 +62,10 @@ The original C++ is not vendored into this repository. The reference harness und
 
 | Item | Requirement |
 |---|---|
-| OS | Windows, Linux or macOS supported by .NET 10 |
-| SDK | .NET SDK 10.0 |
-| Language | C# 14 or later (`LangVersion` is set to `latest`) |
+| Runtime | .NET 8.0 or later |
+| OS | Windows, Linux or macOS supported by the runtime |
+| SDK | .NET SDK 10.0, required only to build from source |
+| Language | C# 14 or later, required only to build from source (`LangVersion` is set to `latest`) |
 | Unsafe code | Required in the consuming project only when `WorldArena.FromNativeMemory` is used |
 | Reference data | The MSVC C++ toolset on Windows or GCC on Linux, and Git. Required only to regenerate the golden data used by the tests |
 
