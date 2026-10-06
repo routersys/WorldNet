@@ -1,7 +1,10 @@
+using System.Runtime.CompilerServices;
+
 namespace WorldNet;
 
 public static unsafe class D4C
 {
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static void Estimate(ReadOnlySpan<double> x, int fs, D4COption option,
         ReadOnlySpan<double> temporalPositions, ReadOnlySpan<double> f0, int fftSize,
         Span<double> aperiodicity, WorldArena arena)
@@ -128,6 +131,7 @@ public static unsafe class D4C
         MatlabFunctions.Interp1(x, y, xLength, xi, xiLength, yi, scratch);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void SetParametersForGetWindowedWaveform(int halfWindowLength, int xLength,
         double currentPosition, int fs, double currentF0, int windowType,
         double windowLengthRatio, int* baseIndex, int* safeIndex, double* window)
@@ -169,6 +173,7 @@ public static unsafe class D4C
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetWindowedWaveform(double* x, int xLength, int fs, double currentF0,
         double currentPosition, int windowType, double windowLengthRatio, double* waveform,
         WorldArena arena, ref RandnState randnState)
@@ -205,6 +210,7 @@ public static unsafe class D4C
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetCentroid(double* x, int xLength, int fs, double currentF0,
         int fftSize, double currentPosition, in ForwardRealFft forwardRealFft, double* centroid,
         WorldArena arena, ref RandnState randnState)
@@ -245,6 +251,7 @@ public static unsafe class D4C
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetStaticCentroid(double* x, int xLength, int fs, double currentF0,
         int fftSize, double currentPosition, in ForwardRealFft forwardRealFft,
         double* staticCentroid, WorldArena arena, ref RandnState randnState)
@@ -282,6 +289,7 @@ public static unsafe class D4C
             arena);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetStaticGroupDelay(double* staticCentroid,
         double* smoothedPowerSpectrum, int fs, double f0, int fftSize, double* staticGroupDelay,
         WorldArena arena)
@@ -302,6 +310,7 @@ public static unsafe class D4C
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetCoarseAperiodicity(double* staticGroupDelay, int fs, int fftSize,
         int numberOfAperiodicities, double* window, int windowLength,
         in ForwardRealFft forwardRealFft, double* coarseAperiodicity, WorldArena arena)
@@ -335,6 +344,7 @@ public static unsafe class D4C
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static double D4CLoveTrainSub(double* x, int fs, int xLength, double currentF0,
         double currentPosition, int fftSize, int boundary0, int boundary1, int boundary2,
         in ForwardRealFft forwardRealFft, WorldArena arena, ref RandnState randnState)
@@ -370,6 +380,7 @@ public static unsafe class D4C
         return powerSpectrum[boundary1] / powerSpectrum[boundary2];
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void D4CLoveTrain(double* x, int fs, int xLength, double* f0, int f0Length,
         double* temporalPositions, double* aperiodicity0, WorldArena arena,
         ref RandnState randnState)
@@ -397,6 +408,7 @@ public static unsafe class D4C
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void D4CGeneralBody(double* x, int xLength, int fs, double currentF0,
         int fftSize, double currentPosition, int numberOfAperiodicities, double* window,
         int windowLength, in ForwardRealFft forwardRealFft, double* coarseAperiodicity,
@@ -425,6 +437,7 @@ public static unsafe class D4C
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void InitializeAperiodicity(int f0Length, int fftSize, int spectrumLength,
         double* aperiodicity)
     {
@@ -438,6 +451,7 @@ public static unsafe class D4C
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void GetAperiodicity(double* coarseFrequencyAxis, double* coarseAperiodicity,
         int numberOfAperiodicities, double* frequencyAxis, int fftSize, double* aperiodicity,
         WorldArena arena)
