@@ -1,0 +1,180 @@
+name: Bug report
+description: Report behavior that differs from what the library documents or guarantees.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not report a vulnerability here. Use the security advisory link on the previous page.
+        A crash or an out-of-bounds access that a crafted file or argument values trigger may be a vulnerability.
+
+        A report is actionable when someone else can reproduce it. The fields below are the ones
+        that decide whether that is possible for this library.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Where the behavior appears. Pick the one closest to the failure, not to your own code.
+      options:
+        - Dio, Harvest or StoneMask
+        - CheapTrick
+        - D4C
+        - Synthesis
+        - WorldSynthesizer
+        - Codec
+        - WaveFile or ParameterFile
+        - WorldArena
+        - Source generator
+        - Packaging, NuGet or Native AOT
+        - Not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: symptom
+    attributes:
+      label: Symptom
+      options:
+        - An exception is thrown
+        - The output differs from the original WORLD
+        - The output is wrong, and I have not compared it with the original WORLD
+        - The process crashes
+        - Managed allocation or memory growth
+        - It is slower than expected
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Package version
+      description: The exact version of the WorldNet package you reference.
+      placeholder: WorldNet 1.2.1
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What you expected, and where that expectation comes from if the documentation states it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: |
+        What happened instead. Paste the exception type, message and stack trace in full if one was thrown.
+        For a numerical difference, give the stage, the index and both values.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: |
+        The smallest code that shows the problem, including every option that differs from its default.
+        A report without this is usually closed for lack of information.
+      render: csharp
+    validations:
+      required: true
+
+  - type: textarea
+    id: input
+    attributes:
+      label: Input
+      description: |
+        The sampling rate, the number of samples, and how the waveform was produced. A synthetic signal that
+        reproduces the problem is best. Attachments are visible to everyone, so attach audio only if you have
+        the right to redistribute it.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: comparison
+    attributes:
+      label: Comparison with the original WORLD
+      description: |
+        WorldNet ports WORLD, so a behavior that the original shares is not a defect of the port. Whether the
+        original gives the same result separates the two.
+      options:
+        - The original WORLD gives a different result
+        - The original WORLD gives the same result
+        - I have not compared
+        - Not applicable
+    validations:
+      required: true
+
+  - type: input
+    id: original
+    attributes:
+      label: Original WORLD build
+      description: Fill this in only if you compared. The commit of WORLD, and the compiler with its version.
+      placeholder: WORLD commit hash, GCC 13.3
+
+  - type: input
+    id: runtime
+    attributes:
+      label: .NET runtime and target framework
+      description: |
+        The runtime that runs the process, from `dotnet --list-runtimes`, and the target framework of your
+        project. The package carries a build for each of net8.0 and net10.0.
+      placeholder: Microsoft.NETCore.App 10.0.0, target net10.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Execution mode
+      options:
+        - JIT
+        - ReadyToRun
+        - Native AOT
+        - WebAssembly
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system and architecture
+      placeholder: Windows 11 24H2 x64, Ubuntu 24.04 ARM64
+    validations:
+      required: true
+
+  - type: input
+    id: processor
+    attributes:
+      label: Processor and vector support
+      description: |
+        The processor model, whether `Avx2.IsSupported`, `Vector256.IsHardwareAccelerated` and
+        `Vector128.IsHardwareAccelerated` are true, and any `DOTNET_Enable*` variable that is set. The
+        vectorized routines choose their code path from these.
+      placeholder: AMD EPYC 9V74, Avx2 true, Vector256 true, Vector128 true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else
+      description: |
+        How you measured an allocation or a timing, the value of `WorldArena.Capacity`, whether one arena
+        is shared between threads, or anything else you think matters.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I am using the latest released version, or I state above why I cannot.
+          required: true
+        - label: I searched the existing issues and this is not a duplicate.
+          required: true
+        - label: I read the Limitations section of the README, and this is not a limitation listed there.
+          required: true
