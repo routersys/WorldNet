@@ -219,16 +219,16 @@ The following table was measured on Linux x64 against the original C++ built wit
 
 | Stage | C++ with GCC | This port with Native AOT | Ratio | This port with JIT | Ratio |
 |---|---:|---:|---:|---:|---:|
-| Dio | 5.86 | 3.85 | 1.52x | 4.16 | 1.41x |
-| StoneMask | 3.67 | 3.45 | 1.06x | 3.69 | 0.99x |
-| CheapTrick | 9.07 | 9.61 | 0.94x | 9.14 | 0.99x |
-| D4C | 35.59 | 31.16 | 1.14x | 31.12 | 1.14x |
-| Synthesis | 8.62 | 10.09 | 0.85x | 9.38 | 0.92x |
-| Harvest | 127.90 | 72.07 | 1.77x | 67.18 | 1.90x |
+| Dio | 6.03 | 2.94 | 2.05x | 2.95 | 2.04x |
+| StoneMask | 3.52 | 2.93 | 1.20x | 3.05 | 1.15x |
+| CheapTrick | 9.17 | 6.01 | 1.53x | 5.91 | 1.55x |
+| D4C | 33.96 | 21.57 | 1.57x | 21.81 | 1.56x |
+| Synthesis | 8.37 | 7.48 | 1.12x | 6.91 | 1.21x |
+| Harvest | 126.57 | 55.85 | 2.27x | 55.72 | 2.27x |
 
 The routines that contain loops, together with the routines of the Ooura FFT, are marked with `MethodImplOptions.AggressiveOptimization`, so that they are optimized at the first call instead of starting in the unoptimized tier. Before they were marked, the same measurement took 126.67 ms from Dio to Synthesis and 141.68 ms for Harvest, against 55.65 ms and 123.50 ms after they were marked. Once a process has warmed up, the speed does not depend on the mark: the best of 100 repeats within one process took 54.35 ms from Dio to Synthesis before the routines were marked and 54.20 ms after.
 
-Harvest and Dio were sped up afterwards without changing any output value. The refinement stage of Harvest used to transform the waveform again for every candidate, although the candidates of one frame can share a window length. It now orders the candidates of a frame by window length and reuses the spectra while the length stays the same. The zero-crossing detection shared by Dio and Harvest finds the points where the signal turns from positive to zero or below with vector comparisons instead of scanning one sample at a time. Against the previous Linux table, the ratio to GCC in the JIT column rose from 1.01x to 1.90x for Harvest and from 1.26x to 1.41x for Dio. The tests that compare every stage with the reference pass unchanged, and a new test compares the zero-crossing detection with a straightforward implementation bit for bit.
+Several routines are vectorized in a way that leaves every output bit unchanged. On x64 processors with AVX2, the Ooura FFT evaluates two complex columns, or two independent blocks, in each 256-bit vector. Only the order in which independent butterflies are evaluated changes, no value takes a different sequence of operations, and no fused multiply-add is used. The pseudo-random generator of the original is a serial recurrence. Here it generates eight segments of the same sequence in parallel from precomputed starting states and returns the values in the original order. The refinement stage of Harvest transforms the waveform once for each distinct window length of a frame instead of once for each candidate, and the zero-crossing detection shared by Dio and Harvest compares several samples per instruction. In the table above, the JIT column read 1.26x for Dio, 1.03x for StoneMask, 1.02x for CheapTrick, 1.12x for D4C, 0.93x for Synthesis and 1.01x for Harvest before these changes. The tests that compare every stage with the reference pass unchanged. Processors without AVX2 run the scalar code and produce the same values. ARM64 uses that code too, and its speed against the original has not been measured.
 
 ---
 
