@@ -30,6 +30,7 @@ internal static unsafe partial class OouraFft
         a[k1 + 1] = xi;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void BitRv2(int n, int* ip, double* a)
     {
         int m = 1;
@@ -161,6 +162,7 @@ internal static unsafe partial class OouraFft
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     private static void BitRv2Conj(int n, int* ip, double* a)
     {
         int m = 1;
