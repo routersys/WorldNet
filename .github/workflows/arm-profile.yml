@@ -1,0 +1,45 @@
+name: ARM64 の時間の内訳の一時確認
+
+on:
+  push:
+    branches: ["develop"]
+    paths:
+      - ".github/workflows/arm-profile.yml"
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
+  DOTNET_NOLOGO: "1"
+
+jobs:
+  profile:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.x"
+      - name: 原典をビルド
+        run: reference/build.sh
+      - name: JIT 用にビルド
+        run: dotnet build WorldNet.Examples/WorldNet.Examples.csproj -c Release
+      - name: perf を用意
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y linux-tools-common linux-tools-generic || true
+          ls /usr/lib/linux-tools/*/perf || true
+      - name: 時間の内訳を取る
+        run: |
+          PERF=$(ls /usr/lib/linux-tools/*/perf | head -1)
+          echo "perf: $PERF"
+          sudo sysctl -w kernel.perf_event_paranoid=-1 || true
+          export DOTNET_PerfMapEnabled=1
+          WAV=reference/world-src/test/vaiueo2d.wav
+          D=WorldNet.Examples/bin/Release/net10.0/WorldNet.Examples.dll
+          sudo -E $PERF record -F 1999 -g -e cpu-clock -o perf-cs.data -- bash -c "for i in \$(seq 1 25); do dotnet $D bench $WAV > /dev/null; done" || true
+          sudo -E $PERF report -i perf-cs.data --no-children --sort symbol --stdio 2>/dev/null | grep -v '^$' | head -90 || true
+          WORLD_BENCH_ONLY=1 sudo -E $PERF record -F 1999 -g -e cpu-clock -o perf-cpp.data -- bash -c "for i in \$(seq 1 25); do reference/worldref $WAV reference/data > /dev/null; done" || true
+          sudo -E $PERF report -i perf-cpp.data --no-children --sort symbol --stdio 2>/dev/null | grep -v '^$' | head -50 || true
