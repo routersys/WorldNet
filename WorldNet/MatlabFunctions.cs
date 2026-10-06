@@ -201,15 +201,8 @@ internal static unsafe class MatlabFunctions
         }
         forwardRealFft.ForwardFft.Execute();
 
-        for (int i = 0; i <= fftSize / 2; ++i)
-        {
-            inverseRealFft.Spectrum[i].Real =
-                (xSpectrum[i].Real * forwardRealFft.Spectrum[i].Real)
-                - (xSpectrum[i].Imaginary * forwardRealFft.Spectrum[i].Imaginary);
-            inverseRealFft.Spectrum[i].Imaginary =
-                (xSpectrum[i].Real * forwardRealFft.Spectrum[i].Imaginary)
-                + (xSpectrum[i].Imaginary * forwardRealFft.Spectrum[i].Real);
-        }
+        SpectrumMath.MultiplySpectra(xSpectrum, forwardRealFft.Spectrum, inverseRealFft.Spectrum,
+            (fftSize / 2) + 1);
         inverseRealFft.InverseFft.Execute();
 
         for (int i = 0; i < fftSize; ++i)
