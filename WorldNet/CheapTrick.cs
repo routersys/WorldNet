@@ -23,6 +23,7 @@ public static unsafe class CheapTrick
         ArgumentNullException.ThrowIfNull(arena);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fs);
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(option.FftSize);
+        Validation.ThrowIfNotPowerOfTwo(option.FftSize, nameof(option));
 
         if (x.IsEmpty)
         {
