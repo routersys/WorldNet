@@ -54,7 +54,7 @@ The public surface is modern C#. Waveforms and parameters are passed as `ReadOnl
 
 All working memory is served by `WorldArena`, a bump allocator backed by `NativeMemory.AlignedAlloc` with 64-byte alignment. The arena is a chain of chunks, so growing it never invalidates a pointer that was already handed out. Scratch buffers are declared once as a `Layout` method on a dedicated type; a source generator reads that method's signature and emits both the size query and the binding call, so the reported size and the actual consumption cannot drift apart.
 
-The original C++ is not vendored into this repository. The reference harness under `reference/` clones WORLD, builds it with MSVC, and dumps the input and output of every stage as raw doubles. The test suite loads those dumps and compares them against the C# results.
+The original C++ is not vendored into this repository. The reference harness under `reference/` clones WORLD, builds it with MSVC on Windows or with GCC on Linux, and dumps the input and output of every stage as raw doubles. The test suite loads those dumps and compares them against the C# results.
 
 ---
 
@@ -66,7 +66,7 @@ The original C++ is not vendored into this repository. The reference harness und
 | SDK | .NET SDK 10.0 |
 | Language | C# 14 or later (`LangVersion` is set to `latest`) |
 | Unsafe code | Required in the consuming project only when `WorldArena.FromNativeMemory` is used |
-| Reference data | MSVC C++ toolset and Git, required only to regenerate the golden data used by the tests |
+| Reference data | The MSVC C++ toolset on Windows or GCC on Linux, and Git. Required only to regenerate the golden data used by the tests |
 
 ---
 
@@ -309,7 +309,7 @@ dotnet build WorldNet.slnx -c Release
 
 To use the checkout instead of the package, add `WorldNet/WorldNet.csproj` as a project reference.
 
-1. To run the test suite, generate the reference data first by executing `reference/build.bat`, which clones WORLD, builds it with MSVC and writes the dumps to `reference/data`.
+1. To run the test suite, generate the reference data first by executing `reference/build.bat` on Windows or `reference/build.sh` on Linux. Either script clones WORLD, builds it and writes the dumps to `reference/data`.
 2. To produce a Native AOT binary of the sample application, run `publish-aot.bat`.
 
 ---
@@ -332,7 +332,7 @@ To use the checkout instead of the package, add `WorldNet/WorldNet.csproj` as a 
 - Determinism: the pipeline produces identical output across repeated runs. The pseudo-random generator used by D4C and by the synthesizer is the xorshift generator of the original, reseeded to the same state, and it reproduces the original sequence and its final state exactly.
 - Scratch layout: a type marked with `[ScratchLayout]` must expose a `Layout` method generic over `IScratchAllocator`. The generator emits `GetRequiredArenaBytes` and `Bind` with a matching parameter list, and skips whichever of the two the type already declares.
 - Native AOT: the library sets `IsAotCompatible`, which enables the trim, single-file and AOT analyzers. `publish-aot.bat` publishes the sample application for `win-x64` and requires the MSVC toolset for the native linker.
-- Regenerating reference data: `reference/build.bat` clones WORLD into `reference/world-src`, builds it, and writes the dumps. Both directories are excluded from version control.
+- Regenerating reference data: `reference/build.bat` on Windows and `reference/build.sh` on Linux clone WORLD into `reference/world-src`, build it, and write the dumps. Both directories are excluded from version control.
 - Network access: the library opens no network connection and sends no data.
 
 ---
