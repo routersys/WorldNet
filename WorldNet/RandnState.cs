@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace WorldNet;
 
 internal struct RandnState
@@ -15,6 +17,7 @@ internal struct RandnState
         W = 88675123;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public double Next()
     {
         uint a = X;
