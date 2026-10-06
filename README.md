@@ -155,6 +155,8 @@ Coding the aperiodicity, coding the spectral envelope and decoding the spectral 
 
 Every scratch requirement is declared once as a `Layout` method that is generic over an allocator. Running it with the measuring allocator yields the required byte count without touching memory, and running it with the arena allocator performs the actual binding. The source generator emits `GetRequiredArenaBytes` and `Bind` from that single signature.
 
+The memory an arena hands out is not cleared. After `Reset`, or after a scope ends, the same bytes are handed out again with their old contents. A span returned by `AllocateDouble` or `AllocateInt` stays valid until the scope that was open when it was taken ends, the arena is reset, or the arena is disposed. `WorldSynthesizer` keeps a reference to its arena, so the arena cannot be collected while the synthesizer is reachable, but the arena still has to keep that memory allocated: do not reset the arena or end an enclosing scope while the synthesizer is in use. Once the arena is disposed, the members of the synthesizer throw `ObjectDisposedException`, and ending a scope whose arena was disposed does nothing.
+
 The absence of managed allocation is measured, not asserted. `GC.GetAllocatedBytesForCurrentThread` reports a delta of zero bytes across the full analysis and synthesis pipeline and across the real-time synthesizer.
 
 ### 6. Numerical verification
@@ -269,7 +271,7 @@ The following table was measured once on Linux ARM64, on a GitHub Actions `ubunt
 | `WorldSynthesizer.AddParameters(f0, spectrogram, aperiodicity)` | Queues one chunk of parameters and reports whether it was accepted. |
 | `WorldSynthesizer.Synthesize()` | Produces the next block and reports whether output is available. |
 | `WorldSynthesizer.Buffer` | Exposes the current output block. |
-| `WorldSynthesizer.IsLocked` | Reports whether the internal buffer is full. |
+| `WorldSynthesizer.IsLocked` | Reports that the queue is full and that `Synthesize` cannot produce more output. Neither call can then make progress until `Refresh` is called. |
 | `WorldSynthesizer.Refresh()` | Clears the queued parameters and the internal state. |
 
 ### Coding
