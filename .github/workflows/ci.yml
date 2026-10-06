@@ -115,6 +115,8 @@ jobs:
             runner: ubuntu-latest
           - name: Linux ARM64
             runner: ubuntu-24.04-arm
+          - name: macOS ARM64
+            runner: macos-latest
     defaults:
       run:
         shell: bash
