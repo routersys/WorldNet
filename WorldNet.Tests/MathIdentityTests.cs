@@ -20,7 +20,7 @@ public class MathIdentityTests
     {
         foreach (double x in Arguments())
         {
-            (double sine, double cosine) = Math.SinCos(x);
+            (double sine, double cosine) = WorldMath.SinCos(x);
             Assert.Equal(BitConverter.DoubleToInt64Bits(Math.Sin(x)),
                 BitConverter.DoubleToInt64Bits(sine));
             Assert.Equal(BitConverter.DoubleToInt64Bits(Math.Cos(x)),
