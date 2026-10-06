@@ -8,6 +8,10 @@ public static unsafe partial class Harvest
 
     public static int GetSamplesForHarvest(int fs, int xLength, double framePeriod)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(fs);
+        ArgumentOutOfRangeException.ThrowIfNegative(xLength);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(framePeriod);
+
         return (int)(1000.0 * xLength / fs / framePeriod) + 1;
     }
 
