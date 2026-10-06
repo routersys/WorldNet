@@ -29,7 +29,7 @@ WorldNet のコードと配布パッケージに原因がある問題を対象�
 
 脆弱性は、公開の Issue に書かないでください。修正を公開する前に悪用されるおそれがあります。
 
-1. `https://github.com/routersys/WorldNet/security/advisories/new` を開き、非公開で報告してください。報告の内容を見られるのは、開発者と報告した人、開発者が招いた人だけです。
+1. `https://github.com/routersys/WorldNet/security/advisories/new` を開き、非公開で報告してください。
 2. この方法が使えないときは、github.routersys@gmail.com へメールで報告してください。
 
 報告には、次の内容を書いてください。分からない項目は書かなくて構いません。
