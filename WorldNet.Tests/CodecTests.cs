@@ -139,4 +139,41 @@ public class CodecTests
             () => Codec.CodeSpectralEnvelope(spectrogram, 2, 22050, 1024, NumberOfDimensions,
                 coded, arena));
     }
+
+    [Theory]
+    [InlineData(1000, 20)]
+    [InlineData(2, 1)]
+    [InlineData(1024, 513)]
+    [InlineData(1024, 100000)]
+    [InlineData(8, 5)]
+    public void SpectralEnvelopeCodecRejectsInvalidShape(int fftSize, int numberOfDimensions)
+    {
+        using WorldArena arena = new();
+        double[] spectrogram = new double[2 * ((fftSize / 2) + 1)];
+        double[] coded = new double[2 * numberOfDimensions];
+
+        Assert.ThrowsAny<ArgumentException>(() => Codec.CodeSpectralEnvelope(
+            spectrogram, 2, 22050, fftSize, numberOfDimensions, coded, arena));
+        Assert.ThrowsAny<ArgumentException>(() => Codec.DecodeSpectralEnvelope(
+            coded, 2, 22050, fftSize, numberOfDimensions, spectrogram, arena));
+    }
+
+    [Theory]
+    [InlineData(4, 2)]
+    [InlineData(8, 4)]
+    [InlineData(1024, 512)]
+    [InlineData(1024, 1)]
+    public void SpectralEnvelopeCodecAcceptsTheLargestNumberOfDimensions(int fftSize,
+        int numberOfDimensions)
+    {
+        using WorldArena arena = new();
+        double[] spectrogram = new double[2 * ((fftSize / 2) + 1)];
+        Array.Fill(spectrogram, 1.0);
+        double[] coded = new double[2 * numberOfDimensions];
+
+        Codec.CodeSpectralEnvelope(spectrogram, 2, 22050, fftSize, numberOfDimensions, coded,
+            arena);
+        Codec.DecodeSpectralEnvelope(coded, 2, 22050, fftSize, numberOfDimensions, spectrogram,
+            arena);
+    }
 }
