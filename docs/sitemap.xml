@@ -1,31 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 <url>
-<loc>https://lib.routersys.com/</loc>
+<loc>https://lib.routersys.com/WorldNet/</loc>
 <lastmod>2026-10-06</lastmod>
-<xhtml:link rel="alternate" hreflang="en" href="https://lib.routersys.com/"/>
-<xhtml:link rel="alternate" hreflang="ja" href="https://lib.routersys.com/ja/"/>
-<xhtml:link rel="alternate" hreflang="x-default" href="https://lib.routersys.com/"/>
+<xhtml:link rel="alternate" hreflang="en" href="https://lib.routersys.com/WorldNet/"/>
+<xhtml:link rel="alternate" hreflang="ja" href="https://lib.routersys.com/WorldNet/ja/"/>
+<xhtml:link rel="alternate" hreflang="x-default" href="https://lib.routersys.com/WorldNet/"/>
 </url>
 <url>
-<loc>https://lib.routersys.com/ja/</loc>
+<loc>https://lib.routersys.com/WorldNet/ja/</loc>
 <lastmod>2026-10-06</lastmod>
-<xhtml:link rel="alternate" hreflang="en" href="https://lib.routersys.com/"/>
-<xhtml:link rel="alternate" hreflang="ja" href="https://lib.routersys.com/ja/"/>
-<xhtml:link rel="alternate" hreflang="x-default" href="https://lib.routersys.com/"/>
+<xhtml:link rel="alternate" hreflang="en" href="https://lib.routersys.com/WorldNet/"/>
+<xhtml:link rel="alternate" hreflang="ja" href="https://lib.routersys.com/WorldNet/ja/"/>
+<xhtml:link rel="alternate" hreflang="x-default" href="https://lib.routersys.com/WorldNet/"/>
 </url>
 <url>
-<loc>https://lib.routersys.com/demo/</loc>
+<loc>https://lib.routersys.com/WorldNet/demo/</loc>
 <lastmod>2026-10-06</lastmod>
-<xhtml:link rel="alternate" hreflang="en" href="https://lib.routersys.com/demo/"/>
-<xhtml:link rel="alternate" hreflang="ja" href="https://lib.routersys.com/ja/demo/"/>
-<xhtml:link rel="alternate" hreflang="x-default" href="https://lib.routersys.com/demo/"/>
+<xhtml:link rel="alternate" hreflang="en" href="https://lib.routersys.com/WorldNet/demo/"/>
+<xhtml:link rel="alternate" hreflang="ja" href="https://lib.routersys.com/WorldNet/ja/demo/"/>
+<xhtml:link rel="alternate" hreflang="x-default" href="https://lib.routersys.com/WorldNet/demo/"/>
 </url>
 <url>
-<loc>https://lib.routersys.com/ja/demo/</loc>
+<loc>https://lib.routersys.com/WorldNet/ja/demo/</loc>
 <lastmod>2026-10-06</lastmod>
-<xhtml:link rel="alternate" hreflang="en" href="https://lib.routersys.com/demo/"/>
-<xhtml:link rel="alternate" hreflang="ja" href="https://lib.routersys.com/ja/demo/"/>
-<xhtml:link rel="alternate" hreflang="x-default" href="https://lib.routersys.com/demo/"/>
+<xhtml:link rel="alternate" hreflang="en" href="https://lib.routersys.com/WorldNet/demo/"/>
+<xhtml:link rel="alternate" hreflang="ja" href="https://lib.routersys.com/WorldNet/ja/demo/"/>
+<xhtml:link rel="alternate" hreflang="x-default" href="https://lib.routersys.com/WorldNet/demo/"/>
 </url>
 </urlset>
