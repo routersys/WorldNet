@@ -20,7 +20,7 @@ internal sealed class ReferenceArray
 internal static class ReferenceData
 {
     public const string MissingMessage =
-        "Reference data was not found. Run reference/build.bat to generate it.";
+        "Reference data was not found. Run reference/build.bat on Windows or reference/build.sh on Linux to generate it.";
 
     private static readonly Lazy<string?> DirectoryPath = new(FindDirectory);
 
