@@ -13,6 +13,6 @@
     <UseSystemResourceKeys>true</UseSystemResourceKeys>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="WorldNet" Version="1.2.0" />
+    <PackageReference Include="WorldNet" Version="1.2.1" />
   </ItemGroup>
 </Project>
