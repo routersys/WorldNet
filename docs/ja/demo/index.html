@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>WorldNetのデモ: ブラウザーでWORLDボコーダーを動かす</title>
-<meta name="description" content="WorldNetをWebAssemblyとしてブラウザーで動かし、パブリックドメインの音声を解析して、音の高さを変えて再合成します。音声は外部へ送りません。">
+<meta name="description" content="WorldNetをWebAssemblyとしてブラウザーで動かし、音声を一度解析して、音の高さ、速さ、フォルマント、息の混ざり方を変えたり、F0推定器やスペクトル包絡の符号化を試したりできます。音声は外部へ送りません。">
 <link rel="canonical" href="https://lib.routersys.com/WorldNet/ja/demo/">
 <link rel="alternate" hreflang="en" href="https://lib.routersys.com/WorldNet/demo/">
 <link rel="alternate" hreflang="ja" href="https://lib.routersys.com/WorldNet/ja/demo/">
@@ -14,100 +14,62 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="WorldNet">
 <meta property="og:title" content="WorldNetのデモ: ブラウザーでWORLDボコーダーを動かす">
-<meta property="og:description" content="WorldNetをWebAssemblyとしてブラウザーで動かし、パブリックドメインの音声を解析して、音の高さを変えて再合成します。音声は外部へ送りません。">
+<meta property="og:description" content="WorldNetをWebAssemblyとしてブラウザーで動かし、音声を一度解析して、音の高さ、速さ、フォルマント、息の混ざり方を変えたり、F0推定器やスペクトル包絡の符号化を試したりできます。音声は外部へ送りません。">
 <meta property="og:url" content="https://lib.routersys.com/WorldNet/ja/demo/">
 <meta property="og:locale" content="ja_JP">
 <meta property="og:locale:alternate" content="en_US">
 <style>body{max-width:44em;margin:1em auto;padding:0 1em;line-height:1.5}audio,svg{max-width:100%}</style>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "WorldNetのデモ: ブラウザーでWORLDボコーダーを動かす", "description": "WorldNetをWebAssemblyとしてブラウザーで動かし、パブリックドメインの音声を解析して、音の高さを変えて再合成します。音声は外部へ送りません。", "url": "https://lib.routersys.com/WorldNet/ja/demo/", "inLanguage": "ja", "isPartOf": {"@type": "WebSite", "name": "WorldNet", "url": "https://lib.routersys.com/WorldNet/"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "WorldNetのデモ: ブラウザーでWORLDボコーダーを動かす", "description": "WorldNetをWebAssemblyとしてブラウザーで動かし、音声を一度解析して、音の高さ、速さ、フォルマント、息の混ざり方を変えたり、F0推定器やスペクトル包絡の符号化を試したりできます。音声は外部へ送りません。", "url": "https://lib.routersys.com/WorldNet/ja/demo/", "inLanguage": "ja", "isPartOf": {"@type": "WebSite", "name": "WorldNet", "url": "https://lib.routersys.com/WorldNet/"}}</script>
 </head>
 <body>
 <header>
 <h1>WorldNetのデモ</h1>
-<nav><a href="../../ja/">トップ</a> | <a href="https://github.com/routersys/WorldNet">GitHub</a> | <a href="../../demo/" hreflang="en" lang="en">English</a></nav>
+<nav><a href="../">トップ</a> | <a href="https://github.com/routersys/WorldNet">GitHub</a> | <a href="../../demo/" hreflang="en" lang="en">English</a></nav>
 </header>
 <hr>
 <main>
-<p>このページは、WorldNetをWebAssemblyとして、ブラウザーの中で動かします。音声は外部へ送りません。下の音声から、HarvestがF0の系列を、CheapTrickがスペクトル包絡を、D4Cが非周期性指標を推定し、Synthesisがそれらから波形を作り直します。音の高さの変更は、合成の前にF0へ倍率を掛けて行います。</p>
-<h2>元の音声</h2>
-<p>“His nature must have been kindly.”</p>
-<audio controls src="../../demo/LJ016-0230.wav"></audio>
-<p>音声: Linda Johnson氏がLibriVox向けに録音したもので、Keith Ito氏の<a href="https://keithito.com/LJ-Speech-Dataset/">LJ Speech Dataset</a>から引用しています。このデータセットはパブリックドメインです。</p>
-<h2>解析して再合成する</h2>
-<p><label>音の高さの変更（半音）: <select id="shift"><option value="-12">-12</option><option value="-7">-7</option><option value="-5">-5</option><option value="0">0</option><option value="5" selected>+5</option><option value="7">+7</option><option value="12">+12</option></select></label> <button id="run" type="button">実行</button></p>
+<p>このページは、WorldNetをWebAssemblyとして、ブラウザーの中で動かします。音声は外部へ送りません。Harvest、CheapTrick、D4Cが、音声を一度だけ解析して、F0の系列、スペクトル包絡、非周期性指標を求めます。Synthesisはその3つから波形を作ります。下の操作は、合成の前にその3つを変えます。</p>
 <p id="status" role="status"></p>
-<h2>結果</h2>
-<audio id="result" controls hidden></audio>
-<pre id="timings"></pre>
-<p>Harvestが推定したF0の系列です。音の高さの変更の前の値です。</p>
-<div id="plot"></div>
+<h2>1. 音声</h2>
+<p>“His nature must have been kindly.”</p>
+<audio id="original" controls src="../../demo/LJ016-0230.wav"></audio>
+<p id="sampleNote">音声: Linda Johnson氏がLibriVox向けに録音したもので、Keith Ito氏の<a href="https://keithito.com/LJ-Speech-Dataset/">LJ Speech Dataset</a>から引用しています。このデータセットはパブリックドメインです。</p>
+<p><label>自分の音声を試す: <input id="file" type="file" accept="audio/*" disabled></label></p>
+<p>ファイルはブラウザーの外へ出ません。ブラウザーがモノラルへ復号し、可能なら22.05kHzにします。使うのは最初の10秒だけです。</p>
+<p id="analysis"></p>
+<h2>2. 声の変換</h2>
+<p><label>モード: <select id="mode" disabled><option value="0" selected>通常</option><option value="1">ロボット</option><option value="2">ささやき</option></select></label></p>
+<p><label>音の高さ、半音: <input id="pitch" type="range" min="-12" max="12" step="1" value="0" disabled> <output id="pitchOut"></output></label></p>
+<p><label>速さ: <input id="speed" type="range" min="0.5" max="2" step="0.05" value="1" disabled> <output id="speedOut"></output></label></p>
+<p><label>フォルマント: <input id="formant" type="range" min="0.7" max="1.4" step="0.05" value="1" disabled> <output id="formantOut"></output></label></p>
+<p><label>息の混ざり方: <input id="breath" type="range" min="0" max="2" step="0.1" value="1" disabled> <output id="breathOut"></output></label> <button id="reset" type="button" disabled>初期値へ戻す</button></p>
+<audio id="converted" controls hidden></audio>
+<p id="convertNote"></p>
 <ul>
-<li>初回は、主に.NETの実行環境で約2.8MBを読み込みます。コードは事前にコンパイルしてあるため、実行時のコンパイルはありません。</li>
-<li>確認した範囲では、16ビットの結果は、ここで選べるどの音の高さの変更でも、ネイティブのビルドとサンプルごとに一致しました。内部の倍精度の値は、WebAssemblyが独自の数学ライブラリを持つため、最後の桁でネイティブのビルドと異なることがあります。原典との照合を済ませているのは、ネイティブのビルドです。</li>
+<li>ロボットは、有声のすべてのフレームへ、有声フレームの中央値のF0を与えます。ささやきは、どのフレームも有声にしません。</li>
+<li>音の高さは、F0へ倍率を掛けます。速さは、フレームを時間方向に取り直し、音の高さを変えません。</li>
+<li>フォルマントは、スペクトル包絡を周波数の軸の方向に伸び縮みさせます。息の混ざり方は、非周期性指標へ倍率を掛けます。</li>
+</ul>
+<h2>3. スペクトル包絡の符号化</h2>
+<p>Codec.CodeSpectralEnvelopeが、すべてのフレームの包絡を、選んだ個数の値へ減らし、Codec.DecodeSpectralEnvelopeが復元します。下の音声は、復元した包絡から合成しています。</p>
+<p><label>1フレームあたりの値の個数: <input id="dimensions" type="range" min="4" max="60" step="1" value="20" disabled> <output id="dimensionsOut"></output></label></p>
+<audio id="coded" controls hidden></audio>
+<p id="codedNote"></p>
+<p><label>図に示すフレーム: <input id="frame" type="range" min="0" max="0" step="1" value="0" disabled></label></p>
+<div id="envelope"></div>
+<h2>4. F0推定器</h2>
+<p>Harvestは、解析のときに実行済みです。ボタンを押すと、同じ音声でDioと、StoneMaskで補正したDioを実行し、3つの系列と所要時間を比べられます。</p>
+<p><button id="compare" type="button" disabled>DioとStoneMaskを実行する</button></p>
+<div id="f0chart"></div>
+<pre id="estimators"></pre>
+<h2>補足</h2>
+<ul>
+<li>初回は、主に.NETの実行環境で2.4 MBを読み込みます。ページを開いた時点で読み込みを始めます。コードは事前にコンパイルしてあるため、待っている間のコンパイルはありません。2回目からは、ブラウザーが保存したものを使います。</li>
+<li>処理はWeb Workerの中で動くため、解析の間もページは操作できます。</li>
+<li>内部の倍精度の値は、WebAssemblyが独自の数学ライブラリを持つため、最後の桁でネイティブのビルドと異なることがあります。原典との照合を済ませているのは、ネイティブのビルドです。</li>
 </ul>
 </main>
-<script type="module">
-const M = {"loading": "実行環境を読み込んでいます...", "running": "実行しています...", "done": "{t}ミリ秒で完了しました。", "fail": "失敗しました: ", "unsupported": "このブラウザーは、デモに必要なストリームに対応していません。", "secs": "秒", "hz": "Hz"};
-const $ = (id) => document.getElementById(id);
-const say = (text) => { $("status").textContent = text; };
-let exportsPromise;
-async function load() {
-  const { dotnet } = await import("../../demo/_framework/dotnet.js");
-  const gz = async (uri) => {
-    const r = await fetch(uri + ".gz");
-    if (!r.ok) throw new Error(uri + " " + r.status);
-    return new Response(r.body.pipeThrough(new DecompressionStream("gzip")), { headers: { "Content-Type": "application/wasm" } });
-  };
-  const runtime = await dotnet
-    .withResourceLoader((type, name, uri) => (type === "assembly" || type === "dotnetwasm") ? gz(uri) : null)
-    .create();
-  return (await runtime.getAssemblyExports(runtime.getConfig().mainAssemblyName)).Demo;
-}
-function plot(f0) {
-  const w = 600, h = 160, pad = 14, n = f0.length;
-  const voiced = Array.from(f0).filter((x) => x > 0);
-  const lo = Math.min(...voiced), hi = Math.max(...voiced);
-  const X = (i) => pad + (i / (n - 1)) * (w - 2 * pad);
-  const Y = (x) => h - pad - ((x - lo) / ((hi - lo) || 1)) * (h - 2 * pad);
-  let d = "", pen = false;
-  f0.forEach((x, i) => {
-    if (x > 0) { d += (pen ? "L" : "M") + X(i).toFixed(1) + " " + Y(x).toFixed(1); pen = true; } else { pen = false; }
-  });
-  const secs = (n * 5 / 1000).toFixed(1);
-  $("plot").innerHTML = '<svg viewBox="0 0 ' + w + " " + h + '" role="img" aria-label="F0の系列" font-size="11" fill="currentColor">'
-    + '<rect x="0.5" y="0.5" width="' + (w - 1) + '" height="' + (h - 1) + '" fill="none" stroke="currentColor" opacity="0.4"/>'
-    + '<path d="' + d + '" fill="none" stroke="currentColor" stroke-width="1.5"/>'
-    + '<text x="4" y="11">' + hi.toFixed(0) + " " + M.hz + '</text><text x="4" y="' + (h - 4) + '">' + lo.toFixed(0) + " " + M.hz + '</text>'
-    + '<text x="' + (w - 4) + '" y="' + (h - 4) + '" text-anchor="end">' + secs + " " + M.secs + "</text></svg>";
-}
-$("run").addEventListener("click", async () => {
-  const button = $("run");
-  if (!("DecompressionStream" in window)) { say(M.unsupported); return; }
-  button.disabled = true;
-  try {
-    say(M.loading);
-    exportsPromise ??= load();
-    const demo = await exportsPromise;
-    say(M.running);
-    const wave = new Uint8Array(await (await fetch("../../demo/LJ016-0230.wav")).arrayBuffer());
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    const start = performance.now();
-    const output = demo.Process(wave, Number($("shift").value));
-    const total = Math.round(performance.now() - start);
-    $("timings").textContent = demo.GetTimings();
-    plot(demo.GetF0());
-    const audio = $("result");
-    if (audio.src) URL.revokeObjectURL(audio.src);
-    audio.src = URL.createObjectURL(new Blob([output], { type: "audio/wav" }));
-    audio.hidden = false;
-    say(M.done.replace("{t}", total));
-  } catch (error) {
-    exportsPromise = undefined;
-    say(M.fail + error.message);
-  } finally {
-    button.disabled = false;
-  }
-});
-</script>
+<script type="application/json" id="messages">{"loading": "実行環境を読み込んでいます: {loaded} MB", "loadingOf": "実行環境を読み込んでいます: {total} MBのうち{loaded} MB", "analyzing": "音声を解析しています...", "decoding": "音声を復号しています...", "running": "実行しています...", "ready": "準備ができました。", "fail": "失敗しました: ", "unsupported": "このブラウザーは、デモに必要なWeb Workerとストリームに対応していません。", "truncated": "ファイルのうち、最初の{s}秒だけを使います。", "synthesized": "{t}ミリ秒で合成しました。", "coded": "1フレームあたり{bins}個の値を{dims}個へ減らし、{t}ミリ秒で合成しました。", "analysis": "{fs}Hzの{seconds}秒を解析しました: Harvest {harvest}ミリ秒、CheapTrick {cheapTrick}ミリ秒、D4C {d4c}ミリ秒。", "chart": "図", "secs": "秒", "ms": "ミリ秒", "hz": "Hz", "khz": "kHz", "db": "dB", "original": "元", "decoded": "復元"}</script>
+<script type="module" src="../../demo/demo.js"></script>
 </body>
 </html>
