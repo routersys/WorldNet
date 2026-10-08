@@ -1,6 +1,0 @@
-name = "lib-routersys"
-main = "index.js"
-compatibility_date = "2025-09-01"
-routes = [
-  { pattern = "lib.routersys.com/*", zone_name = "routersys.com" }
-]
