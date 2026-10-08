@@ -1,7 +1,8 @@
 const SITE_HOST = "lib.routersys.com";
 const ORIGIN_HOST = "ymm4.routersys.com";
-const PREFIX = "/WorldNet";
-const ROBOTS = "User-agent: *\nAllow: /\n\nSitemap: https://lib.routersys.com/WorldNet/sitemap.xml\n";
+const PROJECTS = ["WorldNet", "R128Net"];
+const ROBOTS = "User-agent: *\nAllow: /\n\n"
+  + PROJECTS.map((name) => `Sitemap: https://${SITE_HOST}/${name}/sitemap.xml\n`).join("");
 
 export default {
   async fetch(request) {
@@ -21,15 +22,16 @@ export default {
     }
 
     if (url.pathname === "/") {
-      return Response.redirect(`https://${SITE_HOST}${PREFIX}/`, 302);
+      return Response.redirect(`https://${SITE_HOST}/${PROJECTS[0]}/`, 302);
     }
 
-    if (url.pathname === PREFIX) {
-      url.pathname = `${PREFIX}/`;
+    const bare = PROJECTS.find((name) => url.pathname === `/${name}`);
+    if (bare) {
+      url.pathname = `/${bare}/`;
       return Response.redirect(url.toString(), 301);
     }
 
-    if (!url.pathname.startsWith(`${PREFIX}/`)) {
+    if (!PROJECTS.some((name) => url.pathname.startsWith(`/${name}/`))) {
       return new Response("Not Found", { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } });
     }
 
